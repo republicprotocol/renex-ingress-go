@@ -24,6 +24,8 @@
 #   go-tests = true
 #   unused-packages = true
 
+[metadata.heroku]
+  root-package = "github.com/republicprotocol/ingress-heroku-go"
 
 [[constraint]]
   name = "github.com/ethereum/go-ethereum"

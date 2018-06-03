@@ -26,6 +26,8 @@
 
 [metadata.heroku]
   root-package = "github.com/republicprotocol/ingress-heroku-go"
+  go-version = "1.10.2"
+  install = "./cmd/ingress"
 
 [[constraint]]
   name = "github.com/ethereum/go-ethereum"

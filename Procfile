@@ -1,1 +1,1 @@
-web: ingress-heroku-go --config config.json --keystore keystore.json 
+web: ingress

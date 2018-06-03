@@ -60,7 +60,7 @@ func main() {
 		log.Fatalf("cannot load keystore: %v", err)
 	}
 
-	multiAddr, err := getMultiaddress(keystore, *portParam)
+	multiAddr, err := getMultiaddress(keystore, os.Getenv("PORT"))
 	if err != nil {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
@@ -106,8 +106,8 @@ func main() {
 	for _, multiAddr := range dht.MultiAddresses() {
 		log.Printf("  %v", multiAddr)
 	}
-	log.Printf("listening at %v:%v...", *bindParam, *portParam)
-	if err := netHttp.ListenAndServe(fmt.Sprintf("%v:%v", *bindParam, *portParam), http.NewServer(&ingressAdapter, &ingressAdapter)); err != nil {
+	log.Printf("listening at 0.0.0.0:%v...", os.Getenv("PORT"))
+	if err := netHttp.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), http.NewServer(&ingressAdapter, &ingressAdapter)); err != nil {
 		log.Fatalf("error listening and serving: %v", err)
 	}
 }
@@ -153,14 +153,14 @@ func getSmartContracts(ethereumConfig ethereum.Config, keystore crypto.Keystore)
 func loadConfig(configFile string) (config, error) {
 	file, err := os.Open(configFile)
 	if err != nil {
-		return Config{}, err
-	}
-	defer file.Close()
-	config := new(config)
-	if err := json.NewDecoder(file).Decode(config); err != nil {
 		return config{}, err
 	}
-	return *config, nil
+	defer file.Close()
+	c := config{}
+	if err := json.NewDecoder(file).Decode(c); err != nil {
+		return config{}, err
+	}
+	return c, nil
 }
 
 func loadKeystore(keystoreFile, passphrase string) (crypto.Keystore, error) {

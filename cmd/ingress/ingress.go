@@ -157,7 +157,7 @@ func loadConfig(configFile string) (config, error) {
 	}
 	defer file.Close()
 	c := config{}
-	if err := json.NewDecoder(file).Decode(c); err != nil {
+	if err := json.NewDecoder(file).Decode(&c); err != nil {
 		return config{}, err
 	}
 	return c, nil

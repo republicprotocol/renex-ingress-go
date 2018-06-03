@@ -29,7 +29,7 @@ import (
 	"github.com/republicprotocol/republic-go/swarm"
 )
 
-type Config struct {
+type config struct {
 	EthereumConfig      ethereum.Config         `json:"ethereum"`
 	BootstrapMultiAddrs identity.MultiAddresses `json:"bootstrapMultiAddresses"`
 }
@@ -150,15 +150,15 @@ func getSmartContracts(ethereumConfig ethereum.Config, keystore crypto.Keystore)
 	return auth, registry, &renLedger, nil
 }
 
-func loadConfig(configFile string) (Config, error) {
+func loadConfig(configFile string) (config, error) {
 	file, err := os.Open(configFile)
 	if err != nil {
 		return Config{}, err
 	}
 	defer file.Close()
-	config := new(Config)
+	config := new(config)
 	if err := json.NewDecoder(file).Decode(config); err != nil {
-		return Config{}, err
+		return config{}, err
 	}
 	return *config, nil
 }

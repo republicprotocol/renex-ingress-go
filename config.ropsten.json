@@ -1,0 +1,11 @@
+{
+    "bootstrapMultiAddresses": [],
+    "ethereum": {
+        "network": "ropsten",
+        "uri": "https://ropsten.infura.io",
+        "republicTokenAddress": "",
+        "darknodeRegistryAddress": "",
+        "renLedgerAddress": "",
+        "renExAccountsAddress": ""
+    }
+}

@@ -5,8 +5,11 @@
 *.so
 *.dylib
 
-# Test binary, build with `go test -c`
+# Output of the go test tool
 *.test
 
-# Output of the go coverage tool, specifically when used with LiteIDE
+# Output of the go coverage tool
 *.out
+
+# Vendors using dep
+vendors

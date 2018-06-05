@@ -98,14 +98,7 @@ func main() {
 	if err := swarmer.Bootstrap(ctx, config.BootstrapMultiAddrs); err != nil {
 		log.Printf("error bootstrapping: %v", err)
 	}
-	syncDone := make(chan struct{})
-	defer close(syncDone)
-	syncErrs := ingresser.Sync(syncDone)
-	go func() {
-		for err := range syncErrs {
-			log.Printf("error during sync process: %v", err)
-		}
-	}()
+	ingresser.Sync()
 
 	log.Printf("address %v", multiAddr)
 	log.Printf("ethereum %v", auth.From.Hex())

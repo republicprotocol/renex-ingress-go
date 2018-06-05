@@ -141,7 +141,7 @@
   revision = "0dccf0d7d287e828155a3ea16f7b968fa9662020"
 
 [[projects]]
-  branch = "ingress-sync"
+  branch = "develop"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "blockchain/ethereum",

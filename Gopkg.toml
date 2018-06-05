@@ -8,7 +8,7 @@
   version = "1.8.10"
 
 [[constraint]]
-  branch = "accounts"
+  branch = "develop"
   name = "github.com/republicprotocol/republic-go"
 
 [prune]

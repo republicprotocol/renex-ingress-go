@@ -1,8 +1,8 @@
 {
     "bootstrapMultiAddresses": [
-        "/ip4/13.232.70.89/tcp/18514/republic/8MHm9bov5LbYPhcsKLWzbvCyb6WZgH",
-        "/ip4/18.144.59.64/tcp/18514/republic/8MJmCgUNejSdJ1TztpQGssjHD65M4C",
-        "/ip4/18.228.39.47/tcp/18514/republic/8MJGcnNMm5ahMmEZ9MRmg5oWpPrMiy"
+        "/ip4/52.53.130.48/tcp/18514/republic/8MHpN79NzSasyqd4sFdU7dJULobSxR",
+        "/ip4/34.219.173.138/tcp/18514/republic/8MJmKkgm3jmgA5gUfQdYvLNP3BBTNu",
+        "/ip4/13.232.53.244/tcp/18514/republic/8MKZB6BsnGPSebMX37qERHH2guogyz"
     ],
     "ethereum": {
         "network": "kovan",

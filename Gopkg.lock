@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
-  revision = "4b9133d8ba77cab2812e147080198080b65b19b2"
+  revision = "c23ca1b101a5ddad1bd6a8aed46de3e49d996d8b"
 
 [[projects]]
   branch = "master"
@@ -126,7 +126,7 @@
   branch = "master"
   name = "github.com/multiformats/go-multihash"
   packages = ["."]
-  revision = "c5fd85e75c6c9888b604e8f94459631bc626dc07"
+  revision = "a0545ef43e32af9716b989178ecaefb8dda4a1bc"
 
 [[projects]]
   name = "github.com/pborman/uuid"
@@ -166,7 +166,7 @@
     "stream",
     "swarm"
   ]
-  revision = "58fdde13ae8164468f357faaf855565f26c0cde6"
+  revision = "076d48f98a508846272d91a24fffe7e41c062961"
 
 [[projects]]
   branch = "master"
@@ -214,7 +214,7 @@
     "scrypt",
     "sha3"
   ]
-  revision = "df8d4716b3472e4a531c33cedbe537dae921a1a9"
+  revision = "b47b1587369238182299fe4dad77d05b8b461e06"
 
 [[projects]]
   branch = "master"

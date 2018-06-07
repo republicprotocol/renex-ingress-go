@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
-  revision = "c23ca1b101a5ddad1bd6a8aed46de3e49d996d8b"
+  revision = "eeec72b69356a2dc3f3d974c5d6e41e5fd95f1b5"
 
 [[projects]]
   branch = "master"
@@ -166,7 +166,7 @@
     "stream",
     "swarm"
   ]
-  revision = "076d48f98a508846272d91a24fffe7e41c062961"
+  revision = "d1d6505fd9766fdb7986efc317d8c9ebe7eb9353"
 
 [[projects]]
   branch = "master"
@@ -238,7 +238,7 @@
     "cpu",
     "unix"
   ]
-  revision = "c11f84a56e43e20a78cee75a7c034031ecf57d1f"
+  revision = "9527bec2660bd847c050fda93a0f0c6dee0800bb"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -305,8 +305,8 @@
     "tap",
     "transport"
   ]
-  revision = "41344da2231b913fa3d983840a57a6b1b7b631a1"
-  version = "v1.12.0"
+  revision = "22a49e732a507a11ac524e4ea5fd1a3e384b6fb8"
+  version = "v1.12.1"
 
 [[projects]]
   name = "gopkg.in/fatih/set.v0"

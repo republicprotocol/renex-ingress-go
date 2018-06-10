@@ -13,3 +13,7 @@ ENV_KEYSTORE_PASSPHRASE=thisisasecret
 ```sh
 git push heroku master
 ```
+
+## Requirements
+
+Minimum 1GB RAM.

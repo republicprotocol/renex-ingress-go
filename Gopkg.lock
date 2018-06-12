@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
-  revision = "eeec72b69356a2dc3f3d974c5d6e41e5fd95f1b5"
+  revision = "59944ff78bc1de686b0aba1444dfd380f48f03d4"
 
 [[projects]]
   branch = "master"
@@ -120,13 +120,13 @@
   branch = "master"
   name = "github.com/multiformats/go-multiaddr"
   packages = ["."]
-  revision = "123a717755e0559ec8fda308019cd24e0a37bb07"
+  revision = "f36800afeb9c141e1adb7da099e6f010dfd4c419"
 
 [[projects]]
   branch = "master"
   name = "github.com/multiformats/go-multihash"
   packages = ["."]
-  revision = "a0545ef43e32af9716b989178ecaefb8dda4a1bc"
+  revision = "8be2a682ab9f254311de1375145a2f78a809b07d"
 
 [[projects]]
   name = "github.com/pborman/uuid"
@@ -166,7 +166,7 @@
     "stream",
     "swarm"
   ]
-  revision = "dd2309b6c48edfe6c1b2a9ef0fe5918e045ab5db"
+  revision = "ca4c193c3022af686c23322f92822599faf04725"
 
 [[projects]]
   branch = "master"
@@ -203,7 +203,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "5d6fca44a948d2be89a9702de7717f0168403d3d"
+  revision = "e2150783cd35f5b607daca48afd8c57ec54cc995"
 
 [[projects]]
   branch = "master"
@@ -214,7 +214,7 @@
     "scrypt",
     "sha3"
   ]
-  revision = "b47b1587369238182299fe4dad77d05b8b461e06"
+  revision = "8ac0e0d97ce45cd83d1d7243c060cb8461dda5e9"
 
 [[projects]]
   branch = "master"
@@ -229,7 +229,7 @@
     "trace",
     "websocket"
   ]
-  revision = "1e491301e022f8f977054da4c2d852decd59571f"
+  revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
 
 [[projects]]
   branch = "master"
@@ -238,7 +238,7 @@
     "cpu",
     "unix"
   ]
-  revision = "9527bec2660bd847c050fda93a0f0c6dee0800bb"
+  revision = "bff228c7b664c5fce602223a05fb708fd8654986"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -269,13 +269,13 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "a5b4c53f6e8bdcafa95a94671bf2d1203365858b"
+  revision = "8c39fb57ad842377bfea6ab5eff7608e4e8f6765"
 
 [[projects]]
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "81158efcc9f219c511e4d3c0d61a0e6e49c01a24"
+  revision = "32ee49c4dd805befd833990acba36cb75042378c"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -305,8 +305,8 @@
     "tap",
     "transport"
   ]
-  revision = "22a49e732a507a11ac524e4ea5fd1a3e384b6fb8"
-  version = "v1.12.1"
+  revision = "7a6a684ca69eb4cae85ad0a484f2e531598c047b"
+  version = "v1.12.2"
 
 [[projects]]
   name = "gopkg.in/fatih/set.v0"

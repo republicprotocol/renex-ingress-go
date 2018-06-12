@@ -72,10 +72,9 @@ func main() {
 	}
 
 	dht := dht.NewDHT(multiAddr.Address(), 100)
-	connPool := grpc.NewConnPool(100)
-	swarmClient := grpc.NewSwarmClient(multiAddr, &connPool)
+	swarmClient := grpc.NewSwarmClient(multiAddr)
 	swarmer := swarm.NewSwarmer(swarmClient, &dht)
-	orderbookClient := grpc.NewOrderbookClient(&connPool)
+	orderbookClient := grpc.NewOrderbookClient()
 	ingresser := ingress.NewIngress(&registry, renLedger, swarmer, orderbookClient)
 	ingressAdapter := adapter.NewIngressAdapter(ingresser)
 	openOrderErrors := ingresser.OpenOrderProcess(done)

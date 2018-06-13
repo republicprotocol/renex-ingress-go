@@ -36,6 +36,8 @@ type config struct {
 }
 
 func main() {
+	logger.SetFilterLevel(logger.LevelDebugLow)
+
 	done := make(chan struct{})
 	defer close(done)
 

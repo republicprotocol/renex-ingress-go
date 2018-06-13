@@ -26,6 +26,7 @@ import (
 	"github.com/republicprotocol/republic-go/http/adapter"
 	"github.com/republicprotocol/republic-go/identity"
 	"github.com/republicprotocol/republic-go/ingress"
+	"github.com/republicprotocol/republic-go/logger"
 	"github.com/republicprotocol/republic-go/swarm"
 )
 
@@ -87,14 +88,14 @@ func main() {
 	syncErrs := ingresser.Sync(done)
 	go func() {
 		for err := range syncErrs {
-			log.Printf("error during sync process: %v", err)
+			logger.Error(fmt.Sprintf("error syncing: %v", err))
 		}
 	}()
 
 	processErrs := ingresser.ProcessRequests(done)
 	go func() {
 		for err := range processErrs {
-			log.Printf("error processing order: %v", err)
+			logger.Error(fmt.Sprintf("error processing: %v", err))
 		}
 	}()
 

@@ -40,6 +40,7 @@ func main() {
 
 	done := make(chan struct{})
 	defer close(done)
+	defer logger.Info("shutting down...")
 
 	configEnv := os.Getenv("ENV_CONFIG")
 	if configEnv == "" {

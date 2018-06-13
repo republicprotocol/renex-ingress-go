@@ -77,32 +77,24 @@ func main() {
 	orderbookClient := grpc.NewOrderbookClient()
 	ingresser := ingress.NewIngress(&registry, renLedger, swarmer, orderbookClient)
 	ingressAdapter := adapter.NewIngressAdapter(ingresser)
-	openOrderErrors := ingresser.OpenOrderProcess(done)
-	openOrderFragmentErrors := ingresser.OpenOrderFragmentsProcess(done)
-
-	go func() {
-		for err := range openOrderErrors {
-			log.Printf("error processing order: %v", err)
-		}
-	}()
-
-	go func() {
-		for err := range openOrderFragmentErrors {
-			log.Printf("error processing order fragment: %v", err)
-		}
-	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	if err := swarmer.Bootstrap(ctx, config.BootstrapMultiAddrs); err != nil {
 		log.Printf("error bootstrapping: %v", err)
 	}
-	syncDone := make(chan struct{})
-	defer close(syncDone)
-	syncErrs := ingresser.Sync(syncDone)
+
+	syncErrs := ingresser.Sync(done)
 	go func() {
 		for err := range syncErrs {
 			log.Printf("error during sync process: %v", err)
+		}
+	}()
+
+	processErrs := ingresser.ProcessRequests(done)
+	go func() {
+		for err := range processErrs {
+			log.Printf("error processing order: %v", err)
 		}
 	}()
 

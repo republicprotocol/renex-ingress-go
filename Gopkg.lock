@@ -41,8 +41,8 @@
     "rpc",
     "trie"
   ]
-  revision = "eae63c511ceafab14b92e274c1b18bf1700e2d3d"
-  version = "v1.8.10"
+  revision = "dea1ce052a10cd7d401a5c04f83f371a06fe293c"
+  version = "v1.8.11"
 
 [[projects]]
   name = "github.com/go-stack/stack"
@@ -166,7 +166,7 @@
     "stream",
     "swarm"
   ]
-  revision = "eca54e3b7182a6a664c8ec1d7a52f1ecd0285684"
+  revision = "5a207d9f68ab01967e390c9b3706399ce5ff7bb2"
 
 [[projects]]
   branch = "master"
@@ -238,7 +238,7 @@
     "cpu",
     "unix"
   ]
-  revision = "bff228c7b664c5fce602223a05fb708fd8654986"
+  revision = "a9e25c09b96b8870693763211309e213c6ef299d"
 
 [[projects]]
   name = "golang.org/x/text"

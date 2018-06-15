@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -46,7 +45,8 @@ func main() {
 	keystoreEnv := "config/" + os.Getenv("DYNO") + ".kovan.keystore.json"
 	keystorePassphraseEnv := os.Getenv("ENV_KEYSTORE_PASSPHRASE")
 
-	flag.Parse()
+	log.Println("config:", configEnv)
+	log.Println("keystore:", keystoreEnv)
 
 	config, err := loadConfig(configEnv)
 	if err != nil {
@@ -76,24 +76,26 @@ func main() {
 	ingresser := ingress.NewIngress(&registry, renLedger, swarmer, orderbookClient)
 	ingressAdapter := adapter.NewIngressAdapter(ingresser)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	if err := swarmer.Bootstrap(ctx, config.BootstrapMultiAddrs); err != nil {
-		log.Printf("error bootstrapping: %v", err)
-	}
-
-	syncErrs := ingresser.Sync(done)
 	go func() {
-		for err := range syncErrs {
-			logger.Error(fmt.Sprintf("error syncing: %v", err))
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
+		if err := swarmer.Bootstrap(ctx, config.BootstrapMultiAddrs); err != nil {
+			log.Printf("error bootstrapping: %v", err)
 		}
-	}()
 
-	processErrs := ingresser.ProcessRequests(done)
-	go func() {
-		for err := range processErrs {
-			logger.Error(fmt.Sprintf("error processing: %v", err))
-		}
+		syncErrs := ingresser.Sync(done)
+		go func() {
+			for err := range syncErrs {
+				logger.Error(fmt.Sprintf("error syncing: %v", err))
+			}
+		}()
+
+		processErrs := ingresser.ProcessRequests(done)
+		go func() {
+			for err := range processErrs {
+				logger.Error(fmt.Sprintf("error processing: %v", err))
+			}
+		}()
 	}()
 
 	log.Printf("address %v", multiAddr)

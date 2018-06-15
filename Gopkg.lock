@@ -160,7 +160,7 @@
     "stream",
     "swarm"
   ]
-  revision = "8bce8b6100efcaafa1c0c5ea2ae6646b46dbaf63"
+  revision = "2b3e27b2380d604bdff14b7b110a81916a42b240"
 
 [[projects]]
   branch = "master"

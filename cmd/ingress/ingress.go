@@ -46,7 +46,7 @@ func main() {
 	if configEnv == "" {
 		configEnv = "config.json"
 	}
-	keystoreEnv := os.Getenv("ENV_KEYSTORE")
+	keystoreEnv := os.Getenv("DYNO") + "." + os.Getenv("ENV_KEYSTORE")
 	if keystoreEnv == "" {
 		keystoreEnv = "keystore.json"
 	}

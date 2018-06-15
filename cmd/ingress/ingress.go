@@ -42,7 +42,7 @@ func main() {
 	defer close(done)
 	defer logger.Info("shutting down...")
 
-	configEnv := "config/config.json"
+	configEnv := "config/kovan.config.json"
 	keystoreEnv := "config/" + os.Getenv("DYNO") + ".kovan.keystore.json"
 	keystorePassphraseEnv := os.Getenv("ENV_KEYSTORE_PASSPHRASE")
 

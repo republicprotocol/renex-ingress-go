@@ -166,7 +166,7 @@
     "stream",
     "swarm"
   ]
-  revision = "281701faac166a16e8a1760008894e37fc72b1b5"
+  revision = "ee4cb88af2b9c3672f44297d29f23caa5e14adbd"
 
 [[projects]]
   branch = "master"
@@ -214,7 +214,7 @@
     "scrypt",
     "sha3"
   ]
-  revision = "37a17fe027db43f76fd88b056ddf588563fc8722"
+  revision = "a8fb68e7206f8c78be19b432c58eb52a6aa34462"
 
 [[projects]]
   branch = "master"
@@ -238,7 +238,7 @@
     "cpu",
     "unix"
   ]
-  revision = "56ede360ec1c541828fb88741b3f1049406d28f5"
+  revision = "8883426083c04a2627e6e59d84d5f6fb63d16c91"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -269,7 +269,7 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "c995a088887b4ae00a4c85a984117cbc8d86ca3d"
+  revision = "c6269430a55499efa2e293ae66926175dc3af30e"
 
 [[projects]]
   branch = "master"

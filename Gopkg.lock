@@ -81,12 +81,6 @@
   version = "v1.6.2"
 
 [[projects]]
-  name = "github.com/gorilla/websocket"
-  packages = ["."]
-  revision = "ea4d1f681babbce9545c9c5f3d5194a789c89f5b"
-  version = "v1.2.0"
-
-[[projects]]
   branch = "master"
   name = "github.com/gxed/hashland"
   packages = ["keccakpg"]
@@ -141,7 +135,7 @@
   revision = "0dccf0d7d287e828155a3ea16f7b968fa9662020"
 
 [[projects]]
-  branch = "develop"
+  branch = "f∅"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "blockchain/ethereum",
@@ -166,7 +160,7 @@
     "stream",
     "swarm"
   ]
-  revision = "ee4cb88af2b9c3672f44297d29f23caa5e14adbd"
+  revision = "795803ded3f2f8f050d8804bb3f3a40901f34858"
 
 [[projects]]
   branch = "master"
@@ -329,6 +323,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6ec506ced0c63eb08bf864ac1ed58e0dd6eb229f92d0ff51a6bae7edf5ebd13c"
+  inputs-digest = "d147c2233df3335656c2bbbe5208c032e0603f468bcb255bc2ab3539cacf29bd"
   solver-name = "gps-cdcl"
   solver-version = 1

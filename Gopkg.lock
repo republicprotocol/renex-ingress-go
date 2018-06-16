@@ -160,7 +160,7 @@
     "stream",
     "swarm"
   ]
-  revision = "2b3e27b2380d604bdff14b7b110a81916a42b240"
+  revision = "00fac6ce461023859b4b2cef6211f5d4a73e4967"
 
 [[projects]]
   branch = "master"
@@ -232,7 +232,7 @@
     "cpu",
     "unix"
   ]
-  revision = "8883426083c04a2627e6e59d84d5f6fb63d16c91"
+  revision = "6c888cc515d3ed83fc103cf1d84468aad274b0a7"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -263,7 +263,7 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "c6269430a55499efa2e293ae66926175dc3af30e"
+  revision = "465e6f399236d0ea2466584539d4eab4d3d83720"
 
 [[projects]]
   branch = "master"

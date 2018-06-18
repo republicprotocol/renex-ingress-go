@@ -114,7 +114,7 @@
   branch = "master"
   name = "github.com/multiformats/go-multiaddr"
   packages = ["."]
-  revision = "f36800afeb9c141e1adb7da099e6f010dfd4c419"
+  revision = "997959a3cb94f99103aa3e589c7bcf42130fad98"
 
 [[projects]]
   branch = "master"
@@ -135,7 +135,7 @@
   revision = "0dccf0d7d287e828155a3ea16f7b968fa9662020"
 
 [[projects]]
-  branch = "f∅"
+  branch = "develop"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "blockchain/ethereum",
@@ -160,7 +160,7 @@
     "stream",
     "swarm"
   ]
-  revision = "015f93409eca03c42e2fdfaf12e3fb763f440ba1"
+  revision = "99eb24736bfc9f69b0805c41917ef4fefb1c39b1"
 
 [[projects]]
   branch = "master"
@@ -208,7 +208,7 @@
     "scrypt",
     "sha3"
   ]
-  revision = "a8fb68e7206f8c78be19b432c58eb52a6aa34462"
+  revision = "027cca12c2d63e3d62b670d901e8a2c95854feec"
 
 [[projects]]
   branch = "master"
@@ -263,7 +263,7 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "465e6f399236d0ea2466584539d4eab4d3d83720"
+  revision = "c06a8d8ed11aae27b08c1c109a509ada9de81240"
 
 [[projects]]
   branch = "master"
@@ -323,6 +323,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d147c2233df3335656c2bbbe5208c032e0603f468bcb255bc2ab3539cacf29bd"
+  inputs-digest = "6ec506ced0c63eb08bf864ac1ed58e0dd6eb229f92d0ff51a6bae7edf5ebd13c"
   solver-name = "gps-cdcl"
   solver-version = 1

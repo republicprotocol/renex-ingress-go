@@ -37,7 +37,7 @@ func main() {
 	defer close(done)
 	defer logger.Info("shutting down...")
 
-	networkParam := "nightly"
+	networkParam := "falcon"
 	if os.Getenv("NETWORK") != "" {
 		networkParam = os.Getenv("NETWORK")
 	}

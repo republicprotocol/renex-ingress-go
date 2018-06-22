@@ -37,12 +37,12 @@ func main() {
 	defer close(done)
 	defer logger.Info("shutting down...")
 
-	networkParam := "falcon"
+	networkParam := "nightly"
 	if os.Getenv("NETWORK") != "" {
 		networkParam = os.Getenv("NETWORK")
 	}
-	configParam := fmt.Sprintf("config/%v.config.json", networkParam)
-	keystoreParam := fmt.Sprintf("config/%v.%v.keystore.json", os.Getenv("DYNO"), networkParam)
+	configParam := fmt.Sprintf("%v/config.json", networkParam)
+	keystoreParam := fmt.Sprintf("%v/%v.keystore.json", os.Getenv("DYNO"), networkParam)
 	keystorePassphraseParam := os.Getenv("KEYSTORE_PASSPHRASE")
 
 	config, err := loadConfig(configParam)

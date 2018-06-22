@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -12,6 +13,7 @@ import (
 	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/identity"
+	"github.com/republicprotocol/republic-go/logger"
 )
 
 type config struct {
@@ -20,34 +22,34 @@ type config struct {
 }
 
 func main() {
-	// logger.SetFilterLevel(logger.LevelDebugLow)
+	logger.SetFilterLevel(logger.LevelDebugLow)
 
-	// done := make(chan struct{})
-	// defer close(done)
-	// defer logger.Info("shutting down...")
+	done := make(chan struct{})
+	defer close(done)
+	defer logger.Info("shutting down...")
 
-	// networkParam := os.Getenv("NETWORK")
-	// if networkParam == "" {
-	// 	log.Fatalf("cannot read network environment")
-	// }
-	// configParam := fmt.Sprintf("%v/config.json", networkParam)
-	// keystoreParam := fmt.Sprintf("%v/%v.keystore.json", networkParam, os.Getenv("DYNO"))
-	// keystorePassphraseParam := os.Getenv("KEYSTORE_PASSPHRASE")
+	networkParam := os.Getenv("NETWORK")
+	if networkParam == "" {
+		log.Fatalf("cannot read network environment")
+	}
+	configParam := fmt.Sprintf("%v/config.json", networkParam)
+	keystoreParam := fmt.Sprintf("%v/%v.keystore.json", networkParam, os.Getenv("DYNO"))
+	keystorePassphraseParam := os.Getenv("KEYSTORE_PASSPHRASE")
 
-	// config, err := loadConfig(configParam)
-	// if err != nil {
-	// 	log.Fatalf("cannot load config: %v", err)
-	// }
+	_, err := loadConfig(configParam)
+	if err != nil {
+		log.Fatalf("cannot load config: %v", err)
+	}
 
-	// keystore, err := loadKeystore(keystoreParam, keystorePassphraseParam)
-	// if err != nil {
-	// 	log.Fatalf("cannot load keystore: %v", err)
-	// }
+	keystore, err := loadKeystore(keystoreParam, keystorePassphraseParam)
+	if err != nil {
+		log.Fatalf("cannot load keystore: %v", err)
+	}
 
-	// _, err = getMultiaddress(keystore, os.Getenv("PORT"))
-	// if err != nil {
-	// 	log.Fatalf("cannot get multi-address: %v", err)
-	// }
+	_, err = getMultiaddress(keystore, os.Getenv("PORT"))
+	if err != nil {
+		log.Fatalf("cannot get multi-address: %v", err)
+	}
 
 	// conn, err := contract.Connect(config.Ethereum)
 	// if err != nil {

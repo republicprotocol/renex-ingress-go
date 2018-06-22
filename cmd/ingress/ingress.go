@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/republicprotocol/republic-go/contract"
@@ -78,26 +77,25 @@ func main() {
 	ingressAdapter := adapter.NewIngressAdapter(ingresser)
 
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-		defer cancel()
-		if err := swarmer.Bootstrap(ctx, config.BootstrapMultiAddresses); err != nil {
-			log.Printf("error bootstrapping: %v", err)
-		}
-		log.Printf("connected to %v peers", len(dht.MultiAddresses()))
+		// ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		// defer cancel()
+		// if err := swarmer.Bootstrap(ctx, config.BootstrapMultiAddresses); err != nil {
+		// 	log.Printf("error bootstrapping: %v", err)
+		// }
 
-		syncErrs := ingresser.Sync(done)
-		go func() {
-			for err := range syncErrs {
-				logger.Error(fmt.Sprintf("error syncing: %v", err))
-			}
-		}()
+		// syncErrs := ingresser.Sync(done)
+		// go func() {
+		// 	for err := range syncErrs {
+		// 		logger.Error(fmt.Sprintf("error syncing: %v", err))
+		// 	}
+		// }()
 
-		processErrs := ingresser.ProcessRequests(done)
-		go func() {
-			for err := range processErrs {
-				logger.Error(fmt.Sprintf("error processing: %v", err))
-			}
-		}()
+		// processErrs := ingresser.ProcessRequests(done)
+		// go func() {
+		// 	for err := range processErrs {
+		// 		logger.Error(fmt.Sprintf("error processing: %v", err))
+		// 	}
+		// }()
 	}()
 
 	log.Printf("address %v", multiAddr)

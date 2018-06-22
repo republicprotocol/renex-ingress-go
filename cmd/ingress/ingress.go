@@ -83,6 +83,7 @@ func main() {
 		if err := swarmer.Bootstrap(ctx, config.BootstrapMultiAddresses); err != nil {
 			log.Printf("error bootstrapping: %v", err)
 		}
+		log.Printf("connected to %v peers", len(dht.MultiAddresses()))
 
 		syncErrs := ingresser.Sync(done)
 		go func() {
@@ -101,7 +102,6 @@ func main() {
 
 	log.Printf("address %v", multiAddr)
 	log.Printf("ethereum %v", auth.From.Hex())
-	log.Printf("peers %v", len(dht.MultiAddresses()))
 	for _, multiAddr := range dht.MultiAddresses() {
 		log.Printf("  %v", multiAddr)
 	}

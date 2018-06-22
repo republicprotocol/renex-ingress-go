@@ -33,18 +33,18 @@ func main() {
 		log.Fatalf("cannot read network environment")
 	}
 	configParam := fmt.Sprintf("%v/config.json", networkParam)
-	_ = fmt.Sprintf("%v/%v.keystore.json", networkParam, os.Getenv("DYNO"))
-	_ = os.Getenv("KEYSTORE_PASSPHRASE")
+	keystoreParam := fmt.Sprintf("%v/%v.keystore.json", networkParam, os.Getenv("DYNO"))
+	keystorePassphraseParam := os.Getenv("KEYSTORE_PASSPHRASE")
 
 	_, err := loadConfig(configParam)
 	if err != nil {
 		log.Fatalf("cannot load config: %v", err)
 	}
 
-	// keystore, err := loadKeystore(keystoreParam, keystorePassphraseParam)
-	// if err != nil {
-	// 	log.Fatalf("cannot load keystore: %v", err)
-	// }
+	_, err = loadKeystore(keystoreParam, keystorePassphraseParam)
+	if err != nil {
+		log.Fatalf("cannot load keystore: %v", err)
+	}
 
 	// _, err = getMultiaddress(keystore, os.Getenv("PORT"))
 	// if err != nil {

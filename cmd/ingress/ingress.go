@@ -38,7 +38,7 @@ func main() {
 	defer logger.Info("shutting down...")
 
 	networkParam := os.Getenv("NETWORK")
-	if networkParam != "" {
+	if networkParam == "" {
 		log.Fatalf("cannot read network environment")
 	}
 	configParam := fmt.Sprintf("%v/config.json", networkParam)

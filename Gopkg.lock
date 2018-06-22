@@ -135,7 +135,7 @@
   revision = "0dccf0d7d287e828155a3ea16f7b968fa9662020"
 
 [[projects]]
-  branch = "develop"
+  branch = "nightly"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -159,7 +159,7 @@
     "stream",
     "swarm"
   ]
-  revision = "aed8283f2dbd1d310ef6ba0ab1d39e83eac2753e"
+  revision = "352e874e723d3b6b079482d36c83cdfe1539ce94"
 
 [[projects]]
   branch = "master"
@@ -323,6 +323,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c6ef609b821ce05000b10168e8ea5558598eed2cfb52c08f800aca5e5179c472"
+  inputs-digest = "9fa984d0c476168f7b33fff7d698cb32a2db6ae88eba4e6b0f54d2918bcd0fbb"
   solver-name = "gps-cdcl"
   solver-version = 1

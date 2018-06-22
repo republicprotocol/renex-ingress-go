@@ -1,19 +1,28 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
+	netHttp "net/http"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
+	"github.com/republicprotocol/republic-go/dht"
+	"github.com/republicprotocol/republic-go/grpc"
+	"github.com/republicprotocol/republic-go/http"
+	"github.com/republicprotocol/republic-go/http/adapter"
 	"github.com/republicprotocol/republic-go/identity"
+	"github.com/republicprotocol/republic-go/ingress"
 	"github.com/republicprotocol/republic-go/logger"
+	"github.com/republicprotocol/republic-go/swarm"
 )
 
 type config struct {
@@ -36,71 +45,69 @@ func main() {
 	keystoreParam := fmt.Sprintf("%v/%v.keystore.json", networkParam, os.Getenv("DYNO"))
 	keystorePassphraseParam := os.Getenv("KEYSTORE_PASSPHRASE")
 
-	_, err := loadConfig(configParam)
+	config, err := loadConfig(configParam)
 	if err != nil {
 		log.Fatalf("cannot load config: %v", err)
 	}
 
-	_, err = loadKeystore(keystoreParam, keystorePassphraseParam)
+	keystore, err := loadKeystore(keystoreParam, keystorePassphraseParam)
 	if err != nil {
 		log.Fatalf("cannot load keystore: %v", err)
 	}
 
-	// _, err = getMultiaddress(keystore, os.Getenv("PORT"))
-	// if err != nil {
-	// 	log.Fatalf("cannot get multi-address: %v", err)
-	// }
+	multiAddr, err := getMultiaddress(keystore, os.Getenv("PORT"))
+	if err != nil {
+		log.Fatalf("cannot get multi-address: %v", err)
+	}
 
-	// conn, err := contract.Connect(config.Ethereum)
-	// if err != nil {
-	// 	log.Fatalf("cannot connect to ethereum: %v", err)
-	// }
-	// auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
-	// _, err = contract.NewBinder(context.Background(), auth, conn)
-	// if err != nil {
-	// 	log.Fatalf("cannot create contract binder: %v", err)
-	// }
+	conn, err := contract.Connect(config.Ethereum)
+	if err != nil {
+		log.Fatalf("cannot connect to ethereum: %v", err)
+	}
+	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
+	binder, err := contract.NewBinder(context.Background(), auth, conn)
+	if err != nil {
+		log.Fatalf("cannot create contract binder: %v", err)
+	}
 
-	// dht := dht.NewDHT(multiAddr.Address(), 20)
-	// swarmClient := grpc.NewSwarmClient(multiAddr)
-	// swarmer := swarm.NewSwarmer(swarmClient, &dht)
-	// orderbookClient := grpc.NewOrderbookClient()
-	// ingresser := ingress.NewIngress(&binder, swarmer, orderbookClient)
-	// ingressAdapter := adapter.NewIngressAdapter(ingresser)
+	dht := dht.NewDHT(multiAddr.Address(), 20)
+	swarmClient := grpc.NewSwarmClient(multiAddr)
+	swarmer := swarm.NewSwarmer(swarmClient, &dht)
+	orderbookClient := grpc.NewOrderbookClient()
+	ingresser := ingress.NewIngress(&binder, swarmer, orderbookClient)
+	ingressAdapter := adapter.NewIngressAdapter(ingresser)
 
 	go func() {
-		// ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-		// defer cancel()
-		// if err := swarmer.Bootstrap(ctx, config.BootstrapMultiAddresses); err != nil {
-		// 	log.Printf("error bootstrapping: %v", err)
-		// }
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
+		if err := swarmer.Bootstrap(ctx, config.BootstrapMultiAddresses); err != nil {
+			log.Printf("error bootstrapping: %v", err)
+		}
 
-		// syncErrs := ingresser.Sync(done)
-		// go func() {
-		// 	for err := range syncErrs {
-		// 		logger.Error(fmt.Sprintf("error syncing: %v", err))
-		// 	}
-		// }()
+		syncErrs := ingresser.Sync(done)
+		go func() {
+			for err := range syncErrs {
+				logger.Error(fmt.Sprintf("error syncing: %v", err))
+			}
+		}()
 
-		// processErrs := ingresser.ProcessRequests(done)
-		// go func() {
-		// 	for err := range processErrs {
-		// 		logger.Error(fmt.Sprintf("error processing: %v", err))
-		// 	}
-		// }()
+		processErrs := ingresser.ProcessRequests(done)
+		go func() {
+			for err := range processErrs {
+				logger.Error(fmt.Sprintf("error processing: %v", err))
+			}
+		}()
 	}()
 
-	// log.Printf("address %v", multiAddr)
-	// log.Printf("ethereum %v", auth.From.Hex())
-	// for _, multiAddr := range dht.MultiAddresses() {
-	// 	log.Printf("  %v", multiAddr)
-	// }
-	// log.Printf("listening at 0.0.0.0:%v...", os.Getenv("PORT"))
-	// if err := netHttp.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), http.NewServer(&ingressAdapter, &ingressAdapter)); err != nil {
-	// 	log.Fatalf("error listening and serving: %v", err)
-	// }
-
-	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	log.Printf("address %v", multiAddr)
+	log.Printf("ethereum %v", auth.From.Hex())
+	for _, multiAddr := range dht.MultiAddresses() {
+		log.Printf("  %v", multiAddr)
+	}
+	log.Printf("listening at 0.0.0.0:%v...", os.Getenv("PORT"))
+	if err := netHttp.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), http.NewServer(&ingressAdapter, &ingressAdapter)); err != nil {
+		log.Fatalf("error listening and serving: %v", err)
+	}
 }
 
 func getMultiaddress(keystore crypto.Keystore, port string) (identity.MultiAddress, error) {

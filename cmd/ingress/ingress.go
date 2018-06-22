@@ -37,9 +37,9 @@ func main() {
 	defer close(done)
 	defer logger.Info("shutting down...")
 
-	networkParam := "falcon"
-	if os.Getenv("NETWORK") != "" {
-		networkParam = os.Getenv("NETWORK")
+	networkParam := os.Getenv("NETWORK")
+	if networkParam != "" {
+		log.Fatalf("cannot read network environment")
 	}
 	configParam := fmt.Sprintf("%v/config.json", networkParam)
 	keystoreParam := fmt.Sprintf("%v/%v.keystore.json", os.Getenv("DYNO"), networkParam)

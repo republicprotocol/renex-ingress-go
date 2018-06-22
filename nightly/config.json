@@ -2,7 +2,6 @@
     "bootstrapMultiAddresses": [
     ],
     "ethereum": {
-        "network": "kovan",
-        "uri": "https://kovan.infura.io"
+        "network": "nightly"
     }
 }

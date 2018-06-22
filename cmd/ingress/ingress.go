@@ -65,7 +65,7 @@ func main() {
 		log.Fatalf("cannot connect to ethereum: %v", err)
 	}
 	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
-	binder, err := contract.NewBinder(context.Background(), auth, conn)
+	binder, err := contract.NewBinder(auth, conn)
 	if err != nil {
 		log.Fatalf("cannot create contract binder: %v", err)
 	}

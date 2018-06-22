@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math/big"
 	netHttp "net/http"
 	"os"
 	"os/exec"
@@ -14,10 +13,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/republicprotocol/republic-go/blockchain/ethereum"
-	"github.com/republicprotocol/republic-go/blockchain/ethereum/dnr"
-	"github.com/republicprotocol/republic-go/blockchain/ethereum/ledger"
-	"github.com/republicprotocol/republic-go/cal"
+	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/dht"
 	"github.com/republicprotocol/republic-go/grpc"
@@ -30,8 +26,8 @@ import (
 )
 
 type config struct {
-	EthereumConfig      ethereum.Config         `json:"ethereum"`
-	BootstrapMultiAddrs identity.MultiAddresses `json:"bootstrapMultiAddresses"`
+	Ethereum                contract.Config         `json:"ethereum"`
+	BootstrapMultiAddresses identity.MultiAddresses `json:"bootstrapMultiAddresses"`
 }
 
 func main() {
@@ -41,19 +37,20 @@ func main() {
 	defer close(done)
 	defer logger.Info("shutting down...")
 
-	configEnv := "config/kovan.config.json"
-	keystoreEnv := "config/" + os.Getenv("DYNO") + ".kovan.keystore.json"
-	keystorePassphraseEnv := os.Getenv("ENV_KEYSTORE_PASSPHRASE")
+	networkParam := "falcon"
+	if os.Getenv("NETWORK") != "" {
+		networkParam = os.Getenv("NETWORK")
+	}
+	configParam := fmt.Sprintf("config/%v.config.json", networkParam)
+	keystoreParam := fmt.Sprintf("config/%v.%v.keystore.json", os.Getenv("DYNO"), networkParam)
+	keystorePassphraseParam := os.Getenv("KEYSTORE_PASSPHRASE")
 
-	log.Println("config:", configEnv)
-	log.Println("keystore:", keystoreEnv)
-
-	config, err := loadConfig(configEnv)
+	config, err := loadConfig(configParam)
 	if err != nil {
 		log.Fatalf("cannot load config: %v", err)
 	}
 
-	keystore, err := loadKeystore(keystoreEnv, keystorePassphraseEnv)
+	keystore, err := loadKeystore(keystoreParam, keystorePassphraseParam)
 	if err != nil {
 		log.Fatalf("cannot load keystore: %v", err)
 	}
@@ -63,23 +60,27 @@ func main() {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
 
-	auth, registry, renLedger, err := getSmartContracts(config.EthereumConfig, keystore)
+	conn, err := contract.Connect(config.Ethereum)
 	if err != nil {
-		fmt.Println(fmt.Errorf("cannot get registry: %s", err))
-		return
+		log.Fatalf("cannot connect to ethereum: %v", err)
+	}
+	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
+	binder, err := contract.NewBinder(context.Background(), auth, conn)
+	if err != nil {
+		log.Fatalf("cannot create contract binder: %v", err)
 	}
 
 	dht := dht.NewDHT(multiAddr.Address(), 100)
 	swarmClient := grpc.NewSwarmClient(multiAddr)
 	swarmer := swarm.NewSwarmer(swarmClient, &dht)
 	orderbookClient := grpc.NewOrderbookClient()
-	ingresser := ingress.NewIngress(&registry, renLedger, swarmer, orderbookClient)
+	ingresser := ingress.NewIngress(&binder, swarmer, orderbookClient)
 	ingressAdapter := adapter.NewIngressAdapter(ingresser)
 
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 		defer cancel()
-		if err := swarmer.Bootstrap(ctx, config.BootstrapMultiAddrs); err != nil {
+		if err := swarmer.Bootstrap(ctx, config.BootstrapMultiAddresses); err != nil {
 			log.Printf("error bootstrapping: %v", err)
 		}
 
@@ -122,30 +123,6 @@ func getMultiaddress(keystore crypto.Keystore, port string) (identity.MultiAddre
 		return identity.MultiAddress{}, fmt.Errorf("cannot obtain trader multi address %v", err)
 	}
 	return ingressMultiaddress, nil
-}
-
-func getSmartContracts(ethereumConfig ethereum.Config, keystore crypto.Keystore) (*bind.TransactOpts, dnr.DarknodeRegistry, cal.RenLedger, error) {
-	conn, err := ethereum.Connect(ethereumConfig)
-	if err != nil {
-		fmt.Println(fmt.Errorf("cannot connect to ethereum: %v", err))
-		return nil, dnr.DarknodeRegistry{}, nil, err
-	}
-	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
-	auth.GasPrice = big.NewInt(1000000000)
-
-	registry, err := dnr.NewDarknodeRegistry(context.Background(), conn, auth, &bind.CallOpts{})
-	if err != nil {
-		fmt.Println(fmt.Errorf("cannot bind to darkpool: %v", err))
-		return auth, dnr.DarknodeRegistry{}, nil, err
-	}
-
-	renLedger, err := ledger.NewRenLedgerContract(context.Background(), conn, auth, &bind.CallOpts{})
-	if err != nil {
-		fmt.Println(fmt.Errorf("cannot bind to ren ledger: %v", err))
-		return auth, dnr.DarknodeRegistry{}, nil, err
-	}
-
-	return auth, registry, &renLedger, nil
 }
 
 func loadConfig(configFile string) (config, error) {

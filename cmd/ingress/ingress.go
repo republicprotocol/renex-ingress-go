@@ -42,7 +42,7 @@ func main() {
 		log.Fatalf("cannot read network environment")
 	}
 	configParam := fmt.Sprintf("%v/config.json", networkParam)
-	keystoreParam := fmt.Sprintf("%v/%v.keystore.json", os.Getenv("DYNO"), networkParam)
+	keystoreParam := fmt.Sprintf("%v/%v.keystore.json", networkParam, os.Getenv("DYNO"))
 	keystorePassphraseParam := os.Getenv("KEYSTORE_PASSPHRASE")
 
 	config, err := loadConfig(configParam)

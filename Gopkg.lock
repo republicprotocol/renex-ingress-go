@@ -114,13 +114,13 @@
   branch = "master"
   name = "github.com/multiformats/go-multiaddr"
   packages = ["."]
-  revision = "84fb105635d33c95b41a9385064329b663f6f56f"
+  revision = "96804982667ed1672985566d0d0c2a7ed6f10e1f"
 
 [[projects]]
-  branch = "master"
   name = "github.com/multiformats/go-multihash"
   packages = ["."]
   revision = "8be2a682ab9f254311de1375145a2f78a809b07d"
+  version = "v1.0.8"
 
 [[projects]]
   name = "github.com/pborman/uuid"
@@ -159,7 +159,7 @@
     "stream",
     "swarm"
   ]
-  revision = "4386da7094324ea365a7a48b6a48f851a58955fc"
+  revision = "2cec70e09e53c62f13229b10e773e7b1be8abcb1"
 
 [[projects]]
   branch = "master"
@@ -231,7 +231,7 @@
     "cpu",
     "unix"
   ]
-  revision = "ad87a3a340fa7f3bed189293fbfa7a9b7e021ae1"
+  revision = "63fc586f45fe72d95d5240a5d5eb95e6503907d3"
 
 [[projects]]
   name = "golang.org/x/text"

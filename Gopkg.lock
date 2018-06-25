@@ -135,7 +135,7 @@
   revision = "0dccf0d7d287e828155a3ea16f7b968fa9662020"
 
 [[projects]]
-  branch = "nightly"
+  branch = "develop"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -159,13 +159,13 @@
     "stream",
     "swarm"
   ]
-  revision = "62e6b21e9d20c7d08c38e9063735f3ce5f6e3a0d"
+  revision = "69cdded4a223174a6e0cab2c839b2dc5c99399cc"
 
 [[projects]]
   branch = "master"
   name = "github.com/rjeczalik/notify"
   packages = ["."]
-  revision = "d152f3ce359a5464dc41e84a8919fc67e55bbbf0"
+  revision = "f7ce7f74cca0c606cd22c366f8ac3a09ded2aac0"
 
 [[projects]]
   name = "github.com/rs/cors"
@@ -323,6 +323,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9fa984d0c476168f7b33fff7d698cb32a2db6ae88eba4e6b0f54d2918bcd0fbb"
+  inputs-digest = "c6ef609b821ce05000b10168e8ea5558598eed2cfb52c08f800aca5e5179c472"
   solver-name = "gps-cdcl"
   solver-version = 1

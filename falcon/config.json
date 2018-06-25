@@ -5,7 +5,6 @@
         "/ip4/54.186.20.5/tcp/18514/republic/8MJcnkL4cxcxxxgWQZCMfkKW4V4fWt"
     ],
     "ethereum": {
-        "network": "kovan",
-        "uri": "https://kovan.infura.io"
+        "network": "falcon"
     }
 }

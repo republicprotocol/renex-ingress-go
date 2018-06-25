@@ -37,12 +37,12 @@ func main() {
 	defer close(done)
 	defer logger.Info("shutting down...")
 
-	networkParam := "falcon"
-	if os.Getenv("NETWORK") != "" {
-		networkParam = os.Getenv("NETWORK")
+	networkParam := os.Getenv("NETWORK")
+	if networkParam == "" {
+		log.Fatalf("cannot read network environment")
 	}
-	configParam := fmt.Sprintf("config/%v.config.json", networkParam)
-	keystoreParam := fmt.Sprintf("config/%v.%v.keystore.json", os.Getenv("DYNO"), networkParam)
+	configParam := fmt.Sprintf("%v/config.json", networkParam)
+	keystoreParam := fmt.Sprintf("%v/%v.keystore.json", networkParam, os.Getenv("DYNO"))
 	keystorePassphraseParam := os.Getenv("KEYSTORE_PASSPHRASE")
 
 	config, err := loadConfig(configParam)
@@ -65,12 +65,12 @@ func main() {
 		log.Fatalf("cannot connect to ethereum: %v", err)
 	}
 	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
-	binder, err := contract.NewBinder(context.Background(), auth, conn)
+	binder, err := contract.NewBinder(auth, conn)
 	if err != nil {
 		log.Fatalf("cannot create contract binder: %v", err)
 	}
 
-	dht := dht.NewDHT(multiAddr.Address(), 100)
+	dht := dht.NewDHT(multiAddr.Address(), 20)
 	swarmClient := grpc.NewSwarmClient(multiAddr)
 	swarmer := swarm.NewSwarmer(swarmClient, &dht)
 	orderbookClient := grpc.NewOrderbookClient()
@@ -101,7 +101,6 @@ func main() {
 
 	log.Printf("address %v", multiAddr)
 	log.Printf("ethereum %v", auth.From.Hex())
-	log.Printf("peers %v", len(dht.MultiAddresses()))
 	for _, multiAddr := range dht.MultiAddresses() {
 		log.Printf("  %v", multiAddr)
 	}

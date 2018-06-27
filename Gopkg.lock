@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
-  revision = "06cfa1db77dae2425e143980408e642f7a9d5b09"
+  revision = "c8478dff1cfdd0d7aa3ff5076dbd37d7a40e1d95"
 
 [[projects]]
   branch = "master"
@@ -25,8 +25,17 @@
     "common/hexutil",
     "common/math",
     "common/mclock",
+    "consensus",
+    "consensus/misc",
+    "core",
+    "core/rawdb",
+    "core/state",
     "core/types",
+    "core/vm",
     "crypto",
+    "crypto/bn256",
+    "crypto/bn256/cloudflare",
+    "crypto/bn256/google",
     "crypto/randentropy",
     "crypto/secp256k1",
     "crypto/sha3",
@@ -85,6 +94,15 @@
   name = "github.com/gxed/hashland"
   packages = ["keccakpg"]
   revision = "d9f6b97f8db22dd1e090fd0bbbe98f09cc7dd0a8"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/golang-lru"
+  packages = [
+    ".",
+    "simplelru"
+  ]
+  revision = "0fb14efe8c47ae851c0034ed7a448854d3d34cf3"
 
 [[projects]]
   name = "github.com/jbenet/go-base58"
@@ -159,13 +177,13 @@
     "stream",
     "swarm"
   ]
-  revision = "62e6b21e9d20c7d08c38e9063735f3ce5f6e3a0d"
+  revision = "1181642fff29694d8717c5d53046ff013da8c417"
 
 [[projects]]
   branch = "master"
   name = "github.com/rjeczalik/notify"
   packages = ["."]
-  revision = "d152f3ce359a5464dc41e84a8919fc67e55bbbf0"
+  revision = "52ae50d8490436622a8941bd70c3dbe0acdd4bbf"
 
 [[projects]]
   name = "github.com/rs/cors"
@@ -204,6 +222,7 @@
   packages = [
     "blake2s",
     "pbkdf2",
+    "ripemd160",
     "scrypt",
     "sha3"
   ]
@@ -231,7 +250,7 @@
     "cpu",
     "unix"
   ]
-  revision = "63fc586f45fe72d95d5240a5d5eb95e6503907d3"
+  revision = "c4afb3effaa53fd9a06ca61262dc7ce8df4c081b"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -262,7 +281,7 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "25b95b48224cce18163c7d49dcfb89a2d5ecd209"
+  revision = "56e9b8e653c818f46a96eb4828aba7be54271a69"
 
 [[projects]]
   branch = "master"

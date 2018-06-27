@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
-  revision = "06cfa1db77dae2425e143980408e642f7a9d5b09"
+  revision = "c8478dff1cfdd0d7aa3ff5076dbd37d7a40e1d95"
 
 [[projects]]
   branch = "master"
@@ -135,7 +135,7 @@
   revision = "0dccf0d7d287e828155a3ea16f7b968fa9662020"
 
 [[projects]]
-  branch = "develop"
+  branch = "master"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -159,13 +159,13 @@
     "stream",
     "swarm"
   ]
-  revision = "16e4c514fb637bf27e9b954119b418d2af43e0ed"
+  revision = "40849ebe1c6caf56e8e631e3722c4d7277582a77"
 
 [[projects]]
   branch = "master"
   name = "github.com/rjeczalik/notify"
   packages = ["."]
-  revision = "f7ce7f74cca0c606cd22c366f8ac3a09ded2aac0"
+  revision = "52ae50d8490436622a8941bd70c3dbe0acdd4bbf"
 
 [[projects]]
   name = "github.com/rs/cors"
@@ -231,7 +231,7 @@
     "cpu",
     "unix"
   ]
-  revision = "63fc586f45fe72d95d5240a5d5eb95e6503907d3"
+  revision = "c4afb3effaa53fd9a06ca61262dc7ce8df4c081b"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -262,7 +262,7 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "25b95b48224cce18163c7d49dcfb89a2d5ecd209"
+  revision = "56e9b8e653c818f46a96eb4828aba7be54271a69"
 
 [[projects]]
   branch = "master"

@@ -177,7 +177,7 @@
     "stream",
     "swarm"
   ]
-  revision = "b5ffd60843f4998ae6aee72f0206101dc42369a8"
+  revision = "3bd2a3b08509cefe0c95618519c9a560d6942b32"
 
 [[projects]]
   name = "github.com/rjeczalik/notify"

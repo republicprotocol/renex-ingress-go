@@ -50,8 +50,8 @@
     "rpc",
     "trie"
   ]
-  revision = "dea1ce052a10cd7d401a5c04f83f371a06fe293c"
-  version = "v1.8.11"
+  revision = "37685930d953bcbe023f9bc65b135a8d8b8f1488"
+  version = "v1.8.12"
 
 [[projects]]
   name = "github.com/go-stack/stack"
@@ -153,7 +153,7 @@
   revision = "0dccf0d7d287e828155a3ea16f7b968fa9662020"
 
 [[projects]]
-  branch = "nightly"
+  branch = "sync-orders-with-order-fragments"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -177,7 +177,7 @@
     "stream",
     "swarm"
   ]
-  revision = "f8155e8fa43ecb49939df3760f08d1076415a42f"
+  revision = "28904eeeb39902d4eb4821c71bf080b2f2ad93a8"
 
 [[projects]]
   name = "github.com/rjeczalik/notify"
@@ -241,7 +241,7 @@
     "trace",
     "websocket"
   ]
-  revision = "ed29d75add3d7c4bf7ca65aac0c6df3d1420216f"
+  revision = "7d20a46f6beace81a30952deb544117e269111e0"
 
 [[projects]]
   branch = "master"
@@ -281,7 +281,7 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "75d2ffb453d53bed20f95f0d563ee000dc4c0c83"
+  revision = "16f8f9bb720111f0b7b5c750acc28768620bb0c7"
 
 [[projects]]
   branch = "master"
@@ -342,6 +342,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9fa984d0c476168f7b33fff7d698cb32a2db6ae88eba4e6b0f54d2918bcd0fbb"
+  inputs-digest = "6abddcb3f9ee04167684acb6cbd5e0a8d2b72440c3529627b72bcef092cd4cd1"
   solver-name = "gps-cdcl"
   solver-version = 1

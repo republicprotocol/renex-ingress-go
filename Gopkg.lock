@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "86fed781132ac890ee03e906e4ecd5d6fa180c64"
+  revision = "fdfc19097e7ac6b57035062056f5b7b4638b8898"
 
 [[projects]]
   name = "github.com/ethereum/go-ethereum"
@@ -153,7 +153,7 @@
   revision = "0dccf0d7d287e828155a3ea16f7b968fa9662020"
 
 [[projects]]
-  branch = "sync-orders-with-order-fragments"
+  branch = "symmetric-stream-encryption"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -177,7 +177,7 @@
     "stream",
     "swarm"
   ]
-  revision = "b2986ba1a18636df80201e0a4bfbb78732b53511"
+  revision = "a1719cde71b30b0620cb927cdb608051fae96a88"
 
 [[projects]]
   name = "github.com/rjeczalik/notify"
@@ -214,7 +214,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "0d5a0ceb10cf9ab89fdd744cc8c50a83134f6697"
+  revision = "c4c61651e9e37fa117f53c5a906d3b63090d8445"
 
 [[projects]]
   branch = "master"
@@ -241,7 +241,7 @@
     "trace",
     "websocket"
   ]
-  revision = "7d20a46f6beace81a30952deb544117e269111e0"
+  revision = "6f138e0f60713a248abf7046f1014a3ba90f5341"
 
 [[projects]]
   branch = "master"
@@ -250,7 +250,7 @@
     "cpu",
     "unix"
   ]
-  revision = "151529c776cdc58ddbe7963ba9af779f3577b419"
+  revision = "1b2967e3c290b7c545b3db0deeda16e9be4f98a2"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -281,13 +281,13 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "16f8f9bb720111f0b7b5c750acc28768620bb0c7"
+  revision = "e2be0f7276f6ea2d8290dea1ffd89c98f6ac0b9e"
 
 [[projects]]
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "ff3583edef7de132f219f0efc00e097cabcc0ec0"
+  revision = "8b2cc369ab52e0003a878865c9372afdd6ca5c5a"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -342,6 +342,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6abddcb3f9ee04167684acb6cbd5e0a8d2b72440c3529627b72bcef092cd4cd1"
+  inputs-digest = "77178818615f1b3a14d1ad5649b17b77e53915f6fddb36cc5a953c404147bf33"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -8,7 +8,7 @@
 
 [[constraint]]
   name = "github.com/republicprotocol/republic-go"
-  branch = "sync-orders-with-order-fragments"
+  branch = "symmetric-stream-encryption"
 
 [prune]
   go-tests = true

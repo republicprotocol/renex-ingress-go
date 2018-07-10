@@ -13,14 +13,14 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/republicprotocol/renex-ingress-api-go/http/"
+	"github.com/republicprotocol/renex-ingress-api-go/http/adapter"
+	"github.com/republicprotocol/renex-ingress-api-go/ingress"
 	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/dht"
 	"github.com/republicprotocol/republic-go/grpc"
-	"github.com/republicprotocol/republic-go/http"
-	"github.com/republicprotocol/republic-go/http/adapter"
 	"github.com/republicprotocol/republic-go/identity"
-	"github.com/republicprotocol/republic-go/ingress"
 	"github.com/republicprotocol/republic-go/logger"
 	"github.com/republicprotocol/republic-go/swarm"
 )

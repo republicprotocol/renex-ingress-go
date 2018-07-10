@@ -18,30 +18,39 @@ import (
 	"github.com/republicprotocol/renex-ingress-api-go/httpadapter"
 	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
+	"github.com/republicprotocol/republic-go/identity"
 	"github.com/republicprotocol/republic-go/order"
 	"github.com/republicprotocol/republic-go/registry"
 )
 
+type config struct {
+	Ethereum                contract.Config         `json:"ethereum"`
+	BootstrapMultiAddresses identity.MultiAddresses `json:"bootstrapMultiAddresses"`
+}
+
 func main() {
-	keystoreParam := flag.String("keystore", "", "Optionally encrypted keystore file")
-	configParam := flag.String("config", "", "Ethereum configuration file")
+	ingressParam := flag.String("ingress", "", "Ingress API endpoint")
+	configParam := flag.String("config", "", "Configuration file")
+	keystoreParam := flag.String("keystore", "", "Keystore file")
 	passphraseParam := flag.String("passphrase", "", "Optional passphrase to decrypt the keystore file")
 
 	flag.Parse()
 
+	if *ingressParam == "" {
+		log.Fatalf("missing ingress api endpoint")
+	}
 	keystore, err := loadKeystore(*keystoreParam, *passphraseParam)
 	if err != nil {
 		log.Fatalf("cannot load keystore: %v", err)
 	}
-	config, err := loadConfig(*configParam)
+	conf, err := loadConfig(*configParam)
 	if err != nil {
 		log.Fatalf("cannot load config: %v", err)
 	}
-	contractBinder, err := loadContractBinder(config, keystore)
+	contractBinder, err := loadContractBinder(conf, keystore)
 	if err != nil {
 		log.Fatalf("cannot load smart contract: %v", err)
 	}
-	ingressAPI := fmt.Sprintf("https://ingress-api-%v.herokuapp.com", config.Network)
 
 	onePrice := order.CoExp{
 		Co:  2,
@@ -88,8 +97,8 @@ func main() {
 		}
 		buf := bytes.NewBuffer(data)
 
-		log.Printf("sending to %v", fmt.Sprintf("%v/orders", ingressAPI))
-		res, err := netHttp.DefaultClient.Post(fmt.Sprintf("%v/orders", ingressAPI), "application/json", buf)
+		log.Printf("sending to %v", fmt.Sprintf("%v/orders", *ingressParam))
+		res, err := netHttp.DefaultClient.Post(fmt.Sprintf("%v/orders", *ingressParam), "application/json", buf)
 		if err != nil {
 			log.Fatalf("cannot send request: %v", err)
 		}
@@ -130,21 +139,21 @@ func loadKeystore(keystoreFile, passphrase string) (crypto.Keystore, error) {
 	return keystore, nil
 }
 
-func loadConfig(configFile string) (contract.Config, error) {
+func loadConfig(configFile string) (config, error) {
 	file, err := os.Open(configFile)
 	if err != nil {
-		return contract.Config{}, err
+		return config{}, err
 	}
 	defer file.Close()
-	config := contract.Config{}
-	if err := json.NewDecoder(file).Decode(&config); err != nil {
-		return contract.Config{}, err
+	conf := config{}
+	if err := json.NewDecoder(file).Decode(&conf); err != nil {
+		return config{}, err
 	}
-	return config, nil
+	return conf, nil
 }
 
-func loadContractBinder(config contract.Config, keystore crypto.Keystore) (contract.Binder, error) {
-	conn, err := contract.Connect(config)
+func loadContractBinder(conf config, keystore crypto.Keystore) (contract.Binder, error) {
+	conn, err := contract.Connect(conf.Ethereum)
 	if err != nil {
 		fmt.Println(fmt.Errorf("cannot connect to ethereum: %v", err))
 		return contract.Binder{}, err

@@ -1,5 +1,5 @@
 [metadata.heroku]
-  root-package = "github.com/republicprotocol/ingress-heroku-go"
+  root-package = "github.com/republicprotocol/renex-ingress-api-go"
   install = "./cmd/ingress"
 
 [[constraint]]

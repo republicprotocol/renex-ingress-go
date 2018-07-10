@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/republicprotocol/renex-ingress-api-go/http/"
-	"github.com/republicprotocol/renex-ingress-api-go/http/adapter"
+	"github.com/republicprotocol/renex-ingress-api-go/http"
+	"github.com/republicprotocol/renex-ingress-api-go/httpadapter"
 	"github.com/republicprotocol/renex-ingress-api-go/ingress"
 	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
@@ -75,7 +75,7 @@ func main() {
 	swarmer := swarm.NewSwarmer(swarmClient, &dht)
 	orderbookClient := grpc.NewOrderbookClient()
 	ingresser := ingress.NewIngress(&binder, swarmer, orderbookClient)
-	ingressAdapter := adapter.NewIngressAdapter(ingresser)
+	ingressAdapter := httpadapter.NewIngressAdapter(ingresser)
 
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)

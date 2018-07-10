@@ -124,7 +124,7 @@
 [[projects]]
   branch = "symmetric-stream-encryption"
   name = "github.com/republicprotocol/republic-go"
-  packages = ["contract","contract/bindings","crypto","dht","dispatch","grpc","http","http/adapter","identity","ingress","logger","order","orderbook","registry","shamir","stackint","stackint/asm","status","stream","swarm"]
+  packages = ["contract","contract/bindings","crypto","dht","dispatch","grpc","identity","logger","order","orderbook","registry","shamir","stackint","stackint/asm","stream","swarm"]
   revision = "a1719cde71b30b0620cb927cdb608051fae96a88"
 
 [[projects]]
@@ -220,6 +220,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b052a6e7b841ea9d132d70a9ceac54f998a8901f6bec36a23657fca54cf4e79a"
+  inputs-digest = "fe081a965cb54407eb74056c971373794b860a6ae583d3c1eb53f02f748815d1"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
-  revision = "2c5933638c5ef1bc320b01486100788c81d57b99"
+  revision = "32f94db2e6faa2c7250286dfb4c7ad3dc0f3ead2"
 
 [[projects]]
   branch = "master"
@@ -197,7 +197,7 @@
   revision = "0dccf0d7d287e828155a3ea16f7b968fa9662020"
 
 [[projects]]
-  branch = "symmetric-stream-encryption"
+  branch = "nightly"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -220,7 +220,7 @@
     "stream",
     "swarm"
   ]
-  revision = "599fad1d73134967e2d360d2127623089efe574b"
+  revision = "f8444211c9351e6933d6d6dd78fc761fbe2ebef4"
 
 [[projects]]
   name = "github.com/rjeczalik/notify"
@@ -287,7 +287,7 @@
     "trace",
     "websocket"
   ]
-  revision = "292b43bbf7cb8d35ddf40f8d5100ef3837cced3f"
+  revision = "039a4258aec0ad3c79b905677cceeab13b296a77"
 
 [[projects]]
   branch = "master"
@@ -339,7 +339,7 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "8cb83b71b42ccf5fe279fa8a24a6a8f65507dc9c"
+  revision = "18f0b668f1069d7f55ac25b6f2670e30cd6499c0"
 
 [[projects]]
   branch = "master"
@@ -406,6 +406,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9f5e61c66a56a4d425c21763b0e95ce50ad80f94e11a2e45432811f06d49702f"
+  inputs-digest = "3f1f74abe1f4ad76f9a33c701e47c2007274268ef73a1ce3585a0ae3eb79884c"
   solver-name = "gps-cdcl"
   solver-version = 1

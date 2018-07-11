@@ -8,7 +8,7 @@
 
 [[constraint]]
   name = "github.com/republicprotocol/republic-go"
-  branch = "symmetric-stream-encryption"
+  branch = "nightly"
 
 [prune]
   go-tests = true

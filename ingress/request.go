@@ -21,9 +21,19 @@ type EpochRequest struct {
 func (req EpochRequest) IsRequest() {}
 
 // An OpenOrderRequest is a Request for the Ingress to open an order.Order on
-// the Ethereum blockchain and forward order.Fragments to their respective
-// Darknodes.
+// the Ethereum blockchain.
 type OpenOrderRequest struct {
+	signature   [65]byte
+	orderID     order.ID
+	orderParity order.Parity
+}
+
+// IsRequest implements the Request interface.
+func (req OpenOrderRequest) IsRequest() {}
+
+// An OpenOrderFragmentMappingRequest is a Request for the Ingress to open an
+// order.Order by forwarding order.Fragments to their respective Darknodes.
+type OpenOrderFragmentMappingRequest struct {
 	signature               [65]byte
 	orderID                 order.ID
 	orderFragmentMapping    OrderFragmentMapping
@@ -31,7 +41,7 @@ type OpenOrderRequest struct {
 }
 
 // IsRequest implements the Request interface.
-func (req OpenOrderRequest) IsRequest() {}
+func (req OpenOrderFragmentMappingRequest) IsRequest() {}
 
 // A CancelOrderRequest is a Request for the Ingress to cancel an order.Order
 // on the Ethereum blockchain.

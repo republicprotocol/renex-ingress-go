@@ -1,15 +1,8 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
-# Output of the go test tool
+# Test output
 *.test
 
-# Output of the go coverage tool
+# Profile output
 *.out
 
-# Vendors using dep
+# Dep
 vendor

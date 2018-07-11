@@ -120,6 +120,21 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 	go func() {
 		defer close(errs)
 
+		previousEpoch, err := ingress.contract.PreviousEpoch()
+		if err != nil {
+			errs <- err
+			return
+		}
+		pods, err := ingress.contract.PreviousPods()
+		if err != nil {
+			errs <- err
+			return
+		}
+		if err := ingress.syncFromEpoch(previousEpoch, pods); err != nil {
+			errs <- err
+			return
+		}
+
 		epochIntervalBig, err := ingress.contract.MinimumEpochInterval()
 		if err != nil {
 			errs <- err
@@ -160,7 +175,15 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 					return
 				}
 				epoch = nextEpoch
-				if err := ingress.syncFromEpoch(epoch); err != nil {
+				pods, err := ingress.contract.Pods()
+				if err != nil {
+					select {
+					case <-done:
+					case errs <- err:
+					}
+					return
+				}
+				if err := ingress.syncFromEpoch(epoch, pods); err != nil {
 					select {
 					case <-done:
 					case errs <- err:
@@ -239,12 +262,8 @@ func (ingress *ingress) ProcessRequests(done <-chan struct{}) <-chan error {
 	return errs
 }
 
-func (ingress *ingress) syncFromEpoch(epoch registry.Epoch) error {
+func (ingress *ingress) syncFromEpoch(epoch registry.Epoch, pods []registry.Pod) error {
 	logger.Epoch(epoch.Hash)
-	pods, err := ingress.contract.Pods()
-	if err != nil {
-		return err
-	}
 	ingress.podsMu.Lock()
 	ingress.podsPrev = ingress.podsCurr
 	ingress.podsCurr = map[[32]byte]registry.Pod{}

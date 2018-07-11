@@ -182,17 +182,18 @@ func (ingress *ingress) OpenOrder(signature [65]byte, orderID order.ID, orderFra
 	// TODO: Verify that the signature is valid before sending it to the
 	// Orderbook. This is not strictly necessary but it can save the Ingress
 	// some gas.
+	if err := ingress.verifyOrderFragmentMappings(orderFragmentMappings); err != nil {
+		return err
+	}
 	go func() {
 		log.Printf("[info] (open) queueing order = %v", orderID)
 		ingress.queueRequests <- OpenOrderRequest{
-			signature: signature,
-			orderID:   orderID,
+			signature:   signature,
+			orderID:     orderID,
+			orderParity: ingress.orderParityFromOrderFragmentMappings(orderFragmentMappings),
 		}
 	}()
 	for i := range orderFragmentMappings {
-		if err := ingress.verifyOrderFragmentMapping(orderFragmentMappings[i], i); err != nil {
-			return err
-		}
 		go func(i int) {
 			log.Printf("[info] (open) queueing order fragments order = %v at depth = %v", orderID, i)
 			ingress.queueRequests <- OpenOrderFragmentMappingRequest{
@@ -415,10 +416,19 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 	return nil
 }
 
-func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFragmentMapping, orderFragmentEpochDepth int) error {
+func (ingress *ingress) verifyOrderFragmentMappings(orderFragmentMappings OrderFragmentMappings) error {
 	ingress.podsMu.RLock()
 	defer ingress.podsMu.RUnlock()
 
+	for i := range orderFragmentMappings {
+		if err := ingress.verifyOrderFragmentMapping(orderFragmentMappings[i], i); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFragmentMapping, orderFragmentEpochDepth int) error {
 	// Select pods based on the depth
 	pods := map[[32]byte]registry.Pod{}
 	switch orderFragmentEpochDepth {
@@ -444,4 +454,19 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 		}
 	}
 	return nil
+}
+
+func (ingress *ingress) orderParityFromOrderFragmentMappings(orderFragmentMappings OrderFragmentMappings) order.Parity {
+	ingress.podsMu.RLock()
+	defer ingress.podsMu.RUnlock()
+
+	for i := range orderFragmentMappings {
+		for _, orderFragments := range orderFragmentMappings[i] {
+			for _, orderFragment := range orderFragments {
+				return orderFragment.OrderParity
+			}
+		}
+	}
+
+	return order.ParityBuy
 }

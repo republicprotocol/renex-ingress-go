@@ -36,6 +36,10 @@ var ErrInvalidNumberOfPods = errors.New("invalid number of pods")
 // insufficient number of order fragments, or too many order fragments.
 var ErrInvalidNumberOfOrderFragments = errors.New("invalid number of order fragments")
 
+// ErrInvalidEpochDepth is returned when an invalid epoch depth is provided
+// upon verification.
+var ErrInvalidEpochDepth = errors.New("invalid epoch depth")
+
 // ErrCannotOpenOrderFragments is returned when none of the pods were available
 // to receive order fragments
 var ErrCannotOpenOrderFragments = errors.New("cannot open order fragments: no pod received an order fragment")
@@ -502,6 +506,14 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 		}
 		if len(orderFragments) > len(pod.Darknodes) || len(orderFragments) < pod.Threshold() {
 			return ErrInvalidNumberOfOrderFragments
+		}
+
+		// Ensure order fragment Epoch depth matches up with value provided as
+		// parameter.
+		for _, orderFragment := range orderFragments {
+			if orderFragment.EpochDepth != order.FragmentEpochDepth(orderFragmentEpochDepth) {
+				return ErrInvalidEpochDepth
+			}
 		}
 	}
 	return nil

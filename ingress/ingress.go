@@ -90,8 +90,7 @@ type ingress struct {
 	podsCurr map[[32]byte]registry.Pod
 	podsPrev map[[32]byte]registry.Pod
 
-	queueRequests              chan Request
-	queueOrderFragmentMappings chan OpenOrderRequest
+	queueRequests chan Request
 }
 
 // NewIngress returns an Ingress. The background services of the Ingress must
@@ -107,8 +106,7 @@ func NewIngress(contract *contract.Binder, swarmer swarm.Swarmer, orderbookClien
 		podsCurr: map[[32]byte]registry.Pod{},
 		podsPrev: map[[32]byte]registry.Pod{},
 
-		queueRequests:              make(chan Request, 1024),
-		queueOrderFragmentMappings: make(chan OpenOrderRequest, 1024),
+		queueRequests: make(chan Request, 1024),
 	}
 	return ingress
 }
@@ -184,13 +182,20 @@ func (ingress *ingress) OpenOrder(signature [65]byte, orderID order.ID, orderFra
 	// TODO: Verify that the signature is valid before sending it to the
 	// Orderbook. This is not strictly necessary but it can save the Ingress
 	// some gas.
+	go func() {
+		log.Printf("[info] (open) queueing order = %v", orderID)
+		ingress.queueRequests <- OpenOrderRequest{
+			signature: signature,
+			orderID:   orderID,
+		}
+	}()
 	for i := range orderFragmentMappings {
 		if err := ingress.verifyOrderFragmentMapping(orderFragmentMappings[i], i); err != nil {
 			return err
 		}
 		go func(i int) {
-			logger.Info(fmt.Sprintf("queueing opening of order %v", orderID))
-			ingress.queueRequests <- OpenOrderRequest{
+			log.Printf("[info] (open) queueing order fragments order = %v at depth = %v", orderID, i)
+			ingress.queueRequests <- OpenOrderFragmentMappingRequest{
 				signature:               signature,
 				orderID:                 orderID,
 				orderFragmentMapping:    orderFragmentMappings[i],
@@ -206,7 +211,7 @@ func (ingress *ingress) CancelOrder(signature [65]byte, orderID order.ID) error 
 	// Orderbook. This is not strictly necessary but it can save the Ingress
 	// some gas.
 	go func() {
-		logger.Info(fmt.Sprintf("queueing cancelation of order %v", orderID))
+		log.Printf("[info] (cancel) queueing order = %v", orderID)
 		ingress.queueRequests <- CancelOrderRequest{
 			signature: signature,
 			orderID:   orderID,
@@ -217,25 +222,10 @@ func (ingress *ingress) CancelOrder(signature [65]byte, orderID order.ID) error 
 
 func (ingress *ingress) ProcessRequests(done <-chan struct{}) <-chan error {
 	errs := make(chan error, 2)
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go func() {
-		defer wg.Done()
-		ingress.processRequestQueue(done, errs)
-	}()
-
-	go func() {
-		defer wg.Done()
-		ingress.processOrderFragmentMappingQueue(done, errs)
-	}()
-
 	go func() {
 		defer close(errs)
-		wg.Wait()
+		ingress.processRequestQueue(done, errs)
 	}()
-
 	return errs
 }
 
@@ -265,18 +255,17 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 				if !ok {
 					return
 				}
-
-				logger.Info(fmt.Sprintf("received request of type %T", request))
-
 				switch req := request.(type) {
 				case EpochRequest:
 					ingress.processEpochRequest(req, done, errs)
 				case OpenOrderRequest:
 					ingress.processOpenOrderRequest(req, done, errs)
+				case OpenOrderFragmentMappingRequest:
+					ingress.processOpenOrderFragmentMappingRequest(req, done, errs)
 				case CancelOrderRequest:
 					ingress.processCancelOrderRequest(req, done, errs)
 				default:
-					logger.Error(fmt.Sprintf("unexpected request type %T", request))
+					log.Printf("[error] unexpected request type %T", request)
 				}
 			}
 		}
@@ -284,27 +273,17 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 }
 
 func (ingress *ingress) processEpochRequest(req EpochRequest, done <-chan struct{}, errs chan<- error) {
-	// FIXME: Epochs are disabled until Epoch forwarding has been
-	// finalized.
-	// if _, err := ingress.contract.NextEpoch(); err != nil {
-	// 	select {
-	// 	case <-done:
-	// 	case errs <- err:
-	// 	}
-	// }
+	if _, err := ingress.contract.NextEpoch(); err != nil {
+		select {
+		case <-done:
+		case errs <- err:
+		}
+	}
 }
 
 func (ingress *ingress) processOpenOrderRequest(req OpenOrderRequest, done <-chan struct{}, errs chan<- error) {
-	var orderParity order.Parity
-	for _, orderFragments := range req.orderFragmentMapping {
-		if len(orderFragments) > 1 {
-			orderParity = orderFragments[0].OrderParity
-			break
-		}
-	}
-
 	var err error
-	if orderParity == order.ParityBuy {
+	if req.orderParity == order.ParityBuy {
 		err = ingress.contract.OpenBuyOrder(req.signature, req.orderID)
 	} else {
 		err = ingress.contract.OpenSellOrder(req.signature, req.orderID)
@@ -314,11 +293,6 @@ func (ingress *ingress) processOpenOrderRequest(req OpenOrderRequest, done <-cha
 		case <-done:
 		case errs <- err:
 		}
-	}
-
-	select {
-	case <-done:
-	case ingress.queueOrderFragmentMappings <- req:
 	}
 }
 
@@ -331,51 +305,35 @@ func (ingress *ingress) processCancelOrderRequest(req CancelOrderRequest, done <
 	}
 }
 
-func (ingress *ingress) processOrderFragmentMappingQueue(done <-chan struct{}, errs chan<- error) {
-	dispatch.CoForAll(NumBackgroundWorkers, func(i int) {
-		for {
-			select {
-			case <-done:
-				return
-			case req, ok := <-ingress.queueOrderFragmentMappings:
-				if !ok {
-					return
-				}
-				if err := ingress.processOrderFragmentMapping(req.orderFragmentMapping, req.orderFragmentEpochDepth); err != nil {
-					select {
-					case <-done:
-						return
-					case errs <- err:
-					}
-				}
-			}
-		}
-	})
-}
-
-func (ingress *ingress) processOrderFragmentMapping(orderFragmentMapping OrderFragmentMapping, orderFragmentEpochDepth int) error {
+func (ingress *ingress) processOpenOrderFragmentMappingRequest(req OpenOrderFragmentMappingRequest, done <-chan struct{}, errs chan<- error) {
 	ingress.podsMu.RLock()
 	defer ingress.podsMu.RUnlock()
 
 	// Select pods based on the depth
 	pods := map[[32]byte]registry.Pod{}
-	switch orderFragmentEpochDepth {
+	switch req.orderFragmentEpochDepth {
 	case 0:
 		pods = ingress.podsCurr
 	case 1:
 		pods = ingress.podsPrev
 	default:
-		return ErrUnsupportedEpochDepth
+		select {
+		case <-done:
+		case errs <- ErrUnsupportedEpochDepth:
+		}
+		return
 	}
 
-	errs := make([]error, 0, len(pods))
 	podDidReceiveFragments := int64(0)
 
 	dispatch.CoForAll(pods, func(hash [32]byte) {
-		orderFragments := orderFragmentMapping[hash]
+		orderFragments := req.orderFragmentMapping[hash]
 		if orderFragments != nil && len(orderFragments) > 0 {
 			if err := ingress.sendOrderFragmentsToPod(pods[hash], orderFragments); err != nil {
-				errs = append(errs, err)
+				select {
+				case <-done:
+				case errs <- ErrUnsupportedEpochDepth:
+				}
 				return
 			}
 			if atomic.LoadInt64(&podDidReceiveFragments) == int64(0) {
@@ -385,12 +343,12 @@ func (ingress *ingress) processOrderFragmentMapping(orderFragmentMapping OrderFr
 	})
 
 	if atomic.LoadInt64(&podDidReceiveFragments) == int64(0) {
-		if len(errs) == 0 {
-			return ErrCannotOpenOrderFragments
+		select {
+		case <-done:
+		case errs <- ErrCannotOpenOrderFragments:
 		}
-		return fmt.Errorf("%v %v", ErrCannotOpenOrderFragments.Error(), errs[0])
+		return
 	}
-	return nil
 }
 
 func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments []OrderFragment) error {

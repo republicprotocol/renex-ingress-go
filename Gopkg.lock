@@ -220,7 +220,7 @@
     "stream",
     "swarm"
   ]
-  revision = "211bd648c25fa056166a4f30520d077cd05d4d9a"
+  revision = "3c9ec625d28414372c468f1b1db3f9f0300e779f"
 
 [[projects]]
   name = "github.com/rjeczalik/notify"
@@ -287,7 +287,7 @@
     "trace",
     "websocket"
   ]
-  revision = "039a4258aec0ad3c79b905677cceeab13b296a77"
+  revision = "cffdcf672aee934982473246bc7e9a8ba446aa9b"
 
 [[projects]]
   branch = "master"

@@ -40,7 +40,7 @@ var _ = Describe("Ingress", func() {
 
 		swarmer := mockSwarmer{}
 		orderbookClient := mockOrderbookClient{}
-		ingress = NewIngress(contract, &swarmer, &orderbookClient)
+		ingress = NewIngress(contract, &swarmer, &orderbookClient, time.Microsecond)
 		errChSync = ingress.Sync(done)
 		errChProcess = ingress.ProcessRequests(done)
 
@@ -64,7 +64,7 @@ var _ = Describe("Ingress", func() {
 	Context("when opening orders", func() {
 
 		It("should open orders with a sufficient number of order fragments", func() {
-			ord, err := createOrder()
+			ord, err := createOrder(order.ParityBuy)
 			Expect(err).ShouldNot(HaveOccurred())
 			fragments, err := ord.Split(6, 4)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -95,7 +95,7 @@ var _ = Describe("Ingress", func() {
 		})
 
 		It("should not open orders with an insufficient number of order fragments", func() {
-			ord, err := createOrder()
+			ord, err := createOrder(order.ParityBuy)
 			Expect(err).ShouldNot(HaveOccurred())
 			fragments, err := ord.Split(int64(1), int64(4/3))
 			Expect(err).ShouldNot(HaveOccurred())
@@ -125,7 +125,7 @@ var _ = Describe("Ingress", func() {
 		})
 
 		It("should not open orders with malformed order fragments", func() {
-			ord, err := createOrder()
+			ord, err := createOrder(order.ParityBuy)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			orderFragmentMappingIn := OrderFragmentMapping{}
@@ -145,7 +145,7 @@ var _ = Describe("Ingress", func() {
 		})
 
 		It("should not open orders with empty orderFragmentMappings", func() {
-			ord, err := createOrder()
+			ord, err := createOrder(order.ParityBuy)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			orderFragmentMappingIn := OrderFragmentMappings{}
@@ -159,7 +159,7 @@ var _ = Describe("Ingress", func() {
 		})
 
 		It("should not open orders with unknown pod hashes", func() {
-			ord, err := createOrder()
+			ord, err := createOrder(order.ParityBuy)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			orderFragmentMappingIn := OrderFragmentMapping{}
@@ -176,8 +176,8 @@ var _ = Describe("Ingress", func() {
 			Expect(err).Should(HaveOccurred())
 		})
 
-		It("should not open orders with an invalid epoch depth", func() {
-			ord, err := createOrder()
+		It("should not open orders with an invalid number of pods", func() {
+			ord, err := createOrder(order.ParityBuy)
 			Expect(err).ShouldNot(HaveOccurred())
 			fragments, err := ord.Split(6, 4)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -192,7 +192,40 @@ var _ = Describe("Ingress", func() {
 					Index: int64(i),
 				}
 				orderFragment.EncryptedFragment, err = fragment.Encrypt(rsaKey.PublicKey)
-				orderFragment.EncryptedFragment.EpochDepth = 1
+				Expect(err).ShouldNot(HaveOccurred())
+				orderFragmentMappingIn[pods[0].Hash] = append(orderFragmentMappingIn[pods[0].Hash], orderFragment)
+			}
+
+			orderFragmentMappingsIn := OrderFragmentMappings{}
+			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
+			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
+			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
+
+			signature := [65]byte{}
+			_, err = rand.Read(signature[:])
+			Expect(err).ShouldNot(HaveOccurred())
+
+			err = ingress.OpenOrder(signature, ord.ID, orderFragmentMappingsIn)
+			Expect(err).Should(Equal(ErrInvalidNumberOfPods))
+		})
+
+		It("should not open orders with an invalid epoch depth", func() {
+			ord, err := createOrder(order.ParityBuy)
+			Expect(err).ShouldNot(HaveOccurred())
+			fragments, err := ord.Split(6, 4)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			pods, err := contract.Pods()
+			Expect(err).ShouldNot(HaveOccurred())
+
+			orderFragmentMappingIn := OrderFragmentMapping{}
+			orderFragmentMappingIn[pods[0].Hash] = []OrderFragment{}
+			for i, fragment := range fragments {
+				orderFragment := OrderFragment{
+					Index: int64(i),
+				}
+				orderFragment.EncryptedFragment, err = fragment.Encrypt(rsaKey.PublicKey)
+				orderFragment.EncryptedFragment.EpochDepth = 2
 				Expect(err).ShouldNot(HaveOccurred())
 				orderFragmentMappingIn[pods[0].Hash] = append(orderFragmentMappingIn[pods[0].Hash], orderFragment)
 			}
@@ -205,14 +238,14 @@ var _ = Describe("Ingress", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			err = ingress.OpenOrder(signature, ord.ID, orderFragmentMappingsIn)
-			Expect(err).Should(HaveOccurred())
+			Expect(err).Should(Equal(ErrInvalidEpochDepth))
 		})
 	})
 
 	Context("when canceling orders", func() {
 
 		It("should cancel orders that are open", func() {
-			ord, err := createOrder()
+			ord, err := createOrder(order.ParitySell)
 			Expect(err).ShouldNot(HaveOccurred())
 			fragments, err := ord.Split(5, 4)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -246,7 +279,7 @@ var _ = Describe("Ingress", func() {
 		})
 
 		It("should cancel orders that are not open", func() {
-			ord, err := createOrder()
+			ord, err := createOrder(order.ParitySell)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			signature := [65]byte{}
@@ -410,8 +443,7 @@ func (binder *ingressBinder) setOrderStatus(orderID order.ID, status order.Statu
 	return nil
 }
 
-func createOrder() (order.Order, error) {
-	parity := order.ParityBuy
+func createOrder(parity order.Parity) (order.Order, error) {
 	price := uint64(mathRand.Intn(2000))
 	volume := uint64(mathRand.Intn(2000))
 	nonce := uint64(mathRand.Intn(1000000000))

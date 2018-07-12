@@ -89,9 +89,10 @@ type Ingress interface {
 }
 
 type ingress struct {
-	contract        ContractBinder
-	swarmer         swarm.Swarmer
-	orderbookClient orderbook.Client
+	contract            ContractBinder
+	swarmer             swarm.Swarmer
+	orderbookClient     orderbook.Client
+	epochTimeMultiplier time.Duration
 
 	podsMu   *sync.RWMutex
 	podsCurr map[[32]byte]registry.Pod
@@ -103,11 +104,12 @@ type ingress struct {
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(contract ContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client) Ingress {
+func NewIngress(contract ContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochTimeMultiplier time.Duration) Ingress {
 	ingress := &ingress{
-		contract:        contract,
-		swarmer:         swarmer,
-		orderbookClient: orderbookClient,
+		contract:            contract,
+		swarmer:             swarmer,
+		orderbookClient:     orderbookClient,
+		epochTimeMultiplier: epochTimeMultiplier,
 
 		podsMu:   new(sync.RWMutex),
 		podsCurr: map[[32]byte]registry.Pod{},
@@ -154,7 +156,7 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 		epoch := registry.Epoch{}
 
 		ticks := int64(0)
-		ticker := time.NewTicker(time.Second * time.Duration(epochInterval))
+		ticker := time.NewTicker(ingress.epochTimeMultiplier * time.Duration(epochInterval))
 		defer ticker.Stop()
 
 		for {
@@ -471,7 +473,7 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 	}
 
 	if len(orderFragmentMapping) == 0 || len(orderFragmentMapping) > len(pods) {
-		logger.Error(fmt.Sprintf("invalid number of pods: got %v, expected %v", len(orderFragmentMapping), len(pods)))
+		logger.Error(fmt.Sprintf("invalid number of pods: got %v, expected %v", len(pods), len(orderFragmentMapping)))
 		return ErrInvalidNumberOfPods
 	}
 	for hash, orderFragments := range orderFragmentMapping {

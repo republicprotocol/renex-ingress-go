@@ -220,7 +220,7 @@
     "stream",
     "swarm"
   ]
-  revision = "389b1370316cde54638174c95749c07fd6752a99"
+  revision = "211bd648c25fa056166a4f30520d077cd05d4d9a"
 
 [[projects]]
   name = "github.com/rjeczalik/notify"
@@ -339,7 +339,7 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "18f0b668f1069d7f55ac25b6f2670e30cd6499c0"
+  revision = "2087f8c10712366cfc2f4fcb1bf99eeef61ab21e"
 
 [[projects]]
   branch = "master"

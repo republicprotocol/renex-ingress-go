@@ -12,7 +12,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/dispatch"
 	"github.com/republicprotocol/republic-go/logger"
 	"github.com/republicprotocol/republic-go/order"
@@ -35,6 +34,10 @@ var ErrInvalidNumberOfPods = errors.New("invalid number of pods")
 // ErrInvalidNumberOfOrderFragments is returned when a pod is mapped to an
 // insufficient number of order fragments, or too many order fragments.
 var ErrInvalidNumberOfOrderFragments = errors.New("invalid number of order fragments")
+
+// ErrInvalidOrderFragmentMapping is returned when an order fragment mapping is
+// of an invalid length.
+var ErrInvalidOrderFragmentMapping = errors.New("invalid order fragment mappings")
 
 // ErrInvalidEpochDepth is returned when an invalid epoch depth is provided
 // upon verification.
@@ -86,7 +89,7 @@ type Ingress interface {
 }
 
 type ingress struct {
-	contract        *contract.Binder
+	contract        ContractBinder
 	swarmer         swarm.Swarmer
 	orderbookClient orderbook.Client
 
@@ -100,7 +103,7 @@ type ingress struct {
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(contract *contract.Binder, swarmer swarm.Swarmer, orderbookClient orderbook.Client) Ingress {
+func NewIngress(contract ContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client) Ingress {
 	ingress := &ingress{
 		contract:        contract,
 		swarmer:         swarmer,
@@ -442,6 +445,10 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 func (ingress *ingress) verifyOrderFragmentMappings(orderFragmentMappings OrderFragmentMappings) error {
 	ingress.podsMu.RLock()
 	defer ingress.podsMu.RUnlock()
+
+	if len(orderFragmentMappings) == 0 {
+		return ErrInvalidOrderFragmentMapping
+	}
 
 	for i := range orderFragmentMappings {
 		if err := ingress.verifyOrderFragmentMapping(orderFragmentMappings[i], i); err != nil {

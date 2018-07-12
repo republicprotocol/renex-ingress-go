@@ -176,6 +176,37 @@ var _ = Describe("Ingress", func() {
 			Expect(err).Should(HaveOccurred())
 		})
 
+		It("should not open orders with an invalid epoch depth", func() {
+			ord, err := createOrder()
+			Expect(err).ShouldNot(HaveOccurred())
+			fragments, err := ord.Split(6, 4)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			pods, err := contract.Pods()
+			Expect(err).ShouldNot(HaveOccurred())
+
+			orderFragmentMappingIn := OrderFragmentMapping{}
+			orderFragmentMappingIn[pods[0].Hash] = []OrderFragment{}
+			for i, fragment := range fragments {
+				orderFragment := OrderFragment{
+					Index: int64(i),
+				}
+				orderFragment.EncryptedFragment, err = fragment.Encrypt(rsaKey.PublicKey)
+				orderFragment.EncryptedFragment.EpochDepth = 1
+				Expect(err).ShouldNot(HaveOccurred())
+				orderFragmentMappingIn[pods[0].Hash] = append(orderFragmentMappingIn[pods[0].Hash], orderFragment)
+			}
+
+			orderFragmentMappingsIn := OrderFragmentMappings{}
+			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
+
+			signature := [65]byte{}
+			_, err = rand.Read(signature[:])
+			Expect(err).ShouldNot(HaveOccurred())
+
+			err = ingress.OpenOrder(signature, ord.ID, orderFragmentMappingsIn)
+			Expect(err).Should(HaveOccurred())
+		})
 	})
 
 	Context("when canceling orders", func() {
@@ -245,6 +276,7 @@ type ingressBinder struct {
 
 	numberOfDarknodes int
 	pods              []registry.Pod
+	previousPods      []registry.Pod
 }
 
 // newIngressBinder returns a mock ingressBinder.
@@ -329,6 +361,10 @@ func (binder *ingressBinder) NextEpoch() (registry.Epoch, error) {
 	return binder.Epoch()
 }
 
+func (binder *ingressBinder) PreviousEpoch() (registry.Epoch, error) {
+	return binder.Epoch()
+}
+
 func (binder *ingressBinder) Epoch() (registry.Epoch, error) {
 	darknodes, err := binder.Darknodes()
 	if err != nil {
@@ -347,6 +383,10 @@ func (binder *ingressBinder) MinimumEpochInterval() (*big.Int, error) {
 
 func (binder *ingressBinder) Pods() ([]registry.Pod, error) {
 	return binder.pods, nil
+}
+
+func (binder *ingressBinder) PreviousPods() ([]registry.Pod, error) {
+	return binder.previousPods, nil
 }
 
 func (binder *ingressBinder) setOrderStatus(orderID order.ID, status order.Status) error {

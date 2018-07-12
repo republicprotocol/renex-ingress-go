@@ -151,7 +151,7 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 		epoch := registry.Epoch{}
 
 		ticks := int64(0)
-		ticker := time.NewTicker(time.Second * 14)
+		ticker := time.NewTicker(time.Second * time.Duration(epochInterval))
 		defer ticker.Stop()
 
 		for {

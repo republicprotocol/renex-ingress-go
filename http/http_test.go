@@ -12,7 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/republicprotocol/renex-ingress-api-go/http"
 
-	"github.com/republicprotocol/renex-ingress-api-go/http/adapter"
+	"github.com/republicprotocol/renex-ingress-api-go/httpadapter"
 )
 
 type weakAdapter struct {
@@ -20,7 +20,7 @@ type weakAdapter struct {
 	numCanceled int64
 }
 
-func (adapter *weakAdapter) OpenOrder(signature string, orderFragmentMapping adapter.OrderFragmentMappings) error {
+func (adapter *weakAdapter) OpenOrder(signature string, orderFragmentMapping httpadapter.OrderFragmentMappings) error {
 	atomic.AddInt64(&adapter.numOpened, 1)
 	return nil
 }
@@ -33,7 +33,7 @@ func (adapter *weakAdapter) CancelOrder(signature string, orderID string) error 
 type errAdapter struct {
 }
 
-func (adapter *errAdapter) OpenOrder(signature string, orderFragmentMapping adapter.OrderFragmentMappings) error {
+func (adapter *errAdapter) OpenOrder(signature string, orderFragmentMapping httpadapter.OrderFragmentMappings) error {
 	return errors.New("cannot open order")
 }
 

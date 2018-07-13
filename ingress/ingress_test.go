@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"math/big"
 	mathRand "math/rand"
+	"strconv"
 	"sync"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/republicprotocol/renex-ingress-go/ingress"
+	. "github.com/republicprotocol/renex-ingress-api-go/ingress"
 
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/identity"
@@ -310,6 +311,9 @@ type ingressBinder struct {
 	numberOfDarknodes int
 	pods              []registry.Pod
 	previousPods      []registry.Pod
+
+	prevEpoch registry.Epoch
+	epoch     registry.Epoch
 }
 
 // newIngressBinder returns a mock ingressBinder.
@@ -327,6 +331,13 @@ func newIngressBinder() *ingressBinder {
 		pod.Darknodes = append(pod.Darknodes, identity.Address(ecdsaKey.Address()))
 	}
 
+	epoch := registry.Epoch{
+		Hash:        [32]byte{1},
+		Pods:        []registry.Pod{pod},
+		Darknodes:   identity.Addresses{},
+		BlockNumber: big.NewInt(0),
+	}
+
 	return &ingressBinder{
 		buyOrdersMu: new(sync.Mutex),
 		buyOrders:   []order.ID{},
@@ -340,6 +351,9 @@ func newIngressBinder() *ingressBinder {
 
 		numberOfDarknodes: 6,
 		pods:              []registry.Pod{pod},
+
+		prevEpoch: registry.Epoch{},
+		epoch:     epoch,
 	}
 }
 
@@ -391,23 +405,34 @@ func (binder *ingressBinder) Darknodes() (identity.Addresses, error) {
 }
 
 func (binder *ingressBinder) NextEpoch() (registry.Epoch, error) {
-	return binder.Epoch()
-}
-
-func (binder *ingressBinder) PreviousEpoch() (registry.Epoch, error) {
-	return binder.Epoch()
-}
-
-func (binder *ingressBinder) Epoch() (registry.Epoch, error) {
-	darknodes, err := binder.Darknodes()
+	nextEpoch, err := binder.Epoch()
 	if err != nil {
 		return registry.Epoch{}, err
 	}
-	return registry.Epoch{
-		Hash:      [32]byte{1},
-		Pods:      binder.pods,
-		Darknodes: darknodes,
-	}, nil
+
+	currentEpochVal, err := strconv.Atoi(string(nextEpoch.Hash[:]))
+	if err != nil {
+		return registry.Epoch{}, err
+	}
+	nextEpoch.Hash = [32]byte{byte(currentEpochVal + 1)}
+
+	binder.prevEpoch = binder.epoch
+	binder.epoch = nextEpoch
+
+	return nextEpoch, nil
+}
+
+func (binder *ingressBinder) PreviousEpoch() (registry.Epoch, error) {
+	return binder.prevEpoch, nil
+}
+
+func (binder *ingressBinder) Epoch() (registry.Epoch, error) {
+	var err error
+	binder.epoch.Darknodes, err = binder.Darknodes()
+	if err != nil {
+		return registry.Epoch{}, err
+	}
+	return binder.epoch, nil
 }
 
 func (binder *ingressBinder) MinimumEpochInterval() (*big.Int, error) {

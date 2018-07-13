@@ -3,7 +3,7 @@ package httpadapter
 import (
 	"errors"
 
-	"github.com/republicprotocol/renex-ingress-api-go/ingress"
+	"github.com/republicprotocol/renex-ingress-go/ingress"
 )
 
 // ErrInvalidSignatureLength is returned when a signature does not have the

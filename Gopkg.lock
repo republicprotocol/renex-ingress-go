@@ -124,8 +124,25 @@
 [[projects]]
   branch = "develop"
   name = "github.com/republicprotocol/republic-go"
-  packages = ["contract","contract/bindings","crypto","dht","dispatch","grpc","identity","logger","order","orderbook","registry","shamir","stackint","stackint/asm","stream","swarm"]
-  revision = "f16090a9c096e554fb43187c74e3266841486296"
+  packages = [
+    "contract",
+    "contract/bindings",
+    "crypto",
+    "dht",
+    "dispatch",
+    "grpc",
+    "identity",
+    "logger",
+    "order",
+    "orderbook",
+    "registry",
+    "shamir",
+    "stackint",
+    "stackint/asm",
+    "stream",
+    "swarm"
+  ]
+  revision = "896c2d2548524ac6a520e243d9ae5303827f77af"
 
 [[projects]]
   name = "github.com/rjeczalik/notify"

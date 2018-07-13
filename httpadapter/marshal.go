@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/republicprotocol/renex-ingress-api-go/ingress"
+	"github.com/republicprotocol/renex-ingress-go/ingress"
 	"github.com/republicprotocol/republic-go/order"
 )
 

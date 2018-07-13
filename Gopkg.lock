@@ -198,16 +198,6 @@
 
 [[projects]]
   branch = "nightly"
-  name = "github.com/republicprotocol/renex-ingress-api-go"
-  packages = [
-    "http",
-    "httpadapter",
-    "ingress"
-  ]
-  revision = "a9cfb43e3d5a5933a1ed9fcbc1c9f8de41c9738e"
-
-[[projects]]
-  branch = "nightly"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -216,8 +206,6 @@
     "dht",
     "dispatch",
     "grpc",
-    "http",
-    "http/adapter",
     "identity",
     "logger",
     "order",
@@ -226,7 +214,6 @@
     "shamir",
     "stackint",
     "stackint/asm",
-    "status",
     "stream",
     "swarm"
   ]
@@ -416,6 +403,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7c5c0c69efd4380563c6c59824eb516b8fb98aaf0283dcc44997c0035bf8f9d2"
+  inputs-digest = "fe5fbca78933d899efa0cbbf21efbc6b6e7907a0e9f99572752267b0cbcfd211"
   solver-name = "gps-cdcl"
   solver-version = 1

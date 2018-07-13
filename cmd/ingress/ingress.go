@@ -6,16 +6,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	netHttp "net/http"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/republicprotocol/renex-ingress-api-go/http"
-	"github.com/republicprotocol/renex-ingress-api-go/httpadapter"
-	"github.com/republicprotocol/renex-ingress-api-go/ingress"
+	"github.com/republicprotocol/renex-ingress-go/httpadapter"
+	"github.com/republicprotocol/renex-ingress-go/ingress"
 	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/dht"
@@ -105,7 +104,7 @@ func main() {
 		log.Printf("  %v", multiAddr)
 	}
 	log.Printf("listening at 0.0.0.0:%v...", os.Getenv("PORT"))
-	if err := netHttp.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), http.NewServer(&ingressAdapter, &ingressAdapter)); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), httpadapter.NewIngressServer(ingressAdapter)); err != nil {
 		log.Fatalf("error listening and serving: %v", err)
 	}
 }

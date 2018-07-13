@@ -93,7 +93,7 @@ var _ = Describe("HTTP handlers", func() {
 			server := NewIngressServer(&adapter)
 			server.ServeHTTP(w, r)
 
-			Expect(w.Code).To(Equal(http.StatusBadRequest))
+			Expect(w.Code).To(Equal(http.StatusInternalServerError))
 		})
 	})
 

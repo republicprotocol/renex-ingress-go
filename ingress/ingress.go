@@ -127,7 +127,8 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 	go func() {
 		defer close(errs)
 
-		previousEpoch, err := ingress.contract.PreviousEpoch()
+		// Synchronise against the previous epoch
+		epoch, err := ingress.contract.PreviousEpoch()
 		if err != nil {
 			errs <- err
 			return
@@ -137,11 +138,12 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 			errs <- err
 			return
 		}
-		if err := ingress.syncFromEpoch(previousEpoch, pods); err != nil {
+		if err := ingress.syncFromEpoch(epoch, pods); err != nil {
 			errs <- err
 			return
 		}
 
+		// Get epoch synchronisation interval and timing
 		epochIntervalBig, err := ingress.contract.MinimumEpochInterval()
 		if err != nil {
 			errs <- err
@@ -153,21 +155,20 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 			// blocks
 			epochInterval = 50
 		}
-		epoch := registry.Epoch{}
-
 		ticks := int64(0)
 		ticker := time.NewTicker(ingress.epochTimeMultiplier * time.Duration(epochInterval))
 		defer ticker.Stop()
 
 		for {
-			ticks++
 			if ticks%epochInterval == 0 {
 				logger.Info(fmt.Sprintf("queueing syncing of epoch"))
 				select {
 				case <-done:
+					return
 				case ingress.queueRequests <- EpochRequest{}:
 				}
 			}
+			ticks++
 
 			func() {
 				nextEpoch, err := ingress.contract.Epoch()
@@ -199,6 +200,7 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 				}
 			}()
 
+			// Wait until shutdown or the next epoch synchronise tick
 			select {
 			case <-done:
 				return

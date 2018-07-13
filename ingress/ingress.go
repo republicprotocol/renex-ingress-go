@@ -363,7 +363,7 @@ func (ingress *ingress) processOpenOrderFragmentMappingRequest(req OpenOrderFrag
 			if err := ingress.sendOrderFragmentsToPod(pods[hash], orderFragments); err != nil {
 				select {
 				case <-done:
-				case errs <- ErrUnsupportedEpochDepth:
+				case errs <- err:
 				}
 				return
 			}

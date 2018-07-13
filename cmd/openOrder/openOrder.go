@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/republicprotocol/renex-ingress-go/httpadapter"
+	"github.com/republicprotocol/renex-ingress-api-go/httpadapter"
 	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/identity"

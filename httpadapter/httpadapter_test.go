@@ -10,7 +10,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/republicprotocol/renex-ingress-go/httpadapter"
+	. "github.com/republicprotocol/renex-ingress-api-go/httpadapter"
 )
 
 type weakAdapter struct {

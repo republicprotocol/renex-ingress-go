@@ -5,13 +5,13 @@
   branch = "master"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
-  revision = "c8478dff1cfdd0d7aa3ff5076dbd37d7a40e1d95"
+  revision = "32f94db2e6faa2c7250286dfb4c7ad3dc0f3ead2"
 
 [[projects]]
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "86fed781132ac890ee03e906e4ecd5d6fa180c64"
+  revision = "fdfc19097e7ac6b57035062056f5b7b4638b8898"
 
 [[projects]]
   name = "github.com/ethereum/go-ethereum"
@@ -25,8 +25,17 @@
     "common/hexutil",
     "common/math",
     "common/mclock",
+    "consensus",
+    "consensus/misc",
+    "core",
+    "core/rawdb",
+    "core/state",
     "core/types",
+    "core/vm",
     "crypto",
+    "crypto/bn256",
+    "crypto/bn256/cloudflare",
+    "crypto/bn256/google",
     "crypto/randentropy",
     "crypto/secp256k1",
     "crypto/sha3",
@@ -41,8 +50,8 @@
     "rpc",
     "trie"
   ]
-  revision = "dea1ce052a10cd7d401a5c04f83f371a06fe293c"
-  version = "v1.8.11"
+  revision = "37685930d953bcbe023f9bc65b135a8d8b8f1488"
+  version = "v1.8.12"
 
 [[projects]]
   name = "github.com/go-stack/stack"
@@ -87,6 +96,15 @@
   revision = "d9f6b97f8db22dd1e090fd0bbbe98f09cc7dd0a8"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/golang-lru"
+  packages = [
+    ".",
+    "simplelru"
+  ]
+  revision = "0fb14efe8c47ae851c0034ed7a448854d3d34cf3"
+
+[[projects]]
   name = "github.com/jbenet/go-base58"
   packages = ["."]
   revision = "6237cf65f3a6f7111cd8a42be3590df99a66bc7d"
@@ -123,6 +141,50 @@
   version = "v1.0.8"
 
 [[projects]]
+  name = "github.com/onsi/ginkgo"
+  packages = [
+    ".",
+    "config",
+    "internal/codelocation",
+    "internal/containernode",
+    "internal/failer",
+    "internal/leafnodes",
+    "internal/remote",
+    "internal/spec",
+    "internal/spec_iterator",
+    "internal/specrunner",
+    "internal/suite",
+    "internal/testingtproxy",
+    "internal/writer",
+    "reporters",
+    "reporters/stenographer",
+    "reporters/stenographer/support/go-colorable",
+    "reporters/stenographer/support/go-isatty",
+    "types"
+  ]
+  revision = "fa5fabab2a1bfbd924faf4c067d07ae414e2aedf"
+  version = "v1.5.0"
+
+[[projects]]
+  name = "github.com/onsi/gomega"
+  packages = [
+    ".",
+    "format",
+    "internal/assertion",
+    "internal/asyncassertion",
+    "internal/oraclematcher",
+    "internal/testingtsupport",
+    "matchers",
+    "matchers/support/goraph/bipartitegraph",
+    "matchers/support/goraph/edge",
+    "matchers/support/goraph/node",
+    "matchers/support/goraph/util",
+    "types"
+  ]
+  revision = "62bff4df71bdbc266561a0caee19f0594b17c240"
+  version = "v1.4.0"
+
+[[projects]]
   name = "github.com/pborman/uuid"
   packages = ["."]
   revision = "e790cca94e6cc75c7064b1332e63811d4aae1a53"
@@ -144,10 +206,7 @@
     "dht",
     "dispatch",
     "grpc",
-    "http",
-    "http/adapter",
     "identity",
-    "ingress",
     "logger",
     "order",
     "orderbook",
@@ -155,17 +214,19 @@
     "shamir",
     "stackint",
     "stackint/asm",
-    "status",
     "stream",
     "swarm"
   ]
-  revision = "40849ebe1c6caf56e8e631e3722c4d7277582a77"
+  revision = "49f1517234cc6c02e53f85670e5943830f0942ca"
 
 [[projects]]
-  branch = "master"
   name = "github.com/rjeczalik/notify"
   packages = ["."]
   revision = "52ae50d8490436622a8941bd70c3dbe0acdd4bbf"
+<<<<<<< HEAD
+=======
+  version = "v0.9.0"
+>>>>>>> nightly
 
 [[projects]]
   name = "github.com/rs/cors"
@@ -196,7 +257,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "0d5a0ceb10cf9ab89fdd744cc8c50a83134f6697"
+  revision = "c4c61651e9e37fa117f53c5a906d3b63090d8445"
 
 [[projects]]
   branch = "master"
@@ -204,6 +265,7 @@
   packages = [
     "blake2s",
     "pbkdf2",
+    "ripemd160",
     "scrypt",
     "sha3"
   ]
@@ -214,6 +276,9 @@
   name = "golang.org/x/net"
   packages = [
     "context",
+    "html",
+    "html/atom",
+    "html/charset",
     "http/httpguts",
     "http2",
     "http2/hpack",
@@ -222,7 +287,7 @@
     "trace",
     "websocket"
   ]
-  revision = "afe8f62b1d6bbd81f31868121a50b06d8188e1f9"
+  revision = "d0887baf81f4598189d4e12a37c6da86f0bba4d0"
 
 [[projects]]
   branch = "master"
@@ -231,19 +296,31 @@
     "cpu",
     "unix"
   ]
-  revision = "c4afb3effaa53fd9a06ca61262dc7ce8df4c081b"
+  revision = "1b2967e3c290b7c545b3db0deeda16e9be4f98a2"
 
 [[projects]]
   name = "golang.org/x/text"
   packages = [
     "collate",
     "collate/build",
+    "encoding",
+    "encoding/charmap",
+    "encoding/htmlindex",
+    "encoding/internal",
+    "encoding/internal/identifier",
+    "encoding/japanese",
+    "encoding/korean",
+    "encoding/simplifiedchinese",
+    "encoding/traditionalchinese",
+    "encoding/unicode",
     "internal/colltab",
     "internal/gen",
     "internal/tag",
     "internal/triegen",
     "internal/ucd",
+    "internal/utf8internal",
     "language",
+    "runes",
     "secure/bidirule",
     "transform",
     "unicode/bidi",
@@ -262,13 +339,13 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "56e9b8e653c818f46a96eb4828aba7be54271a69"
+  revision = "2087f8c10712366cfc2f4fcb1bf99eeef61ab21e"
 
 [[projects]]
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "80063a038e333bbe006c878e4c5ce4c74d055498"
+  revision = "e92b116572682a5b432ddd840aeaba2a559eeff1"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -320,9 +397,15 @@
   packages = ["."]
   revision = "c1b8fa8bdccecb0b8db834ee0b92fdbcfa606dd6"
 
+[[projects]]
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c6ef609b821ce05000b10168e8ea5558598eed2cfb52c08f800aca5e5179c472"
+  inputs-digest = "fe5fbca78933d899efa0cbbf21efbc6b6e7907a0e9f99572752267b0cbcfd211"
   solver-name = "gps-cdcl"
   solver-version = 1

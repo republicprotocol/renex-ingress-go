@@ -13,9 +13,9 @@ import (
 // IngressAdapter.
 func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
 	r := mux.NewRouter().StrictSlash(true)
-	r.HandleFunc("/orders", OpenOrderHandler(openOrderAdapter)).Methods("POST")
-	r.HandleFunc("/orders", CancelOrderHandler(cancelOrderAdapter)).Methods("DELETE")
-	r.Use(http.RecoveryHandler)
+	r.HandleFunc("/orders", OpenOrderHandler(ingressAdapter)).Methods("POST")
+	r.HandleFunc("/orders", CancelOrderHandler(ingressAdapter)).Methods("DELETE")
+	r.Use(RecoveryHandler)
 
 	handler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
@@ -36,7 +36,7 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter) http.HandlerFunc {
 			return
 		}
 		if err := openOrderAdapter.OpenOrder(openOrderRequest.Signature, openOrderRequest.OrderFragmentMappings); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
 			return
 		}
@@ -60,10 +60,23 @@ func CancelOrderHandler(cancelOrderAdapter CancelOrderAdapter) http.HandlerFunc 
 			return
 		}
 		if err := cancelOrderAdapter.CancelOrder(signature, orderID); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("cannot cancel order: %v", err)))
 			return
 		}
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+// RecoveryHandler handles errors while processing the requests and populates the errors in the response
+func RecoveryHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if r := recover(); r != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("%v", r)))
+			}
+		}()
+		h.ServeHTTP(w, r)
+	})
 }

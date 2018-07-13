@@ -9,12 +9,11 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
-	netHttp "net/http"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/republicprotocol/renex-ingress-go/http"
 	"github.com/republicprotocol/renex-ingress-go/httpadapter"
 	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
@@ -73,7 +72,7 @@ func main() {
 		}
 
 		log.Printf("order = %v, from = %v", ord.ID, contractBinder.From().String())
-		request := http.OpenOrderRequest{
+		request := httpadapter.OpenOrderRequest{
 			Signature:             base64.StdEncoding.EncodeToString(signature),
 			OrderFragmentMappings: httpadapter.OrderFragmentMappings{},
 		}
@@ -98,7 +97,7 @@ func main() {
 		buf := bytes.NewBuffer(data)
 
 		log.Printf("sending to %v", fmt.Sprintf("%v/orders", *ingressParam))
-		res, err := netHttp.DefaultClient.Post(fmt.Sprintf("%v/orders", *ingressParam), "application/json", buf)
+		res, err := http.DefaultClient.Post(fmt.Sprintf("%v/orders", *ingressParam), "application/json", buf)
 		if err != nil {
 			log.Fatalf("cannot send request: %v", err)
 		}

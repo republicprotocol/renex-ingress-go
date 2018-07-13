@@ -50,7 +50,7 @@ type CancelOrderAdapter interface {
 
 // An IngressAdapter implements the OpenOrderAdapter and the
 // CancelOrderAdapter.
-type IngressAdapter interfac e{
+type IngressAdapter interface {
 	OpenOrderAdapter
 	CancelOrderAdapter
 }
@@ -68,7 +68,7 @@ func NewIngressAdapter(ingress ingress.Ingress) IngressAdapter {
 }
 
 // OpenOrder implements the OpenOrderAdapter interface.
-func (adapter *IngressAdapter) OpenOrder(signatureIn string, orderFragmentMappingsIn OrderFragmentMappings) error {
+func (adapter *ingressAdapter) OpenOrder(signatureIn string, orderFragmentMappingsIn OrderFragmentMappings) error {
 	signature, err := UnmarshalSignature(signatureIn)
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func (adapter *IngressAdapter) OpenOrder(signatureIn string, orderFragmentMappin
 }
 
 // CancelOrder implements the CancelOrderAdapter interface.
-func (adapter *IngressAdapter) CancelOrder(signatureIn string, orderIDIn string) error {
+func (adapter *ingressAdapter) CancelOrder(signatureIn string, orderIDIn string) error {
 	signature, err := UnmarshalSignature(signatureIn)
 	if err != nil {
 		return err

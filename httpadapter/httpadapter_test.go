@@ -54,7 +54,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/orders", body)
 
 			adapter := weakAdapter{}
-			server := NewServer(&adapter, &adapter)
+			server := NewIngressServer(&adapter)
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusCreated))
@@ -72,14 +72,14 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/orders", body)
 
 			adapter := weakAdapter{}
-			server := NewServer(&adapter, &adapter)
+			server := NewIngressServer(&adapter)
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusBadRequest))
 			Expect(atomic.LoadInt64(&adapter.numOpened)).To(Equal(int64(0)))
 		})
 
-		It("should return status 500 for adapter errors", func() {
+		It("should return status 500 for ingress adapter errors", func() {
 
 			mockOrder := new(OpenOrderRequest)
 			data, err := json.Marshal(mockOrder)
@@ -90,10 +90,10 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/orders", body)
 
 			adapter := errAdapter{}
-			server := NewServer(&adapter, &adapter)
+			server := NewIngressServer(&adapter)
 			server.ServeHTTP(w, r)
 
-			Expect(w.Code).To(Equal(http.StatusInternalServerError))
+			Expect(w.Code).To(Equal(http.StatusBadRequest))
 		})
 	})
 
@@ -107,7 +107,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("DELETE", "http://localhost/orders?id="+orderID+"&signature="+signature, nil)
 
 			adapter := weakAdapter{}
-			server := NewServer(&adapter, &adapter)
+			server := NewIngressServer(&adapter)
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusOK))
@@ -121,14 +121,14 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("DELETE", "http://localhost/orders?id="+orderID, nil)
 
 			adapter := weakAdapter{}
-			server := NewServer(&adapter, &adapter)
+			server := NewIngressServer(&adapter)
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusBadRequest))
 			Expect(atomic.LoadInt64(&adapter.numOpened)).To(Equal(int64(0)))
 		})
 
-		It("should return status 500 for adapter errors", func() {
+		It("should return status 500 for ingress adapter errors", func() {
 
 			orderID := "vrZhWU3VV9LRIriRvuzT9CbVc57wQhbQ"
 			signature := "Td2YBy0MRYPYqqBduRmDsIhTySQUlMhPBM+wnNPWKqq="
@@ -136,7 +136,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("DELETE", "http://localhost/orders?id="+orderID+"&signature="+signature, nil)
 
 			adapter := errAdapter{}
-			server := NewServer(&adapter, &adapter)
+			server := NewIngressServer(&adapter)
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusInternalServerError))

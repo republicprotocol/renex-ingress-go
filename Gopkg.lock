@@ -198,6 +198,16 @@
 
 [[projects]]
   branch = "nightly"
+  name = "github.com/republicprotocol/renex-ingress-api-go"
+  packages = [
+    "http",
+    "httpadapter",
+    "ingress"
+  ]
+  revision = "a9cfb43e3d5a5933a1ed9fcbc1c9f8de41c9738e"
+
+[[projects]]
+  branch = "nightly"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -220,7 +230,7 @@
     "stream",
     "swarm"
   ]
-  revision = "3c9ec625d28414372c468f1b1db3f9f0300e779f"
+  revision = "49f1517234cc6c02e53f85670e5943830f0942ca"
 
 [[projects]]
   name = "github.com/rjeczalik/notify"
@@ -287,7 +297,7 @@
     "trace",
     "websocket"
   ]
-  revision = "cffdcf672aee934982473246bc7e9a8ba446aa9b"
+  revision = "d0887baf81f4598189d4e12a37c6da86f0bba4d0"
 
 [[projects]]
   branch = "master"
@@ -406,6 +416,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3f1f74abe1f4ad76f9a33c701e47c2007274268ef73a1ce3585a0ae3eb79884c"
+  inputs-digest = "7c5c0c69efd4380563c6c59824eb516b8fb98aaf0283dcc44997c0035bf8f9d2"
   solver-name = "gps-cdcl"
   solver-version = 1

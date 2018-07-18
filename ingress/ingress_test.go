@@ -40,7 +40,7 @@ var _ = Describe("Ingress", func() {
 
 		swarmer := mockSwarmer{}
 		orderbookClient := mockOrderbookClient{}
-		ingress = NewIngress(contract, &swarmer, &orderbookClient, time.Microsecond)
+		ingress = NewIngress(contract, &swarmer, &orderbookClient, time.Millisecond)
 		errChSync = ingress.Sync(done)
 		errChProcess = ingress.ProcessRequests(done)
 
@@ -48,7 +48,7 @@ var _ = Describe("Ingress", func() {
 		go captureErrorsFromErrorChannel(errChSync)
 		go captureErrorsFromErrorChannel(errChProcess)
 
-		time.Sleep(time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	})
 
 	AfterEach(func() {
@@ -82,9 +82,7 @@ var _ = Describe("Ingress", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 				orderFragmentMappingIn[pods[0].Hash] = append(orderFragmentMappingIn[pods[0].Hash], orderFragment)
 			}
-
-			orderFragmentMappingsIn := OrderFragmentMappings{}
-			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
+			orderFragmentMappingsIn := OrderFragmentMappings{orderFragmentMappingIn}
 
 			signature := [65]byte{}
 			_, err = rand.Read(signature[:])
@@ -395,7 +393,15 @@ func (binder *ingressBinder) NextEpoch() (registry.Epoch, error) {
 }
 
 func (binder *ingressBinder) PreviousEpoch() (registry.Epoch, error) {
-	return binder.Epoch()
+	darknodes, err := binder.Darknodes()
+	if err != nil {
+		return registry.Epoch{}, err
+	}
+	return registry.Epoch{
+		Hash:      [32]byte{1},
+		Pods:      binder.pods,
+		Darknodes: darknodes,
+	}, nil
 }
 
 func (binder *ingressBinder) Epoch() (registry.Epoch, error) {
@@ -404,7 +410,7 @@ func (binder *ingressBinder) Epoch() (registry.Epoch, error) {
 		return registry.Epoch{}, err
 	}
 	return registry.Epoch{
-		Hash:      [32]byte{1},
+		Hash:      [32]byte{2},
 		Pods:      binder.pods,
 		Darknodes: darknodes,
 	}, nil

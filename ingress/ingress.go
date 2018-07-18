@@ -475,7 +475,7 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 	}
 
 	if len(orderFragmentMapping) == 0 || len(orderFragmentMapping) > len(pods) {
-		logger.Error(fmt.Sprintf("invalid number of pods: got %v, expected %v", len(pods), len(orderFragmentMapping)))
+		logger.Error(fmt.Sprintf("invalid number of pods: got %v, expected %v", len(orderFragmentMapping), len(pods)))
 		return ErrInvalidNumberOfPods
 	}
 	for hash, orderFragments := range orderFragmentMapping {

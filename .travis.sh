@@ -12,7 +12,7 @@ go vet `go list ./... | grep -Ev "(env|vendor)"`
 golint `go list ./... | grep -Ev "(env|vendor)"`
 
 GOMAXPROCS=1 CI=true ginkgo -v --race --cover --coverprofile cover.out ./...
-covermerge http/cover.out httpadapter/cover.out ingress/cover.out > cover.out
+covermerge httpadapter/cover.out ingress/cover.out > cover.out
 
 sed -i '/.pb.go/d' cover.out
 sed -i '/bindings/d' cover.out

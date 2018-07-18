@@ -1,5 +1,5 @@
 [metadata.heroku]
-  go-version = "1.10.2"
+  go-version = "1.10.3"
   root-package = "github.com/republicprotocol/renex-ingress-go"
   install = "./cmd/ingress"
 

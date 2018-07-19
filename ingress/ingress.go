@@ -155,21 +155,10 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 			// blocks
 			epochInterval = 50
 		}
-		ticks := int64(0)
 		ticker := time.NewTicker(ingress.epochTimeMultiplier * time.Duration(epochInterval))
 		defer ticker.Stop()
 
 		for {
-			if ticks%epochInterval == 0 {
-				logger.Info(fmt.Sprintf("queueing syncing of epoch"))
-				select {
-				case <-done:
-					return
-				case ingress.queueRequests <- EpochRequest{}:
-				}
-			}
-			ticks++
-
 			func() {
 				nextEpoch, err := ingress.contract.Epoch()
 				if err != nil {
@@ -199,6 +188,15 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 					return
 				}
 			}()
+
+			// TODO: Save gas by only doing this when the current block number
+			// is sufficiently high and we can guarantee that this will
+			// succeed.
+			select {
+			case <-done:
+				return
+			case ingress.queueRequests <- EpochRequest{}:
+			}
 
 			// Wait until shutdown or the next epoch synchronise tick
 			select {

@@ -3,11 +3,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9881039571249d9ff92d4a3383a015c233a4c172f6b5a3d6d71e6c4bfdb70efc"
+  digest = "1:a259ef38cd3e32d931581cf5aa9cbf2bf2e2de43096b8d15ba5998122b0de8d4"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
   pruneopts = "T"
-  revision = "32f94db2e6faa2c7250286dfb4c7ad3dc0f3ead2"
+  revision = "625ff285aa35926943df199ab15deba045716206"
 
 [[projects]]
   branch = "master"
@@ -252,7 +252,7 @@
 
 [[projects]]
   branch = "nightly"
-  digest = "1:022d96a269e06682806fd180eaa1f4c58180e94f84f38ce7b401580b34a32262"
+  digest = "1:20f345d54711a94032c1d4fa7655383d72d899a7617ad543511258c5bc868fd6"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -273,7 +273,7 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "1c9f0dddc814b1b25bd12a424e5fb74487b3c28e"
+  revision = "9638f9a5ef200bdb5fde7480360a89681f837307"
 
 [[projects]]
   digest = "1:3a59a673de0deaee372e540e372c9d8c367e7966face8606fa24ad0749c85a48"
@@ -322,7 +322,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2c4971d2da7bb27fa225a119dc96af2119dd096869c1228438a0b5fda5f6fe15"
+  digest = "1:9a74ab4659e08b1c065c0e3da2777990ea91fc32661b37f05b98fe139dbb032d"
   name = "golang.org/x/crypto"
   packages = [
     "blake2s",
@@ -332,11 +332,11 @@
     "sha3",
   ]
   pruneopts = "T"
-  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
+  revision = "a2144134853fc9a27a7b1e3eb4f19f1a76df13c9"
 
 [[projects]]
   branch = "master"
-  digest = "1:501f63fec0206818ab3dac086383bd2146841951c6bd6f3c4f72613f113f25fd"
+  digest = "1:74cd767e32ebe2da7887223f5e64b3e91c10ac7432a89c543b4419c7d1f43281"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -352,7 +352,7 @@
     "websocket",
   ]
   pruneopts = "T"
-  revision = "d0887baf81f4598189d4e12a37c6da86f0bba4d0"
+  revision = "81d44fd177a98d09fe3bc40a5a78d495d3f042ea"
 
 [[projects]]
   branch = "master"
@@ -414,11 +414,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:eb16acaf0f70c705a4e5936d4530f1a994217feafc24a672414b316ee3c2865d"
+  digest = "1:8d093c040b734e160cbe8291c7b539c36d2c6dd4581c4bb37cff56078c65bd07"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "T"
-  revision = "2731d4fa720b67f9fe38e9051a2a9b38e4609260"
+  revision = "fedd2861243fd1a8152376292b921b394c7bef7e"
 
 [[projects]]
   digest = "1:831f433242783a335d6b98d6e576da77e23a4ca376f78c641a79849f8122f627"

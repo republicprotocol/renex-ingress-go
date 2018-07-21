@@ -3,11 +3,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a259ef38cd3e32d931581cf5aa9cbf2bf2e2de43096b8d15ba5998122b0de8d4"
+  digest = "1:d2d43cb63597ba4c480679279ce46443da2cec6f106f25b87d95e7fed7eb62e8"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
   pruneopts = "T"
-  revision = "625ff285aa35926943df199ab15deba045716206"
+  revision = "32a4de07828f33fc490e6acfbdc211c4f2143ee7"
 
 [[projects]]
   branch = "master"
@@ -172,11 +172,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a454a13fdbaf3ed1b9ea85afd6c807feb5b46a36ea9dd44db359b1e562fe13b2"
+  digest = "1:07ede8edd965de9bd086e7666abce840db8a4786d21575fa74404ece6205d9e4"
   name = "github.com/multiformats/go-multiaddr"
   packages = ["."]
   pruneopts = "T"
-  revision = "96804982667ed1672985566d0d0c2a7ed6f10e1f"
+  revision = "d6ad8896def6b8571037683cffd995e3a87b14fa"
 
 [[projects]]
   branch = "master"
@@ -252,7 +252,7 @@
 
 [[projects]]
   branch = "nightly"
-  digest = "1:20f345d54711a94032c1d4fa7655383d72d899a7617ad543511258c5bc868fd6"
+  digest = "1:61dfb95226ae96baa8dbc50614d409ea836db18f4cb5ac67048c772d89db0217"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -273,7 +273,7 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "9638f9a5ef200bdb5fde7480360a89681f837307"
+  revision = "ee41fbe554c555fa994f0c1496bfe6768bd8a7ef"
 
 [[projects]]
   digest = "1:3a59a673de0deaee372e540e372c9d8c367e7966face8606fa24ad0749c85a48"
@@ -336,7 +336,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:74cd767e32ebe2da7887223f5e64b3e91c10ac7432a89c543b4419c7d1f43281"
+  digest = "1:5dc276691386951495e5d6a75811d9974cc818390372a12508c4516f780cf673"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -352,7 +352,7 @@
     "websocket",
   ]
   pruneopts = "T"
-  revision = "81d44fd177a98d09fe3bc40a5a78d495d3f042ea"
+  revision = "a680a1efc54dd51c040b3b5ce4939ea3cf2ea0d1"
 
 [[projects]]
   branch = "master"
@@ -402,7 +402,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9eb21170847b2491779fd0fba4934b8219d3ac3fe2d3c4ee1be7424fb94739c0"
+  digest = "1:7dd8427452185e5473848b94e76d181003d5cf25db82f2d760d866557addeedb"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -410,7 +410,7 @@
     "internal/fastwalk",
   ]
   pruneopts = "T"
-  revision = "32950ab3be12acf6d472893021373669979907ab"
+  revision = "99195f4d4ffa6331a9bc856c72697a15d9842950"
 
 [[projects]]
   branch = "master"

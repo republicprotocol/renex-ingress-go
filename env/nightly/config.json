@@ -1,0 +1,9 @@
+{
+    "bootstrapMultiAddresses": [
+        "/ip4/54.255.182.246/tcp/18514/republic/8MHgRa2Uj7Tj2cgoA1PoULso7UmgVi",
+        "/ip4/52.62.18.91/tcp/18514/republic/8MJnjSUVJCgP6YVjNWzaJXtiKE3p1o"
+    ],
+    "ethereum": {
+        "network": "nightly"
+    }
+}

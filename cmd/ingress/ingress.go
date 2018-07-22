@@ -6,21 +6,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	netHttp "net/http"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/republicprotocol/renex-ingress-go/httpadapter"
+	"github.com/republicprotocol/renex-ingress-go/ingress"
 	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/dht"
 	"github.com/republicprotocol/republic-go/grpc"
-	"github.com/republicprotocol/republic-go/http"
-	"github.com/republicprotocol/republic-go/http/adapter"
 	"github.com/republicprotocol/republic-go/identity"
-	"github.com/republicprotocol/republic-go/ingress"
 	"github.com/republicprotocol/republic-go/logger"
 	"github.com/republicprotocol/republic-go/swarm"
 )
@@ -41,8 +40,8 @@ func main() {
 	if networkParam == "" {
 		log.Fatalf("cannot read network environment")
 	}
-	configParam := fmt.Sprintf("%v/config.json", networkParam)
-	keystoreParam := fmt.Sprintf("%v/%v.keystore.json", networkParam, os.Getenv("DYNO"))
+	configParam := fmt.Sprintf("env/%v/config.json", networkParam)
+	keystoreParam := fmt.Sprintf("env/%v/%v.keystore.json", networkParam, os.Getenv("DYNO"))
 	keystorePassphraseParam := os.Getenv("KEYSTORE_PASSPHRASE")
 
 	config, err := loadConfig(configParam)
@@ -74,8 +73,8 @@ func main() {
 	swarmClient := grpc.NewSwarmClient(multiAddr)
 	swarmer := swarm.NewSwarmer(swarmClient, &dht)
 	orderbookClient := grpc.NewOrderbookClient()
-	ingresser := ingress.NewIngress(&binder, swarmer, orderbookClient)
-	ingressAdapter := adapter.NewIngressAdapter(ingresser)
+	ingresser := ingress.NewIngress(&binder, swarmer, orderbookClient, time.Second)
+	ingressAdapter := httpadapter.NewIngressAdapter(ingresser)
 
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -105,7 +104,7 @@ func main() {
 		log.Printf("  %v", multiAddr)
 	}
 	log.Printf("listening at 0.0.0.0:%v...", os.Getenv("PORT"))
-	if err := netHttp.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), http.NewServer(&ingressAdapter, &ingressAdapter)); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), httpadapter.NewIngressServer(ingressAdapter)); err != nil {
 		log.Fatalf("error listening and serving: %v", err)
 	}
 }

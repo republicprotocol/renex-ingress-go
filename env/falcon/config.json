@@ -1,0 +1,11 @@
+{
+    "bootstrapMultiAddresses": [
+        "/ip4/13.124.184.167/tcp/18514/republic/8MJw8s6TVKmQH3kdM5kJUYqPmh3JmF",
+        "/ip4/52.79.235.44/tcp/18514/republic/8MJEFcsQ5G8XMg5vka1XhswQotjbbj",
+        "/ip4/13.114.234.59/tcp/18514/republic/8MKKUenZG8inoZqd8boYxGb1J3waAg",
+        "/ip4/35.154.181.5/tcp/18514/republic/8MJNi8mgfQqD52bjUCnUzJ64uneJbk"
+    ],
+    "ethereum": {
+        "network": "falcon"
+    }
+}

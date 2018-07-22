@@ -361,11 +361,7 @@ func (ingress *ingress) processOpenOrderFragmentMappingRequest(req OpenOrderFrag
 			if err := ingress.sendOrderFragmentsToPod(pods[hash], orderFragments); err != nil {
 				select {
 				case <-done:
-<<<<<<< HEAD
-				case errs <- err:
-=======
 				case errs <- fmt.Errorf("[error] (open) order fragment mapping = %v: %v", req.orderID, err):
->>>>>>> nightly
 				}
 				return
 			}

@@ -320,7 +320,7 @@ func (ingress *ingress) processOpenOrderRequest(req OpenOrderRequest, done <-cha
 	if err != nil {
 		select {
 		case <-done:
-		case errs <- err:
+		case errs <- fmt.Errorf("[error] (open) order = %v: %v", req.orderID, err):
 		}
 	}
 }
@@ -329,7 +329,7 @@ func (ingress *ingress) processCancelOrderRequest(req CancelOrderRequest, done <
 	if err := ingress.contract.CancelOrder(req.signature, req.orderID); err != nil {
 		select {
 		case <-done:
-		case errs <- err:
+		case errs <- fmt.Errorf("[error] (cancel) order = %v: %v", req.orderID, err):
 		}
 	}
 }
@@ -348,7 +348,7 @@ func (ingress *ingress) processOpenOrderFragmentMappingRequest(req OpenOrderFrag
 	default:
 		select {
 		case <-done:
-		case errs <- ErrUnsupportedEpochDepth:
+		case errs <- fmt.Errorf("[error] (open) order fragment mapping = %v: %v", req.orderID, ErrUnsupportedEpochDepth):
 		}
 		return
 	}
@@ -361,7 +361,7 @@ func (ingress *ingress) processOpenOrderFragmentMappingRequest(req OpenOrderFrag
 			if err := ingress.sendOrderFragmentsToPod(pods[hash], orderFragments); err != nil {
 				select {
 				case <-done:
-				case errs <- ErrUnsupportedEpochDepth:
+				case errs <- fmt.Errorf("[error] (open) order fragment mapping = %v: %v", req.orderID, err):
 				}
 				return
 			}
@@ -374,7 +374,7 @@ func (ingress *ingress) processOpenOrderFragmentMappingRequest(req OpenOrderFrag
 	if atomic.LoadInt64(&podDidReceiveFragments) == int64(0) {
 		select {
 		case <-done:
-		case errs <- ErrCannotOpenOrderFragments:
+		case errs <- fmt.Errorf("[error] (open) order fragment mapping = %v: %v", req.orderID, ErrCannotOpenOrderFragments):
 		}
 		return
 	}

@@ -150,11 +150,6 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 			return
 		}
 		epochInterval := epochIntervalBig.Int64()
-		if epochInterval < 50 {
-			// An Ingress will not trigger epochs faster than once every 50
-			// blocks
-			epochInterval = 50
-		}
 		ticker := time.NewTicker(ingress.epochTimeMultiplier * time.Duration(epochInterval))
 		defer ticker.Stop()
 

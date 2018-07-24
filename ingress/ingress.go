@@ -297,12 +297,13 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 }
 
 func (ingress *ingress) processEpochRequest(req EpochRequest, done <-chan struct{}, errs chan<- error) {
-	if _, err := ingress.contract.NextEpoch(); err != nil {
-		select {
-		case <-done:
-		case errs <- err:
-		}
-	}
+	// FIXME: Re-enable epochs.
+	// if _, err := ingress.contract.NextEpoch(); err != nil {
+	// 	select {
+	// 	case <-done:
+	// 	case errs <- err:
+	// 	}
+	// }
 }
 
 func (ingress *ingress) processOpenOrderRequest(req OpenOrderRequest, done <-chan struct{}, errs chan<- error) {

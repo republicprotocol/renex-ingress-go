@@ -166,6 +166,7 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 					case <-done:
 						return
 					case ingress.queueRequests <- EpochRequest{}:
+						log.Printf("[info] (epoch) queuing epoch turning")
 					}
 				}
 			}
@@ -263,7 +264,7 @@ func (ingress *ingress) ProcessRequests(done <-chan struct{}) <-chan error {
 }
 
 func (ingress *ingress) syncFromEpoch(epoch registry.Epoch, pods []registry.Pod) error {
-	logger.Epoch(epoch.Hash)
+	log.Printf("[info] (epoch) next epoch = %v", base64.StdEncoding.EncodeToString(epoch.Hash[:]))
 	ingress.podsMu.Lock()
 	ingress.podsPrev = ingress.podsCurr
 	ingress.podsCurr = map[[32]byte]registry.Pod{}

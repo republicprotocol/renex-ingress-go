@@ -27,4 +27,6 @@ type ContractBinder interface {
 	Pods() ([]registry.Pod, error)
 
 	PreviousPods() ([]registry.Pod, error)
+
+	CurrentBlockNumber() (*big.Int, error)
 }

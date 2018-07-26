@@ -205,12 +205,14 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 					case <-ticker.C:
 					}
 
-					select {
-					case <-done:
-						return
-					case ingress.queueRequests <- EpochRequest{}:
-						log.Printf("[info] (epoch) queuing epoch turning")
+					epoch, err := ingress.contract.NextEpoch()
+					if err != nil {
+						// Ignore the error to prevent verbose logging
+						continue
 					}
+					// Wait for a lower bound on the epoch
+					log.Printf("[info] (epoch) latest epoch = %v", base64.StdEncoding.EncodeToString(epoch.Hash[:]))
+					time.Sleep(time.Duration(epoch.BlockInterval.Int64()) * ingress.epochPollInterval)
 				}
 			})
 	}()
@@ -293,8 +295,6 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 					return
 				}
 				switch req := request.(type) {
-				case EpochRequest:
-					ingress.processEpochRequest(req, done, errs)
 				case OpenOrderRequest:
 					ingress.processOpenOrderRequest(req, done, errs)
 				case OpenOrderFragmentMappingRequest:
@@ -307,17 +307,6 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 			}
 		}
 	})
-}
-
-func (ingress *ingress) processEpochRequest(req EpochRequest, done <-chan struct{}, errs chan<- error) {
-	epoch, err := ingress.contract.NextEpoch()
-	if err != nil {
-		// Ignore the error to prevent verbose logging
-		return
-	}
-
-	// Wait for a lower bound on the epoch
-	time.Sleep(time.Duration(epoch.BlockInterval.Int64()) * ingress.epochPollInterval)
 }
 
 func (ingress *ingress) processOpenOrderRequest(req OpenOrderRequest, done <-chan struct{}, errs chan<- error) {

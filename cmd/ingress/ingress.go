@@ -73,7 +73,7 @@ func main() {
 	swarmClient := grpc.NewSwarmClient(multiAddr)
 	swarmer := swarm.NewSwarmer(swarmClient, &dht)
 	orderbookClient := grpc.NewOrderbookClient()
-	ingresser := ingress.NewIngress(&binder, swarmer, orderbookClient, time.Second)
+	ingresser := ingress.NewIngress(&binder, swarmer, orderbookClient, 4*time.Second)
 	ingressAdapter := httpadapter.NewIngressAdapter(ingresser)
 
 	go func() {

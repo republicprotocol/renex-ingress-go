@@ -310,12 +310,17 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 }
 
 func (ingress *ingress) processEpochRequest(req EpochRequest, done <-chan struct{}, errs chan<- error) {
-	if _, err := ingress.contract.NextEpoch(); err != nil {
+	epoch, err := ingress.contract.NextEpoch()
+	if err != nil {
 		select {
 		case <-done:
 		case errs <- err:
 		}
+		return
 	}
+
+	// Wait for a lower bound on the epoch
+	time.Sleep(time.Duration(epoch.BlockInterval.Int64()) * ingress.epochPollInterval)
 }
 
 func (ingress *ingress) processOpenOrderRequest(req OpenOrderRequest, done <-chan struct{}, errs chan<- error) {

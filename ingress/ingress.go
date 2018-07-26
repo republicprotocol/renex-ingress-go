@@ -146,22 +146,65 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 	go func() {
 		defer close(errs)
 
-		ticker := time.NewTicker(ingress.epochPollInterval)
-		defer ticker.Stop()
+		dispatch.CoBegin(
+			func() {
+				ticker := time.NewTicker(ingress.epochPollInterval)
+				defer ticker.Stop()
 
-		for {
-			<-ticker.C
+				for {
+					select {
+					case <-done:
+						return
+					case <-ticker.C:
+					}
 
-			// Check current block number
-			blockNumberBig, err := ingress.contract.CurrentBlockNumber()
-			if err != nil {
-				select {
-				case <-done:
-					return
-				case errs <- err:
+					// Get the current epoch
+					nextEpoch, err := ingress.contract.Epoch()
+					if err != nil {
+						select {
+						case <-done:
+							return
+						case errs <- err:
+							continue
+						}
+					}
+
+					// Check if it equals what we think the current epoch is
+					// and update if necessary
+					if bytes.Equal(epoch.Hash[:], nextEpoch.Hash[:]) {
+						continue
+					}
+					epoch = nextEpoch
+					pods, err := ingress.contract.Pods()
+					if err != nil {
+						select {
+						case <-done:
+							return
+						case errs <- err:
+							continue
+						}
+					}
+					if err := ingress.syncFromEpoch(epoch, pods); err != nil {
+						select {
+						case <-done:
+							return
+						case errs <- err:
+							continue
+						}
+					}
 				}
-			} else if blockNumberBig != nil {
-				if blockNumberBig.Sub(blockNumberBig, epoch.BlockNumber).Cmp(epoch.BlockInterval) == 1 {
+			},
+			func() {
+				ticker := time.NewTicker(2 * ingress.epochPollInterval)
+				defer ticker.Stop()
+
+				for {
+					select {
+					case <-done:
+						return
+					case <-ticker.C:
+					}
+
 					select {
 					case <-done:
 						return
@@ -169,43 +212,7 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 						log.Printf("[info] (epoch) queuing epoch turning")
 					}
 				}
-			}
-
-			// Get the current epoch
-			nextEpoch, err := ingress.contract.Epoch()
-			if err != nil {
-				select {
-				case <-done:
-					return
-				case errs <- err:
-					continue
-				}
-			}
-
-			// Check if it equals what we think the current epoch is
-			// and update if necessary
-			if bytes.Equal(epoch.Hash[:], nextEpoch.Hash[:]) {
-				continue
-			}
-			epoch = nextEpoch
-			pods, err := ingress.contract.Pods()
-			if err != nil {
-				select {
-				case <-done:
-					return
-				case errs <- err:
-					continue
-				}
-			}
-			if err := ingress.syncFromEpoch(epoch, pods); err != nil {
-				select {
-				case <-done:
-					return
-				case errs <- err:
-					continue
-				}
-			}
-		}
+			})
 	}()
 
 	return errs

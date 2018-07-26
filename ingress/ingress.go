@@ -312,10 +312,7 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 func (ingress *ingress) processEpochRequest(req EpochRequest, done <-chan struct{}, errs chan<- error) {
 	epoch, err := ingress.contract.NextEpoch()
 	if err != nil {
-		select {
-		case <-done:
-		case errs <- err:
-		}
+		// Ignore the error to prevent verbose logging
 		return
 	}
 

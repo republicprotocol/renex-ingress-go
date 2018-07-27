@@ -273,7 +273,6 @@ func (ingress *ingress) ProcessRequests(done <-chan struct{}) <-chan error {
 }
 
 func (ingress *ingress) syncFromEpoch(epoch registry.Epoch, pods []registry.Pod) error {
-	log.Printf("[info] (epoch) next epoch = %v", base64.StdEncoding.EncodeToString(epoch.Hash[:]))
 	ingress.podsMu.Lock()
 	ingress.podsPrev = ingress.podsCurr
 	ingress.podsCurr = map[[32]byte]registry.Pod{}

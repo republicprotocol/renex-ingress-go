@@ -1,8 +1,7 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
+		"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -17,11 +16,13 @@ import (
 	"github.com/republicprotocol/renex-ingress-go/ingress"
 	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
-	"github.com/republicprotocol/republic-go/dht"
 	"github.com/republicprotocol/republic-go/grpc"
 	"github.com/republicprotocol/republic-go/identity"
 	"github.com/republicprotocol/republic-go/logger"
 	"github.com/republicprotocol/republic-go/swarm"
+		"github.com/republicprotocol/republic-go/leveldb"
+	"strconv"
+	"github.com/republicprotocol/republic-go/registry"
 )
 
 type config struct {
@@ -31,10 +32,19 @@ type config struct {
 
 func main() {
 	logger.SetFilterLevel(logger.LevelDebugLow)
+	alpha := os.Getenv("ALPHA")
+	if alpha == ""{
+		alpha = "5"
+	}
+	alphaNum, err := strconv.Atoi(alpha)
+	if err != nil {
+		log.Fatal("cannot parse alpha factor")
+	}
 
 	done := make(chan struct{})
 	defer close(done)
 	defer logger.Info("shutting down...")
+
 
 	networkParam := os.Getenv("NETWORK")
 	if networkParam == "" {
@@ -59,6 +69,20 @@ func main() {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
 
+	// New database for persistent storage
+	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour)
+	if err != nil {
+		log.Fatalf("cannot open leveldb: %v", err)
+	}
+	defer store.Release()
+	multiAddr.Signature, err  = keystore.EcdsaKey.Sign(multiAddr.Hash())
+	if err != nil {
+		log.Fatal("cannot sign own multiAddress")
+	}
+	if err := store.SwarmMultiAddressStore().PutMultiAddress(multiAddr); err != nil {
+		log.Fatal("cannot store own multiAddress")
+	}
+
 	conn, err := contract.Connect(config.Ethereum)
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)
@@ -69,18 +93,28 @@ func main() {
 		log.Fatalf("cannot create contract binder: %v", err)
 	}
 
-	dht := dht.NewDHT(multiAddr.Address(), 20)
-	swarmClient := grpc.NewSwarmClient(multiAddr)
-	swarmer := swarm.NewSwarmer(swarmClient, &dht)
+	crypter := registry.NewCrypter(keystore, &binder, 256, time.Minute)
+	swarmClient := grpc.NewSwarmClient(store.SwarmMultiAddressStore(), multiAddr.Address())
+	swarmer := swarm.NewSwarmer(swarmClient, store.SwarmMultiAddressStore(), alphaNum, &crypter)
+
 	orderbookClient := grpc.NewOrderbookClient()
 	ingresser := ingress.NewIngress(&binder, swarmer, orderbookClient, 4*time.Second)
 	ingressAdapter := httpadapter.NewIngressAdapter(ingresser)
 
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-		defer cancel()
-		if err := swarmer.Bootstrap(ctx, config.BootstrapMultiAddresses); err != nil {
-			log.Printf("error bootstrapping: %v", err)
+		// Add bootstrap nodes in the storer or load from the file .
+		for _, multiAddr := range config.BootstrapMultiAddresses {
+			multi, err := store.SwarmMultiAddressStore().MultiAddress(multiAddr.Address())
+			if err != nil && err != swarm.ErrMultiAddressNotFound {
+				logger.Network(logger.LevelError, fmt.Sprintf("cannot get bootstrap multi-address from store: %v", err))
+				continue
+			}
+			if err == nil {
+				multiAddr.Nonce = multi.Nonce
+			}
+			if err := store.SwarmMultiAddressStore().PutMultiAddress(multiAddr); err != nil {
+				logger.Network(logger.LevelError, fmt.Sprintf("cannot store bootstrap multiaddress in store: %v", err))
+			}
 		}
 
 		syncErrs := ingresser.Sync(done)
@@ -100,9 +134,6 @@ func main() {
 
 	log.Printf("address %v", multiAddr)
 	log.Printf("ethereum %v", auth.From.Hex())
-	for _, multiAddr := range dht.MultiAddresses() {
-		log.Printf("  %v", multiAddr)
-	}
 	log.Printf("listening at 0.0.0.0:%v...", os.Getenv("PORT"))
 	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), httpadapter.NewIngressServer(ingressAdapter)); err != nil {
 		log.Fatalf("error listening and serving: %v", err)

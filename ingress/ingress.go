@@ -79,7 +79,7 @@ type Ingress interface {
 	OpenOrder(signature [65]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) error
 
 	// CancelOrder on the Orderbook. A signature from the trader is needed to
-	// verify the cancelation.
+	// verify the cancellation.
 	CancelOrder(signature [65]byte, orderID order.ID) error
 
 	// ProcessRequests in the background. Closing the done channel will stop
@@ -250,7 +250,7 @@ func (ingress *ingress) OpenOrder(signature [65]byte, orderID order.ID, orderFra
 }
 
 func (ingress *ingress) CancelOrder(signature [65]byte, orderID order.ID) error {
-	// TODO: Verify that the signature is valid beforNumBackgroundWorkerse sending it to the
+	// TODO: Verify that the signature is valid before NumBackgroundWorkers sending it to the
 	// Orderbook. This is not strictly necessary but it can save the Ingress
 	// some gas.
 	go func() {
@@ -407,7 +407,7 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 
-			darknodeMultiAddr, err := ingress.swarmer.Query(ctx, darknode, -1)
+			darknodeMultiAddr, err := ingress.swarmer.Query(ctx, darknode)
 			if err != nil {
 				errs <- fmt.Errorf("cannot send query to %v: %v", darknode, err)
 				return

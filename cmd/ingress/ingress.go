@@ -34,7 +34,7 @@ func main() {
 	logger.SetFilterLevel(logger.LevelDebugLow)
 	alpha := os.Getenv("ALPHA")
 	if alpha == "" {
-		alpha = "5"
+		alpha = "2"
 	}
 	alphaNum, err := strconv.Atoi(alpha)
 	if err != nil {

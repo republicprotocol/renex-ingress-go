@@ -1,13 +1,14 @@
 package main
 
 import (
-		"encoding/json"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,11 +19,10 @@ import (
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/grpc"
 	"github.com/republicprotocol/republic-go/identity"
+	"github.com/republicprotocol/republic-go/leveldb"
 	"github.com/republicprotocol/republic-go/logger"
-	"github.com/republicprotocol/republic-go/swarm"
-		"github.com/republicprotocol/republic-go/leveldb"
-	"strconv"
 	"github.com/republicprotocol/republic-go/registry"
+	"github.com/republicprotocol/republic-go/swarm"
 )
 
 type config struct {
@@ -33,7 +33,7 @@ type config struct {
 func main() {
 	logger.SetFilterLevel(logger.LevelDebugLow)
 	alpha := os.Getenv("ALPHA")
-	if alpha == ""{
+	if alpha == "" {
 		alpha = "5"
 	}
 	alphaNum, err := strconv.Atoi(alpha)
@@ -44,7 +44,6 @@ func main() {
 	done := make(chan struct{})
 	defer close(done)
 	defer logger.Info("shutting down...")
-
 
 	networkParam := os.Getenv("NETWORK")
 	if networkParam == "" {
@@ -75,7 +74,7 @@ func main() {
 		log.Fatalf("cannot open leveldb: %v", err)
 	}
 	defer store.Release()
-	multiAddr.Signature, err  = keystore.EcdsaKey.Sign(multiAddr.Hash())
+	multiAddr.Signature, err = keystore.EcdsaKey.Sign(multiAddr.Hash())
 	if err != nil {
 		log.Fatal("cannot sign own multiAddress")
 	}

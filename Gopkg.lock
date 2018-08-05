@@ -203,7 +203,7 @@
   version = "v1.1"
 
 [[projects]]
-  branch = "gossip"
+  branch = "monday-deployment"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -215,6 +215,7 @@
     "leveldb",
     "logger",
     "ome",
+    "oracle",
     "order",
     "orderbook",
     "registry",
@@ -224,7 +225,7 @@
     "stackint/asm",
     "swarm"
   ]
-  revision = "394fb2b579c087b3a47b946b8bef8314571353d9"
+  revision = "b7f84be9d278678a0fb5feeebaddfa11cf5fe4b0"
 
 [[projects]]
   name = "github.com/rjeczalik/notify"
@@ -423,6 +424,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "01eb5d3b58d61519c01f51449dd9ee954fb4a3fbb0a7b86eeec8db9170a1bbdd"
+  inputs-digest = "60a49ba94651974b604024fcb416111a27148b338707e6fefb00ccab25bad96d"
   solver-name = "gps-cdcl"
   solver-version = 1

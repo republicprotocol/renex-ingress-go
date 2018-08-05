@@ -78,7 +78,7 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot sign own multiAddress")
 	}
-	if err := store.SwarmMultiAddressStore().PutMultiAddress(multiAddr); err != nil {
+	if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
 		log.Fatal("cannot store own multiAddress")
 	}
 
@@ -111,7 +111,7 @@ func main() {
 			if err == nil {
 				multiAddr.Nonce = multi.Nonce
 			}
-			if err := store.SwarmMultiAddressStore().PutMultiAddress(multiAddr); err != nil {
+			if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
 				logger.Network(logger.LevelError, fmt.Sprintf("cannot store bootstrap multiaddress in store: %v", err))
 			}
 		}

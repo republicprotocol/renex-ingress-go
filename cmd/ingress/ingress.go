@@ -101,7 +101,6 @@ func main() {
 	ingressAdapter := httpadapter.NewIngressAdapter(ingresser)
 
 	go func() {
-		log.Println("have", len(config.BootstrapMultiAddresses), "bootstrap nodes")
 		// Add bootstrap nodes in the storer or load from the file .
 		for _, multiAddr := range config.BootstrapMultiAddresses {
 			multi, err := store.SwarmMultiAddressStore().MultiAddress(multiAddr.Address())

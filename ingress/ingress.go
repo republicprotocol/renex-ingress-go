@@ -462,6 +462,7 @@ func (ingress *ingress) verifyOrderFragmentMappings(orderFragmentMappings OrderF
 func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFragmentMapping, orderFragmentEpochDepth int) error {
 	// Select pods based on the depth
 	pods := map[[32]byte]registry.Pod{}
+	log.Printf("epoch depth is %d", orderFragmentEpochDepth)
 	switch orderFragmentEpochDepth {
 	case 0:
 		pods = ingress.podsCurr
@@ -475,6 +476,7 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 		logger.Error(fmt.Sprintf("invalid number of pods: got %v, expected %v", len(orderFragmentMapping), len(pods)))
 		return ErrInvalidNumberOfPods
 	}
+	log.Printf("have %d in the fragments mapping", len(orderFragmentMapping))
 	for hash, orderFragments := range orderFragmentMapping {
 		pod, ok := pods[hash]
 		if !ok {

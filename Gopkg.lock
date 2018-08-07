@@ -203,7 +203,7 @@
   version = "v1.1"
 
 [[projects]]
-  branch = "monday-deployment"
+  branch = "nightly"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -225,7 +225,7 @@
     "stackint/asm",
     "swarm"
   ]
-  revision = "de442ee9992e0218e68f043361b9b606ac0e8ad8"
+  revision = "12f053b04c27d5aaaeb79c9cc60dac2922b964c0"
 
 [[projects]]
   name = "github.com/rjeczalik/notify"
@@ -424,6 +424,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "60a49ba94651974b604024fcb416111a27148b338707e6fefb00ccab25bad96d"
+  inputs-digest = "4b9f9f07d5aa2ab39942102f6b5e3967993b4537fcf3d931192acce4b51a5948"
   solver-name = "gps-cdcl"
   solver-version = 1

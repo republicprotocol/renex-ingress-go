@@ -69,7 +69,7 @@ func main() {
 		log.Fatalf("cannot create contract binder: %v", err)
 	}
 
-	dht := dht.NewDHT(multiAddr.Address(), 20)
+	dht := dht.NewDHT(multiAddr.Address(), 100)
 	swarmClient := grpc.NewSwarmClient(multiAddr)
 	swarmer := swarm.NewSwarmer(swarmClient, &dht)
 	orderbookClient := grpc.NewOrderbookClient()

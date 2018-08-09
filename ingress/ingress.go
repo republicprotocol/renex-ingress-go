@@ -205,12 +205,11 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 					case <-ticker.C:
 					}
 
-					// FIXME: Temporarily disabling call to NextEpoch.
-					// epoch, err := ingress.contract.NextEpoch()
-					// if err != nil {
-					// 	// Ignore the error to prevent verbose logging
-					// 	continue
-					// }
+					epoch, err := ingress.contract.NextEpoch()
+					if err != nil {
+						// Ignore the error to prevent verbose logging
+						continue
+					}
 					// Wait for a lower bound on the epoch
 					log.Printf("[info] (epoch) latest epoch = %v", base64.StdEncoding.EncodeToString(epoch.Hash[:]))
 					time.Sleep(time.Duration(epoch.BlockInterval.Int64()) * ingress.epochPollInterval)

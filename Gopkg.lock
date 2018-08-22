@@ -452,7 +452,7 @@
   name = "gopkg.in/fatih/set.v0"
   packages = ["."]
   pruneopts = "T"
-  revision = "2c768e3c5489976167bfc42b5c7c92ca783f4389"
+  revision = "57907de300222151a123d29255ed17f5ed43fad3"
   version = "v0.1.0"
 
 [[projects]]

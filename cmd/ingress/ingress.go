@@ -23,6 +23,7 @@ import (
 	"github.com/republicprotocol/republic-go/logger"
 	"github.com/republicprotocol/republic-go/registry"
 	"github.com/republicprotocol/republic-go/swarm"
+	"context"
 )
 
 type config struct {
@@ -115,6 +116,18 @@ func main() {
 				logger.Network(logger.LevelError, fmt.Sprintf("cannot store bootstrap multiaddress in store: %v", err))
 			}
 		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		if err := swarmer.Ping(ctx); err != nil {
+			log.Printf("[error] (bootstrap) %v", err)
+		}
+		peers, err := swarmer.Peers()
+		if err != nil {
+			log.Printf("[error] (bootstrap) cannot get connected peers: %v", err)
+		}
+		log.Printf("[info] connected to %v peers", len(peers)-1)
 
 		syncErrs := ingresser.Sync(done)
 		go func() {

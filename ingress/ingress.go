@@ -79,7 +79,7 @@ type Ingress interface {
 	OpenOrder(signature [65]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) error
 
 	// CancelOrder on the Orderbook. A signature from the trader is needed to
-	// verify the cancelation.
+	// verify the cancellation.
 	CancelOrder(signature [65]byte, orderID order.ID) error
 
 	// ProcessRequests in the background. Closing the done channel will stop
@@ -205,12 +205,14 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 					case <-ticker.C:
 					}
 
-					select {
-					case <-done:
-						return
-					case ingress.queueRequests <- EpochRequest{}:
-						log.Printf("[info] (epoch) queuing epoch turning")
+					epoch, err := ingress.contract.NextEpoch()
+					if err != nil {
+						// Ignore the error to prevent verbose logging
+						continue
 					}
+					// Wait for a lower bound on the epoch
+					log.Printf("[info] (epoch) latest epoch = %v", base64.StdEncoding.EncodeToString(epoch.Hash[:]))
+					time.Sleep(time.Duration(epoch.BlockInterval.Int64()) * ingress.epochPollInterval)
 				}
 			})
 	}()
@@ -248,7 +250,7 @@ func (ingress *ingress) OpenOrder(signature [65]byte, orderID order.ID, orderFra
 }
 
 func (ingress *ingress) CancelOrder(signature [65]byte, orderID order.ID) error {
-	// TODO: Verify that the signature is valid before NumBackgroundWorkerse sending it to the
+	// TODO: Verify that the signature is valid before NumBackgroundWorkers sending it to the
 	// Orderbook. This is not strictly necessary but it can save the Ingress
 	// some gas.
 	go func() {
@@ -271,7 +273,6 @@ func (ingress *ingress) ProcessRequests(done <-chan struct{}) <-chan error {
 }
 
 func (ingress *ingress) syncFromEpoch(epoch registry.Epoch, pods []registry.Pod) error {
-	log.Printf("[info] (epoch) next epoch = %v", base64.StdEncoding.EncodeToString(epoch.Hash[:]))
 	ingress.podsMu.Lock()
 	ingress.podsPrev = ingress.podsCurr
 	ingress.podsCurr = map[[32]byte]registry.Pod{}
@@ -293,8 +294,6 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 					return
 				}
 				switch req := request.(type) {
-				case EpochRequest:
-					ingress.processEpochRequest(req, done, errs)
 				case OpenOrderRequest:
 					ingress.processOpenOrderRequest(req, done, errs)
 				case OpenOrderFragmentMappingRequest:
@@ -307,17 +306,6 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 			}
 		}
 	})
-}
-
-func (ingress *ingress) processEpochRequest(req EpochRequest, done <-chan struct{}, errs chan<- error) {
-	epoch, err := ingress.contract.NextEpoch()
-	if err != nil {
-		// Ignore the error to prevent verbose logging
-		return
-	}
-
-	// Wait for a lower bound on the epoch
-	time.Sleep(time.Duration(epoch.BlockInterval.Int64()) * ingress.epochPollInterval)
 }
 
 func (ingress *ingress) processOpenOrderRequest(req OpenOrderRequest, done <-chan struct{}, errs chan<- error) {
@@ -473,6 +461,7 @@ func (ingress *ingress) verifyOrderFragmentMappings(orderFragmentMappings OrderF
 func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFragmentMapping, orderFragmentEpochDepth int) error {
 	// Select pods based on the depth
 	pods := map[[32]byte]registry.Pod{}
+	log.Printf("epoch depth is %d", orderFragmentEpochDepth)
 	switch orderFragmentEpochDepth {
 	case 0:
 		pods = ingress.podsCurr
@@ -486,6 +475,7 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 		logger.Error(fmt.Sprintf("invalid number of pods: got %v, expected %v", len(orderFragmentMapping), len(pods)))
 		return ErrInvalidNumberOfPods
 	}
+	log.Printf("have %d in the fragments mapping", len(orderFragmentMapping))
 	for hash, orderFragments := range orderFragmentMapping {
 		pod, ok := pods[hash]
 		if !ok {

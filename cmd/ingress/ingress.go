@@ -68,6 +68,20 @@ func main() {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
 
+	// New database for persistent storage
+	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour)
+	if err != nil {
+		log.Fatalf("cannot open leveldb: %v", err)
+	}
+	defer store.Release()
+	multiAddr.Signature, err = keystore.EcdsaKey.Sign(multiAddr.Hash())
+	if err != nil {
+		log.Fatal("cannot sign own multiAddress")
+	}
+	if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
+		log.Fatal("cannot store own multiAddress")
+	}
+
 	conn, err := contract.Connect(config.Ethereum)
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)

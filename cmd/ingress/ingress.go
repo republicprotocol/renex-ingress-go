@@ -23,7 +23,6 @@ import (
 	"github.com/republicprotocol/republic-go/logger"
 	"github.com/republicprotocol/republic-go/registry"
 	"github.com/republicprotocol/republic-go/swarm"
-	"context"
 )
 
 type config struct {
@@ -69,18 +68,8 @@ func main() {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
 
-	conn, err := contract.Connect(config.Ethereum)
-	if err != nil {
-		log.Fatalf("cannot connect to ethereum: %v", err)
-	}
-	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
-	binder, err := contract.NewBinder(auth, conn)
-	if err != nil {
-		log.Fatalf("cannot create contract binder: %v", err)
-	}
-
 	// New database for persistent storage
-	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour, 24*time.Hour)
+	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour, 24 * time.Hour)
 	if err != nil {
 		log.Fatalf("cannot open leveldb: %v", err)
 	}
@@ -91,6 +80,16 @@ func main() {
 	}
 	if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
 		log.Fatal("cannot store own multiAddress")
+	}
+
+	conn, err := contract.Connect(config.Ethereum)
+	if err != nil {
+		log.Fatalf("cannot connect to ethereum: %v", err)
+	}
+	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
+	binder, err := contract.NewBinder(auth, conn)
+	if err != nil {
+		log.Fatalf("cannot create contract binder: %v", err)
 	}
 
 	crypter := registry.NewCrypter(keystore, &binder, 256, time.Minute)
@@ -115,13 +114,6 @@ func main() {
 			if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
 				logger.Network(logger.LevelError, fmt.Sprintf("cannot store bootstrap multiaddress in store: %v", err))
 			}
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-
-		if err := swarmer.Ping(ctx); err != nil {
-			log.Printf("[error] (bootstrap) %v", err)
 		}
 		peers, err := swarmer.Peers()
 		if err != nil {

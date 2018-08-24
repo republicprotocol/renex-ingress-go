@@ -79,7 +79,7 @@ type Ingress interface {
 	OpenOrder(signature [65]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) error
 
 	// CancelOrder on the Orderbook. A signature from the trader is needed to
-	// verify the cancelation.
+	// verify the cancellation.
 	CancelOrder(signature [65]byte, orderID order.ID) error
 
 	// ProcessRequests in the background. Closing the done channel will stop
@@ -89,10 +89,10 @@ type Ingress interface {
 }
 
 type ingress struct {
-	contract            ContractBinder
-	swarmer             swarm.Swarmer
-	orderbookClient     orderbook.Client
-	epochTimeMultiplier time.Duration
+	contract          ContractBinder
+	swarmer           swarm.Swarmer
+	orderbookClient   orderbook.Client
+	epochPollInterval time.Duration
 
 	podsMu   *sync.RWMutex
 	podsCurr map[[32]byte]registry.Pod
@@ -104,12 +104,12 @@ type ingress struct {
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(contract ContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochTimeMultiplier time.Duration) Ingress {
+func NewIngress(contract ContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration) Ingress {
 	ingress := &ingress{
-		contract:            contract,
-		swarmer:             swarmer,
-		orderbookClient:     orderbookClient,
-		epochTimeMultiplier: epochTimeMultiplier,
+		contract:          contract,
+		swarmer:           swarmer,
+		orderbookClient:   orderbookClient,
+		epochPollInterval: epochPollInterval,
 
 		podsMu:   new(sync.RWMutex),
 		podsCurr: map[[32]byte]registry.Pod{},
@@ -124,87 +124,97 @@ func NewIngress(contract ContractBinder, swarmer swarm.Swarmer, orderbookClient 
 func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 	errs := make(chan error, 1)
 
+	// Synchronise against the previous epoch
+	epoch, err := ingress.contract.PreviousEpoch()
+	if err != nil {
+		errs <- err
+		close(errs)
+		return errs
+	}
+	pods, err := ingress.contract.PreviousPods()
+	if err != nil {
+		errs <- err
+		close(errs)
+		return errs
+	}
+	if err := ingress.syncFromEpoch(epoch, pods); err != nil {
+		errs <- err
+		close(errs)
+		return errs
+	}
+
 	go func() {
 		defer close(errs)
 
-		// Synchronise against the previous epoch
-		epoch, err := ingress.contract.PreviousEpoch()
-		if err != nil {
-			errs <- err
-			return
-		}
-		pods, err := ingress.contract.PreviousPods()
-		if err != nil {
-			errs <- err
-			return
-		}
-		if err := ingress.syncFromEpoch(epoch, pods); err != nil {
-			errs <- err
-			return
-		}
-
-		// Get epoch synchronisation interval and timing
-		epochIntervalBig, err := ingress.contract.MinimumEpochInterval()
-		if err != nil {
-			errs <- err
-			return
-		}
-		epochInterval := epochIntervalBig.Int64()
-		if epochInterval < 50 {
-			// An Ingress will not trigger epochs faster than once every 50
-			// blocks
-			epochInterval = 50
-		}
-		ticker := time.NewTicker(ingress.epochTimeMultiplier * time.Duration(epochInterval))
-		defer ticker.Stop()
-
-		for {
+		dispatch.CoBegin(
 			func() {
-				nextEpoch, err := ingress.contract.Epoch()
-				if err != nil {
-					select {
-					case <-done:
-					case errs <- err:
-					}
-					return
-				}
-				if bytes.Equal(epoch.Hash[:], nextEpoch.Hash[:]) {
-					return
-				}
-				epoch = nextEpoch
-				pods, err := ingress.contract.Pods()
-				if err != nil {
-					select {
-					case <-done:
-					case errs <- err:
-					}
-					return
-				}
-				if err := ingress.syncFromEpoch(epoch, pods); err != nil {
-					select {
-					case <-done:
-					case errs <- err:
-					}
-					return
-				}
-			}()
+				ticker := time.NewTicker(ingress.epochPollInterval)
+				defer ticker.Stop()
 
-			// TODO: Save gas by only doing this when the current block number
-			// is sufficiently high and we can guarantee that this will
-			// succeed.
-			select {
-			case <-done:
-				return
-			case ingress.queueRequests <- EpochRequest{}:
-			}
+				for {
+					select {
+					case <-done:
+						return
+					case <-ticker.C:
+					}
 
-			// Wait until shutdown or the next epoch synchronise tick
-			select {
-			case <-done:
-				return
-			case <-ticker.C:
-			}
-		}
+					// Get the current epoch
+					nextEpoch, err := ingress.contract.Epoch()
+					if err != nil {
+						select {
+						case <-done:
+							return
+						case errs <- err:
+							continue
+						}
+					}
+
+					// Check if it equals what we think the current epoch is
+					// and update if necessary
+					if bytes.Equal(epoch.Hash[:], nextEpoch.Hash[:]) {
+						continue
+					}
+					epoch = nextEpoch
+					pods, err := ingress.contract.Pods()
+					if err != nil {
+						select {
+						case <-done:
+							return
+						case errs <- err:
+							continue
+						}
+					}
+					if err := ingress.syncFromEpoch(epoch, pods); err != nil {
+						select {
+						case <-done:
+							return
+						case errs <- err:
+							continue
+						}
+					}
+				}
+			},
+			func() {
+				ticker := time.NewTicker(2 * ingress.epochPollInterval)
+				defer ticker.Stop()
+
+				for {
+					select {
+					case <-done:
+						return
+					case <-ticker.C:
+					}
+
+					epoch, err := ingress.contract.NextEpoch()
+					if err != nil {
+						// Ignore the error to prevent verbose logging
+						continue
+					}
+					// Wait for a lower bound on the epoch
+					log.Printf("[info] (epoch) latest epoch = %v", base64.StdEncoding.EncodeToString(epoch.Hash[:]))
+					time.Sleep(time.Duration(epoch.BlockInterval.Int64()) * ingress.epochPollInterval)
+				}
+			})
 	}()
 
 	return errs
@@ -240,7 +250,7 @@ func (ingress *ingress) OpenOrder(signature [65]byte, orderID order.ID, orderFra
 }
 
 func (ingress *ingress) CancelOrder(signature [65]byte, orderID order.ID) error {
-	// TODO: Verify that the signature is valid beforNumBackgroundWorkerse sending it to the
+	// TODO: Verify that the signature is valid before NumBackgroundWorkers sending it to the
 	// Orderbook. This is not strictly necessary but it can save the Ingress
 	// some gas.
 	go func() {
@@ -263,7 +273,6 @@ func (ingress *ingress) ProcessRequests(done <-chan struct{}) <-chan error {
 }
 
 func (ingress *ingress) syncFromEpoch(epoch registry.Epoch, pods []registry.Pod) error {
-	logger.Epoch(epoch.Hash)
 	ingress.podsMu.Lock()
 	ingress.podsPrev = ingress.podsCurr
 	ingress.podsCurr = map[[32]byte]registry.Pod{}
@@ -285,8 +294,6 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 					return
 				}
 				switch req := request.(type) {
-				case EpochRequest:
-					ingress.processEpochRequest(req, done, errs)
 				case OpenOrderRequest:
 					ingress.processOpenOrderRequest(req, done, errs)
 				case OpenOrderFragmentMappingRequest:
@@ -299,15 +306,6 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 			}
 		}
 	})
-}
-
-func (ingress *ingress) processEpochRequest(req EpochRequest, done <-chan struct{}, errs chan<- error) {
-	if _, err := ingress.contract.NextEpoch(); err != nil {
-		select {
-		case <-done:
-		case errs <- err:
-		}
-	}
 }
 
 func (ingress *ingress) processOpenOrderRequest(req OpenOrderRequest, done <-chan struct{}, errs chan<- error) {
@@ -463,6 +461,7 @@ func (ingress *ingress) verifyOrderFragmentMappings(orderFragmentMappings OrderF
 func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFragmentMapping, orderFragmentEpochDepth int) error {
 	// Select pods based on the depth
 	pods := map[[32]byte]registry.Pod{}
+	log.Printf("epoch depth is %d", orderFragmentEpochDepth)
 	switch orderFragmentEpochDepth {
 	case 0:
 		pods = ingress.podsCurr
@@ -476,6 +475,7 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 		logger.Error(fmt.Sprintf("invalid number of pods: got %v, expected %v", len(orderFragmentMapping), len(pods)))
 		return ErrInvalidNumberOfPods
 	}
+	log.Printf("have %d in the fragments mapping", len(orderFragmentMapping))
 	for hash, orderFragments := range orderFragmentMapping {
 		pod, ok := pods[hash]
 		if !ok {

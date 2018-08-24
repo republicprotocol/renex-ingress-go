@@ -68,8 +68,18 @@ func main() {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
 
+	conn, err := contract.Connect(config.Ethereum)
+	if err != nil {
+		log.Fatalf("cannot connect to ethereum: %v", err)
+	}
+	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
+	binder, err := contract.NewBinder(auth, conn)
+	if err != nil {
+		log.Fatalf("cannot create contract binder: %v", err)
+	}
+
 	// New database for persistent storage
-	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour, 24 * time.Hour)
+	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour, 24*time.Hour)
 	if err != nil {
 		log.Fatalf("cannot open leveldb: %v", err)
 	}
@@ -80,16 +90,6 @@ func main() {
 	}
 	if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
 		log.Fatal("cannot store own multiAddress")
-	}
-
-	conn, err := contract.Connect(config.Ethereum)
-	if err != nil {
-		log.Fatalf("cannot connect to ethereum: %v", err)
-	}
-	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
-	binder, err := contract.NewBinder(auth, conn)
-	if err != nil {
-		log.Fatalf("cannot create contract binder: %v", err)
 	}
 
 	crypter := registry.NewCrypter(keystore, &binder, 256, time.Minute)

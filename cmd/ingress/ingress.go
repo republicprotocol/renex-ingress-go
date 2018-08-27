@@ -34,7 +34,7 @@ func main() {
 	logger.SetFilterLevel(logger.LevelDebugLow)
 	alpha := os.Getenv("ALPHA")
 	if alpha == "" {
-		alpha = "2"
+		alpha = "5"
 	}
 	alphaNum, err := strconv.Atoi(alpha)
 	if err != nil {
@@ -90,6 +90,20 @@ func main() {
 	binder, err := contract.NewBinder(auth, conn)
 	if err != nil {
 		log.Fatalf("cannot create contract binder: %v", err)
+	}
+
+	// New database for persistent storage
+	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour)
+	if err != nil {
+		log.Fatalf("cannot open leveldb: %v", err)
+	}
+	defer store.Release()
+	multiAddr.Signature, err = keystore.EcdsaKey.Sign(multiAddr.Hash())
+	if err != nil {
+		log.Fatal("cannot sign own multiAddress")
+	}
+	if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
+		log.Fatal("cannot store own multiAddress")
 	}
 
 	crypter := registry.NewCrypter(keystore, &binder, 256, time.Minute)

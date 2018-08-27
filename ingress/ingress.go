@@ -250,9 +250,9 @@ func (ingress *ingress) OpenOrder(signature [65]byte, orderID order.ID, orderFra
 }
 
 func (ingress *ingress) CancelOrder(signature [65]byte, orderID order.ID) error {
-	// TODO: Verify that the signature is valid before NumBackgroundWorkers sending it to the
-	// Orderbook. This is not strictly necessary but it can save the Ingress
-	// some gas.
+	// TODO: Verify that the signature is valid before NumBackgroundWorkers
+	// sending it to the Orderbook. This is not strictly necessary but it can
+	// save the Ingress some gas.
 	go func() {
 		log.Printf("[info] (cancel) queueing order = %v", orderID)
 		ingress.queueRequests <- CancelOrderRequest{

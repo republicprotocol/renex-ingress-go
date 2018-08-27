@@ -23,8 +23,8 @@ type OpenOrderRequest struct {
 // IsRequest implements the Request interface.
 func (req OpenOrderRequest) IsRequest() {}
 
-// IsEmpty returns true if the OpenOrderRequest contains nil fields
-func (req *OpenOrderRequest) IsEmpty() bool {
+// IsNil returns true if the OpenOrderRequest contains nil fields
+func (req *OpenOrderRequest) IsNil() bool {
 	return req == nil || len(req.signature) != 65 || len(req.orderID) != 32
 }
 
@@ -40,8 +40,8 @@ type OpenOrderFragmentMappingRequest struct {
 // IsRequest implements the Request interface.
 func (req OpenOrderFragmentMappingRequest) IsRequest() {}
 
-// IsEmpty returns true if the OpenOrderFragmentMappingRequest contains nil fields
-func (req *OpenOrderFragmentMappingRequest) IsEmpty() bool {
+// IsNil returns true if the OpenOrderFragmentMappingRequest contains nil fields
+func (req *OpenOrderFragmentMappingRequest) IsNil() bool {
 	return req == nil || len(req.signature) != 65 || len(req.orderID) != 32 || len(req.orderFragmentMapping) == 0
 }
 
@@ -55,7 +55,7 @@ type CancelOrderRequest struct {
 // IsRequest implements the Request interface.
 func (req CancelOrderRequest) IsRequest() {}
 
-// IsEmpty returns true if the CancelOrderRequest contains nil fields
-func (req *CancelOrderRequest) IsEmpty() bool {
+// IsNil returns true if the CancelOrderRequest contains nil fields
+func (req *CancelOrderRequest) IsNil() bool {
 	return req == nil || len(req.signature) != 65 || len(req.orderID) != 32
 }

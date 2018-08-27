@@ -103,8 +103,8 @@ func main() {
 	go func() {
 		// Add bootstrap nodes in the storer or load from the file .
 		for _, multiAddr := range config.BootstrapMultiAddresses {
-			if multiAddr.IsEmpty() {
-				logger.Network(logger.LevelError, fmt.Sprintf("cannot store null bootstrap address from config file: %v", err))
+			if multiAddr.IsNil() {
+				logger.Network(logger.LevelError, "cannot store null bootstrap address from config file")
 				continue
 			}
 			multi, err := store.SwarmMultiAddressStore().MultiAddress(multiAddr.Address())

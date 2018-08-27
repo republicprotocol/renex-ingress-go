@@ -68,20 +68,6 @@ func main() {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
 
-	// New database for persistent storage
-	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour)
-	if err != nil {
-		log.Fatalf("cannot open leveldb: %v", err)
-	}
-	defer store.Release()
-	multiAddr.Signature, err = keystore.EcdsaKey.Sign(multiAddr.Hash())
-	if err != nil {
-		log.Fatal("cannot sign own multiAddress")
-	}
-	if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
-		log.Fatal("cannot store own multiAddress")
-	}
-
 	conn, err := contract.Connect(config.Ethereum)
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)
@@ -93,7 +79,7 @@ func main() {
 	}
 
 	// New database for persistent storage
-	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour)
+	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour, 24*time.Hour)
 	if err != nil {
 		log.Fatalf("cannot open leveldb: %v", err)
 	}
@@ -129,6 +115,11 @@ func main() {
 				logger.Network(logger.LevelError, fmt.Sprintf("cannot store bootstrap multiaddress in store: %v", err))
 			}
 		}
+		peers, err := swarmer.Peers()
+		if err != nil {
+			log.Printf("[error] (bootstrap) cannot get connected peers: %v", err)
+		}
+		log.Printf("[info] connected to %v peers", len(peers)-1)
 
 		syncErrs := ingresser.Sync(done)
 		go func() {

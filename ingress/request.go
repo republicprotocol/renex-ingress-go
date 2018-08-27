@@ -1,6 +1,8 @@
 package ingress
 
-import "github.com/republicprotocol/republic-go/order"
+import (
+	"github.com/republicprotocol/republic-go/order"
+)
 
 // Request is an interface implemented by components that can be interpreted by
 // an Ingress as a request for an action to be performed, usually involving the
@@ -12,21 +14,9 @@ type Request interface {
 	IsRequest()
 }
 
-// An OpenOrderRequest is a Request for the Ingress to open an order.Order on
-// the Ethereum blockchain.
-type OpenOrderRequest struct {
-	signature   [65]byte
-	orderID     order.ID
-	orderParity order.Parity
-}
-
-// IsRequest implements the Request interface.
-func (req OpenOrderRequest) IsRequest() {}
-
 // An OpenOrderFragmentMappingRequest is a Request for the Ingress to open an
 // order.Order by forwarding order.Fragments to their respective Darknodes.
 type OpenOrderFragmentMappingRequest struct {
-	signature               [65]byte
 	orderID                 order.ID
 	orderFragmentMapping    OrderFragmentMapping
 	orderFragmentEpochDepth int
@@ -35,12 +25,10 @@ type OpenOrderFragmentMappingRequest struct {
 // IsRequest implements the Request interface.
 func (req OpenOrderFragmentMappingRequest) IsRequest() {}
 
-// A CancelOrderRequest is a Request for the Ingress to cancel an order.Order
-// on the Ethereum blockchain.
-type CancelOrderRequest struct {
-	signature [65]byte
-	orderID   order.ID
+type WithdrawalRequest struct {
+	trader  [20]byte
+	tokenID uint32
 }
 
 // IsRequest implements the Request interface.
-func (req CancelOrderRequest) IsRequest() {}
+func (req WithdrawalRequest) IsRequest() {}

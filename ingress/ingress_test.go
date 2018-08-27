@@ -23,6 +23,7 @@ import (
 var _ = Describe("Ingress", func() {
 
 	var rsaKey crypto.RsaKey
+	var ecdsaKey crypto.EcdsaKey
 	var contract *ingressBinder
 	var ingress Ingress
 	var done chan struct{}
@@ -36,11 +37,15 @@ var _ = Describe("Ingress", func() {
 		rsaKey, err = crypto.RandomRsaKey()
 		Expect(err).ShouldNot(HaveOccurred())
 
+		ecdsaKey, err = crypto.RandomEcdsaKey()
+		Expect(err).ShouldNot(HaveOccurred())
+
 		contract = newIngressBinder()
 
 		swarmer := mockSwarmer{}
 		orderbookClient := mockOrderbookClient{}
-		ingress = NewIngress(contract, &swarmer, &orderbookClient, time.Millisecond)
+
+		ingress = NewIngress(ecdsaKey, contract, &swarmer, &orderbookClient, time.Millisecond)
 		errChSync = ingress.Sync(done)
 		errChProcess = ingress.ProcessRequests(done)
 
@@ -239,55 +244,6 @@ var _ = Describe("Ingress", func() {
 			Expect(err).Should(Equal(ErrInvalidEpochDepth))
 		})
 	})
-
-	Context("when canceling orders", func() {
-
-		It("should cancel orders that are open", func() {
-			ord, err := createOrder(order.ParitySell)
-			Expect(err).ShouldNot(HaveOccurred())
-			fragments, err := ord.Split(5, 4)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			orderFragmentMappingIn := OrderFragmentMapping{}
-			pods, err := contract.Pods()
-			Expect(err).ShouldNot(HaveOccurred())
-			orderFragmentMappingIn[pods[0].Hash] = []OrderFragment{}
-			for i, fragment := range fragments {
-				orderFragment := OrderFragment{
-					Index: int64(i),
-				}
-				orderFragment.EncryptedFragment, err = fragment.Encrypt(rsaKey.PublicKey)
-				Expect(err).ShouldNot(HaveOccurred())
-				orderFragmentMappingIn[pods[0].Hash] = append(orderFragmentMappingIn[pods[0].Hash], orderFragment)
-			}
-
-			orderFragmentMappingsIn := OrderFragmentMappings{}
-			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
-
-			signature := [65]byte{}
-			_, err = rand.Read(signature[:])
-			Expect(err).ShouldNot(HaveOccurred())
-
-			err = ingress.OpenOrder(signature, ord.ID, orderFragmentMappingsIn)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			time.Sleep(time.Second)
-			err = ingress.CancelOrder(signature, ord.ID)
-			Expect(err).ShouldNot(HaveOccurred())
-		})
-
-		It("should cancel orders that are not open", func() {
-			ord, err := createOrder(order.ParitySell)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			signature := [65]byte{}
-			_, err = rand.Read(signature[:])
-			Expect(err).ShouldNot(HaveOccurred())
-
-			err = ingress.CancelOrder(signature, ord.ID)
-			Expect(err).ShouldNot(HaveOccurred())
-		})
-	})
 })
 
 // ErrOpenOpenedOrder is returned when trying to open an opened order.
@@ -339,45 +295,6 @@ func newIngressBinder() *ingressBinder {
 		numberOfDarknodes: 6,
 		pods:              []registry.Pod{pod},
 	}
-}
-
-// OpenBuyOrder in the mock ingressBinder.
-func (binder *ingressBinder) OpenBuyOrder(signature [65]byte, orderID order.ID) error {
-	binder.ordersMu.Lock()
-	binder.buyOrdersMu.Lock()
-	defer binder.ordersMu.Unlock()
-	defer binder.buyOrdersMu.Unlock()
-
-	if _, ok := binder.orders[orderID]; !ok {
-		binder.orders[orderID] = len(binder.buyOrders)
-		binder.buyOrders = append(binder.buyOrders, orderID)
-		binder.orderStatus[orderID] = order.Open
-		return nil
-	}
-
-	return errors.New("cannot open order that is already open")
-}
-
-// OpenSellOrder in the mock ingressBinder.
-func (binder *ingressBinder) OpenSellOrder(signature [65]byte, orderID order.ID) error {
-	binder.ordersMu.Lock()
-	binder.sellOrdersMu.Lock()
-	defer binder.ordersMu.Unlock()
-	defer binder.sellOrdersMu.Unlock()
-
-	if _, ok := binder.orders[orderID]; !ok {
-		binder.orders[orderID] = len(binder.sellOrders)
-		binder.sellOrders = append(binder.sellOrders, orderID)
-		binder.orderStatus[orderID] = order.Open
-		return nil
-	}
-
-	return ErrOpenOpenedOrder
-}
-
-// CancelOrder in the mock ingressBinder.
-func (binder *ingressBinder) CancelOrder(signature [65]byte, orderID order.ID) error {
-	return binder.setOrderStatus(orderID, order.Canceled)
 }
 
 func (binder *ingressBinder) Darknodes() (identity.Addresses, error) {

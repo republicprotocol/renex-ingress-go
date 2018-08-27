@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/dispatch"
 	"github.com/republicprotocol/republic-go/logger"
 	"github.com/republicprotocol/republic-go/order"
@@ -66,21 +68,20 @@ type OrderFragment struct {
 	Index int64
 }
 
-// Ingress interface can open and cancel orders on behalf of a user.
+// Ingress interface can approve orders to opened on to the Orderbook and can
+// forward fragments on
 type Ingress interface {
 
 	// Sync the epoch.
 	Sync(<-chan struct{}) <-chan error
 
-	// OpenOrder on the Orderbook and on the Darkpool. A signature from the
-	// trader identifies them as the owner, the order ID is submitted to the
-	// Orderbook along with the necessary fee, and the order fragment mapping
-	// is used to send order fragments to pods in the Darkpool.
-	OpenOrder(signature [65]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) error
+	// OpenOrder on the Darkpool and returns a signed approval for the order to
+	// be opened in the Orderbook. The trader address and order ID are signed
+	// together so that the approval is only valid for that trader. The order
+	// fragment mapping is used to send order fragments to pods in the Darkpool.
+	OpenOrder(trader [20]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) ([65]byte, error)
 
-	// CancelOrder on the Orderbook. A signature from the trader is needed to
-	// verify the cancellation.
-	CancelOrder(signature [65]byte, orderID order.ID) error
+	ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]byte, error)
 
 	// ProcessRequests in the background. Closing the done channel will stop
 	// all processing. Running this background worker is required to open and
@@ -89,6 +90,7 @@ type Ingress interface {
 }
 
 type ingress struct {
+	ecdsaKey          crypto.EcdsaKey
 	contract          ContractBinder
 	swarmer           swarm.Swarmer
 	orderbookClient   orderbook.Client
@@ -104,8 +106,9 @@ type ingress struct {
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(contract ContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration) Ingress {
+func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration) Ingress {
 	ingress := &ingress{
+		ecdsaKey:          ecdsaKey,
 		contract:          contract,
 		swarmer:           swarmer,
 		orderbookClient:   orderbookClient,
@@ -124,7 +127,7 @@ func NewIngress(contract ContractBinder, swarmer swarm.Swarmer, orderbookClient 
 func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 	errs := make(chan error, 1)
 
-	// Synchronise against the previous epoch
+	// Synchronize against the previous epoch
 	epoch, err := ingress.contract.PreviousEpoch()
 	if err != nil {
 		errs <- err
@@ -220,47 +223,63 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 	return errs
 }
 
-func (ingress *ingress) OpenOrder(signature [65]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) error {
+func (ingress *ingress) OpenOrder(address [20]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) ([65]byte, error) {
 	// TODO: Verify that the signature is valid before sending it to the
 	// Orderbook. This is not strictly necessary but it can save the Ingress
 	// some gas.
 	if err := ingress.verifyOrderFragmentMappings(orderFragmentMappings); err != nil {
-		return err
+		return [65]byte{}, err
 	}
-	go func() {
-		log.Printf("[info] (open) queueing order = %v", orderID)
-		ingress.queueRequests <- OpenOrderRequest{
-			signature:   signature,
-			orderID:     orderID,
-			orderParity: ingress.orderParityFromOrderFragmentMappings(orderFragmentMappings),
-		}
-	}()
+
+	log.Printf("[info] (open) signing order = %v", orderID)
+	// Append orderID
+	message := append([]byte("Republic Protocol: open: "), orderID[:]...)
+	// Append trader
+	message = append(message, address[:]...)
+
+	signatureData := crypto.Keccak256([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message)
+	signature, err := ingress.ecdsaKey.Sign(signatureData)
+	if err != nil {
+		return [65]byte{}, err
+	}
+
 	for i := range orderFragmentMappings {
 		go func(i int) {
 			log.Printf("[info] (open) queueing order fragments order = %v at depth = %v", orderID, i)
 			ingress.queueRequests <- OpenOrderFragmentMappingRequest{
-				signature:               signature,
 				orderID:                 orderID,
 				orderFragmentMapping:    orderFragmentMappings[i],
 				orderFragmentEpochDepth: i,
 			}
 		}(i)
 	}
-	return nil
+
+	var signature65 [65]byte
+	copy(signature65[:], signature[:65])
+	return signature65, nil
 }
 
-func (ingress *ingress) CancelOrder(signature [65]byte, orderID order.ID) error {
-	// TODO: Verify that the signature is valid before NumBackgroundWorkers sending it to the
-	// Orderbook. This is not strictly necessary but it can save the Ingress
-	// some gas.
-	go func() {
-		log.Printf("[info] (cancel) queueing order = %v", orderID)
-		ingress.queueRequests <- CancelOrderRequest{
-			signature: signature,
-			orderID:   orderID,
-		}
-	}()
-	return nil
+func (ingress *ingress) ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]byte, error) {
+	log.Printf("[info] (open) approving withdrawal for %v", trader)
+	// Append orderID
+	message := append([]byte("Republic Protocol: withdraw: "), trader[:]...)
+	// Append trader (TODO: Convert uint32 to bytes properly)
+	buf := new(bytes.Buffer)
+	err := binary.Write(buf, binary.LittleEndian, tokenID)
+	if err != nil {
+		fmt.Println("binary.Write failed:", err)
+	}
+
+	// TODO: Retrieve trader nonce
+
+	message = append(message, buf.Bytes()...)
+
+	signatureData := crypto.Keccak256([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message)
+	signature, err := ingress.ecdsaKey.Sign(signatureData)
+
+	var signature65 [65]byte
+	copy(signature65[:], signature[:65])
+	return signature65, nil
 }
 
 func (ingress *ingress) ProcessRequests(done <-chan struct{}) <-chan error {
@@ -294,42 +313,14 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 					return
 				}
 				switch req := request.(type) {
-				case OpenOrderRequest:
-					ingress.processOpenOrderRequest(req, done, errs)
 				case OpenOrderFragmentMappingRequest:
 					ingress.processOpenOrderFragmentMappingRequest(req, done, errs)
-				case CancelOrderRequest:
-					ingress.processCancelOrderRequest(req, done, errs)
 				default:
 					log.Printf("[error] unexpected request type %T", request)
 				}
 			}
 		}
 	})
-}
-
-func (ingress *ingress) processOpenOrderRequest(req OpenOrderRequest, done <-chan struct{}, errs chan<- error) {
-	var err error
-	if req.orderParity == order.ParityBuy {
-		err = ingress.contract.OpenBuyOrder(req.signature, req.orderID)
-	} else {
-		err = ingress.contract.OpenSellOrder(req.signature, req.orderID)
-	}
-	if err != nil {
-		select {
-		case <-done:
-		case errs <- fmt.Errorf("[error] (open) order = %v: %v", req.orderID, err):
-		}
-	}
-}
-
-func (ingress *ingress) processCancelOrderRequest(req CancelOrderRequest, done <-chan struct{}, errs chan<- error) {
-	if err := ingress.contract.CancelOrder(req.signature, req.orderID); err != nil {
-		select {
-		case <-done:
-		case errs <- fmt.Errorf("[error] (cancel) order = %v: %v", req.orderID, err):
-		}
-	}
 }
 
 func (ingress *ingress) processOpenOrderFragmentMappingRequest(req OpenOrderFragmentMappingRequest, done <-chan struct{}, errs chan<- error) {

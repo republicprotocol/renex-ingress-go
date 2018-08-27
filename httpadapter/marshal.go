@@ -15,7 +15,6 @@ import (
 // in the OrderFragment. It is represented as a JSON object. This
 // representation is useful for HTTP drivers.
 type OrderFragment struct {
-	OrderSignature  string           `json:"orderSignature"`
 	OrderID         string           `json:"orderId"`
 	OrderType       order.Type       `json:"orderType"`
 	OrderParity     order.Parity     `json:"orderParity"`
@@ -45,12 +44,23 @@ type OrderFragmentMappings []OrderFragmentMapping
 // OpenOrderRequest is an JSON object sent to the HTTP handlers to request the
 // opening of an order.
 type OpenOrderRequest struct {
-	Signature             string                `json:"signature"`
+	Address               string                `json:"address"`
 	OrderFragmentMappings OrderFragmentMappings `json:"orderFragmentMappings"`
+}
+
+// ApproveWithdrawalRequest is an JSON object sent to the HTTP handlers to
+// request the approval of a withdrawal.
+type ApproveWithdrawalRequest struct {
+	Trader  string `json:"trader"`
+	TokenID uint32 `json:"tokenID"`
 }
 
 func MarshalSignature(signatureIn [65]byte) string {
 	return base64.StdEncoding.EncodeToString(signatureIn[:])
+}
+
+func MarshalAddress(addressIn [32]byte) string {
+	return base64.StdEncoding.EncodeToString(addressIn[:])
 }
 
 func MarshalOrderID(orderIDIn order.ID) string {
@@ -96,6 +106,19 @@ func UnmarshalSignature(signatureIn string) ([65]byte, error) {
 	}
 	copy(signature[:], signatureBytes)
 	return signature, nil
+}
+
+func UnmarshalAddress(addressIn string) ([20]byte, error) {
+	address := [20]byte{}
+	addressBytes, err := base64.StdEncoding.DecodeString(addressIn)
+	if err != nil {
+		return address, fmt.Errorf("cannot decode address %v: %v", addressIn, err)
+	}
+	if len(addressBytes) != 20 {
+		return address, ErrInvalidAddressLength
+	}
+	copy(address[:], addressBytes)
+	return address, nil
 }
 
 func UnmarshalOrderID(orderIDIn string) (order.ID, error) {

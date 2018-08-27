@@ -39,6 +39,10 @@ var ErrInvalidNumberOfOrderFragments = errors.New("invalid number of order fragm
 // of an invalid length.
 var ErrInvalidOrderFragmentMapping = errors.New("invalid order fragment mappings")
 
+// ErrInvalidOrderFragment is returned when an invalid orderFragment is provided
+// upon verification.
+var ErrInvalidOrderFragment = errors.New("invalid order fragment")
+
 // ErrInvalidEpochDepth is returned when an invalid epoch depth is provided
 // upon verification.
 var ErrInvalidEpochDepth = errors.New("invalid epoch depth")
@@ -131,6 +135,11 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 		close(errs)
 		return errs
 	}
+	if epoch.IsEmpty() {
+		errs <- fmt.Errorf("cannot sync: null epoch")
+		close(errs)
+		return errs
+	}
 	pods, err := ingress.contract.PreviousPods()
 	if err != nil {
 		errs <- err
@@ -167,6 +176,10 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 						case errs <- err:
 							continue
 						}
+					}
+
+					if nextEpoch.IsEmpty() {
+						continue
 					}
 
 					// Check if it equals what we think the current epoch is
@@ -309,6 +322,10 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 }
 
 func (ingress *ingress) processOpenOrderRequest(req OpenOrderRequest, done <-chan struct{}, errs chan<- error) {
+	if req.IsEmpty() {
+		errs <- fmt.Errorf("[error] (open) invalid OpenOrderRequest")
+		return
+	}
 	var err error
 	if req.orderParity == order.ParityBuy {
 		err = ingress.contract.OpenBuyOrder(req.signature, req.orderID)
@@ -324,6 +341,10 @@ func (ingress *ingress) processOpenOrderRequest(req OpenOrderRequest, done <-cha
 }
 
 func (ingress *ingress) processCancelOrderRequest(req CancelOrderRequest, done <-chan struct{}, errs chan<- error) {
+	if req.IsEmpty() {
+		errs <- fmt.Errorf("[error] (cancel) invalid CancelOrderRequest")
+		return
+	}
 	if err := ingress.contract.CancelOrder(req.signature, req.orderID); err != nil {
 		select {
 		case <-done:
@@ -333,6 +354,10 @@ func (ingress *ingress) processCancelOrderRequest(req CancelOrderRequest, done <
 }
 
 func (ingress *ingress) processOpenOrderFragmentMappingRequest(req OpenOrderFragmentMappingRequest, done <-chan struct{}, errs chan<- error) {
+	if req.IsEmpty() {
+		errs <- fmt.Errorf("[error] (open) invalid OpenOrderFragmentMappingRequest")
+		return
+	}
 	ingress.podsMu.RLock()
 	defer ingress.podsMu.RUnlock()
 
@@ -401,7 +426,17 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 				errs <- fmt.Errorf("no fragment found at index %v", i)
 				return
 			}
+			if orderFragment.IsEmpty() || orderFragment.EncryptedFragment.IsEmpty() {
+				errs <- fmt.Errorf("invalid order fragment found at index %v", i)
+				return
+			}
+
 			darknode := pod.Darknodes[i]
+
+			if len(darknode) == 0 {
+				errs <- fmt.Errorf("empty darknode address")
+				return
+			}
 
 			// Send the order fragment to the Darknode
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -410,6 +445,11 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 			darknodeMultiAddr, err := ingress.swarmer.Query(ctx, darknode)
 			if err != nil {
 				errs <- fmt.Errorf("cannot send query to %v: %v", darknode, err)
+				return
+			}
+
+			if darknodeMultiAddr.IsEmpty() {
+				errs <- fmt.Errorf("invalid darknode multi-address detected")
 				return
 			}
 
@@ -443,12 +483,12 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 }
 
 func (ingress *ingress) verifyOrderFragmentMappings(orderFragmentMappings OrderFragmentMappings) error {
-	ingress.podsMu.RLock()
-	defer ingress.podsMu.RUnlock()
-
 	if len(orderFragmentMappings) == 0 {
 		return ErrInvalidOrderFragmentMapping
 	}
+
+	ingress.podsMu.RLock()
+	defer ingress.podsMu.RUnlock()
 
 	for i := range orderFragmentMappings {
 		if err := ingress.verifyOrderFragmentMapping(orderFragmentMappings[i], i); err != nil {
@@ -488,6 +528,9 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 		// Ensure order fragment Epoch depth matches up with value provided as
 		// parameter.
 		for _, orderFragment := range orderFragments {
+			if orderFragment.IsEmpty() {
+				return ErrInvalidOrderFragment
+			}
 			if orderFragment.EpochDepth != order.FragmentEpochDepth(orderFragmentEpochDepth) {
 				return ErrInvalidEpochDepth
 			}

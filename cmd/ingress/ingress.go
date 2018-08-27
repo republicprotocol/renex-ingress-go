@@ -68,6 +68,9 @@ func main() {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
 
+	if config.Ethereum == nil {
+		log.Fatalf("cannot parse Ethereum config")
+	}
 	conn, err := contract.Connect(config.Ethereum)
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)
@@ -103,6 +106,10 @@ func main() {
 	go func() {
 		// Add bootstrap nodes in the storer or load from the file .
 		for _, multiAddr := range config.BootstrapMultiAddresses {
+			if multiAddr.IsEmpty() {
+				logger.Network(logger.LevelError, fmt.Sprintf("cannot store null bootstrap address from config file: %v", err))
+				continue
+			}
 			multi, err := store.SwarmMultiAddressStore().MultiAddress(multiAddr.Address())
 			if err != nil && err != swarm.ErrMultiAddressNotFound {
 				logger.Network(logger.LevelError, fmt.Sprintf("cannot get bootstrap multi-address from store: %v", err))
@@ -110,6 +117,7 @@ func main() {
 			}
 			if err == nil {
 				multiAddr.Nonce = multi.Nonce
+				multiAddr.Signature = multi.Signature
 			}
 			if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
 				logger.Network(logger.LevelError, fmt.Sprintf("cannot store bootstrap multiaddress in store: %v", err))
@@ -145,6 +153,9 @@ func main() {
 }
 
 func getMultiaddress(keystore crypto.Keystore, port string) (identity.MultiAddress, error) {
+	if len(port) == 0 {
+		return identity.MultiAddress{}, fmt.Errorf("cannot use nil port")
+	}
 	// Get our IP address
 	ipInfoOut, err := exec.Command("curl", "https://ipinfo.io/ip").Output()
 	if err != nil {

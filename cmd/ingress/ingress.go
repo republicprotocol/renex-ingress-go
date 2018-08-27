@@ -68,9 +68,6 @@ func main() {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
 
-	if config.Ethereum == nil {
-		log.Fatalf("cannot parse Ethereum config")
-	}
 	conn, err := contract.Connect(config.Ethereum)
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)

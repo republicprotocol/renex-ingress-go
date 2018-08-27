@@ -34,7 +34,7 @@ func main() {
 	logger.SetFilterLevel(logger.LevelDebugLow)
 	alpha := os.Getenv("ALPHA")
 	if alpha == "" {
-		alpha = "2"
+		alpha = "5"
 	}
 	alphaNum, err := strconv.Atoi(alpha)
 	if err != nil {
@@ -68,8 +68,18 @@ func main() {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
 
+	conn, err := contract.Connect(config.Ethereum)
+	if err != nil {
+		log.Fatalf("cannot connect to ethereum: %v", err)
+	}
+	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
+	binder, err := contract.NewBinder(auth, conn)
+	if err != nil {
+		log.Fatalf("cannot create contract binder: %v", err)
+	}
+
 	// New database for persistent storage
-	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour)
+	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour, 24*time.Hour)
 	if err != nil {
 		log.Fatalf("cannot open leveldb: %v", err)
 	}
@@ -80,16 +90,6 @@ func main() {
 	}
 	if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
 		log.Fatal("cannot store own multiAddress")
-	}
-
-	conn, err := contract.Connect(config.Ethereum)
-	if err != nil {
-		log.Fatalf("cannot connect to ethereum: %v", err)
-	}
-	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
-	binder, err := contract.NewBinder(auth, conn)
-	if err != nil {
-		log.Fatalf("cannot create contract binder: %v", err)
 	}
 
 	crypter := registry.NewCrypter(keystore, &binder, 256, time.Minute)
@@ -103,18 +103,29 @@ func main() {
 	go func() {
 		// Add bootstrap nodes in the store or load from the file.
 		for _, multiAddr := range config.BootstrapMultiAddresses {
-			multi, err := store.SwarmMultiAddressStore().MultiAddress(multiAddr.Address())
-			if err != nil && err != swarm.ErrMultiAddressNotFound {
+			if multiAddr.IsNil() {
+				logger.Network(logger.LevelError, "cannot store null bootstrap address from config file")
+				continue
+			}
+			_, err := store.SwarmMultiAddressStore().MultiAddress(multiAddr.Address())
+			if err == nil {
+				// Only add bootstrap multi-addresses that are not already in the store.
+				continue
+			}
+			if err != swarm.ErrMultiAddressNotFound {
 				logger.Network(logger.LevelError, fmt.Sprintf("cannot get bootstrap multi-address from store: %v", err))
 				continue
 			}
-			if err == nil {
-				multiAddr.Nonce = multi.Nonce
-			}
+
 			if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
 				logger.Network(logger.LevelError, fmt.Sprintf("cannot store bootstrap multiaddress in store: %v", err))
 			}
 		}
+		peers, err := swarmer.Peers()
+		if err != nil {
+			log.Printf("[error] (bootstrap) cannot get connected peers: %v", err)
+		}
+		log.Printf("[info] connected to %v peers", len(peers)-1)
 
 		syncErrs := ingresser.Sync(done)
 		go func() {
@@ -140,6 +151,9 @@ func main() {
 }
 
 func getMultiaddress(keystore crypto.Keystore, port string) (identity.MultiAddress, error) {
+	if len(port) == 0 {
+		return identity.MultiAddress{}, fmt.Errorf("cannot use nil port")
+	}
 	// Get our IP address
 	ipInfoOut, err := exec.Command("curl", "https://ipinfo.io/ip").Output()
 	if err != nil {

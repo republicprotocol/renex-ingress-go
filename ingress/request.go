@@ -25,6 +25,11 @@ type OpenOrderFragmentMappingRequest struct {
 // IsRequest implements the Request interface.
 func (req OpenOrderFragmentMappingRequest) IsRequest() {}
 
+// IsNil returns true if the OpenOrderFragmentMappingRequest contains nil fields
+func (req *OpenOrderFragmentMappingRequest) IsNil() bool {
+	return req == nil || len(req.orderID) != 32 || len(req.orderFragmentMapping) == 0
+}
+
 type WithdrawalRequest struct {
 	trader  [20]byte
 	tokenID uint32
@@ -32,3 +37,8 @@ type WithdrawalRequest struct {
 
 // IsRequest implements the Request interface.
 func (req WithdrawalRequest) IsRequest() {}
+
+// IsNil returns true if the OpenOrderFragmentMappingRequest contains nil fields
+func (req *WithdrawalRequest) IsNil() bool {
+	return req == nil || len(req.trader) != 29
+}

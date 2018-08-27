@@ -107,15 +107,16 @@ func main() {
 				logger.Network(logger.LevelError, "cannot store null bootstrap address from config file")
 				continue
 			}
-			multi, err := store.SwarmMultiAddressStore().MultiAddress(multiAddr.Address())
-			if err != nil && err != swarm.ErrMultiAddressNotFound {
+			_, err := store.SwarmMultiAddressStore().MultiAddress(multiAddr.Address())
+			if err == nil {
+				// Only add bootstrap multi-addresses that are not already in the store.
+				continue
+			}
+			if err != swarm.ErrMultiAddressNotFound {
 				logger.Network(logger.LevelError, fmt.Sprintf("cannot get bootstrap multi-address from store: %v", err))
 				continue
 			}
-			if err == nil {
-				multiAddr.Nonce = multi.Nonce
-				multiAddr.Signature = multi.Signature
-			}
+
 			if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
 				logger.Network(logger.LevelError, fmt.Sprintf("cannot store bootstrap multiaddress in store: %v", err))
 			}

@@ -9,12 +9,6 @@ import (
 // ContractBinder will define all methods that the ingress will require to
 // communicate with smart contracts.
 type ContractBinder interface {
-	// OpenBuyOrder(signature [65]byte, orderID order.ID) error
-
-	// OpenSellOrder(signature [65]byte, orderID order.ID) error
-
-	// CancelOrder(signature [65]byte, orderID order.ID) error
-
 	MinimumEpochInterval() (*big.Int, error)
 
 	Epoch() (registry.Epoch, error)

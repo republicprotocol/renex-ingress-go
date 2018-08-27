@@ -89,11 +89,12 @@ var _ = Describe("Ingress", func() {
 			}
 			orderFragmentMappingsIn := OrderFragmentMappings{orderFragmentMappingIn}
 
-			signature := [65]byte{}
-			_, err = rand.Read(signature[:])
+			trader := [20]byte{}
+			_, err = rand.Read(trader[:])
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = ingress.OpenOrder(signature, ord.ID, orderFragmentMappingsIn)
+			signature, err := ingress.OpenOrder(trader, ord.ID, orderFragmentMappingsIn)
+			Expect(signature).ShouldNot(BeNil())
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 
@@ -119,11 +120,12 @@ var _ = Describe("Ingress", func() {
 			orderFragmentMappingsIn := OrderFragmentMappings{}
 			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
 
-			signature := [65]byte{}
-			_, err = rand.Read(signature[:])
+			trader := [20]byte{}
+			_, err = rand.Read(trader[:])
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = ingress.OpenOrder(signature, ord.ID, orderFragmentMappingsIn)
+			signature, err := ingress.OpenOrder(trader, ord.ID, orderFragmentMappingsIn)
+			Expect(signature).ShouldNot(BeNil())
 			Expect(err).Should(HaveOccurred())
 		})
 
@@ -139,11 +141,12 @@ var _ = Describe("Ingress", func() {
 			orderFragmentMappingsIn := OrderFragmentMappings{}
 			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
 
-			signature := [65]byte{}
-			_, err = rand.Read(signature[:])
+			trader := [20]byte{}
+			_, err = rand.Read(trader[:])
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = ingress.OpenOrder(signature, ord.ID, orderFragmentMappingsIn)
+			signature, err := ingress.OpenOrder(trader, ord.ID, orderFragmentMappingsIn)
+			Expect(signature).ShouldNot(BeNil())
 			Expect(err).Should(HaveOccurred())
 		})
 
@@ -153,11 +156,12 @@ var _ = Describe("Ingress", func() {
 
 			orderFragmentMappingIn := OrderFragmentMappings{}
 
-			signature := [65]byte{}
-			_, err = rand.Read(signature[:])
+			trader := [20]byte{}
+			_, err = rand.Read(trader[:])
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = ingress.OpenOrder(signature, ord.ID, orderFragmentMappingIn)
+			signature, err := ingress.OpenOrder(trader, ord.ID, orderFragmentMappingIn)
+			Expect(signature).ShouldNot(BeNil())
 			Expect(err).Should(HaveOccurred())
 		})
 
@@ -171,11 +175,12 @@ var _ = Describe("Ingress", func() {
 			orderFragmentMappingsIn := OrderFragmentMappings{}
 			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
 
-			signature := [65]byte{}
-			_, err = rand.Read(signature[:])
+			trader := [20]byte{}
+			_, err = rand.Read(trader[:])
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = ingress.OpenOrder(signature, ord.ID, orderFragmentMappingsIn)
+			signature, err := ingress.OpenOrder(trader, ord.ID, orderFragmentMappingsIn)
+			Expect(signature).ShouldNot(BeNil())
 			Expect(err).Should(HaveOccurred())
 		})
 
@@ -204,11 +209,12 @@ var _ = Describe("Ingress", func() {
 			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
 			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
 
-			signature := [65]byte{}
-			_, err = rand.Read(signature[:])
+			trader := [20]byte{}
+			_, err = rand.Read(trader[:])
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = ingress.OpenOrder(signature, ord.ID, orderFragmentMappingsIn)
+			signature, err := ingress.OpenOrder(trader, ord.ID, orderFragmentMappingsIn)
+			Expect(signature).ShouldNot(BeNil())
 			Expect(err).Should(Equal(ErrInvalidNumberOfPods))
 		})
 
@@ -236,11 +242,12 @@ var _ = Describe("Ingress", func() {
 			orderFragmentMappingsIn := OrderFragmentMappings{}
 			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
 
-			signature := [65]byte{}
-			_, err = rand.Read(signature[:])
+			trader := [20]byte{}
+			_, err = rand.Read(trader[:])
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = ingress.OpenOrder(signature, ord.ID, orderFragmentMappingsIn)
+			signature, err := ingress.OpenOrder(trader, ord.ID, orderFragmentMappingsIn)
+			Expect(signature).ShouldNot(BeNil())
 			Expect(err).Should(Equal(ErrInvalidEpochDepth))
 		})
 	})
@@ -327,9 +334,11 @@ func (binder *ingressBinder) Epoch() (registry.Epoch, error) {
 		return registry.Epoch{}, err
 	}
 	return registry.Epoch{
-		Hash:      [32]byte{2},
-		Pods:      binder.pods,
-		Darknodes: darknodes,
+		Hash:          [32]byte{2},
+		Pods:          binder.pods,
+		Darknodes:     darknodes,
+		BlockNumber:   big.NewInt(0),
+		BlockInterval: big.NewInt(1),
 	}, nil
 }
 
@@ -376,16 +385,28 @@ func createOrder(parity order.Parity) (order.Order, error) {
 type mockSwarmer struct {
 }
 
-func (swarmer *mockSwarmer) Bootstrap(ctx context.Context, multiAddrs identity.MultiAddresses) error {
+func (swarmer *mockSwarmer) Ping(ctx context.Context) error {
 	return nil
 }
 
-func (swarmer *mockSwarmer) Query(ctx context.Context, query identity.Address, depth int) (identity.MultiAddress, error) {
+func (swarmer *mockSwarmer) Pong(ctx context.Context, to identity.MultiAddress) error {
+	return nil
+}
+
+func (swarmer *mockSwarmer) BroadcastMultiAddress(ctx context.Context, multiAddress identity.MultiAddress) error {
+	return nil
+}
+
+func (swarmer *mockSwarmer) Query(ctx context.Context, query identity.Address) (identity.MultiAddress, error) {
 	return identity.MultiAddress{}, nil
 }
 
 func (swarmer *mockSwarmer) MultiAddress() identity.MultiAddress {
 	return identity.MultiAddress{}
+}
+
+func (swarmer *mockSwarmer) Peers() (identity.MultiAddresses, error) {
+	return identity.MultiAddresses{}, nil
 }
 
 type mockOrderbookClient struct {

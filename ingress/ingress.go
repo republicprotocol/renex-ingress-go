@@ -54,9 +54,6 @@ var ErrEpochIsNil = errors.New("epoch is nil")
 // ErrOpenOrderRequestIsNil is returned when a nil OpenOrderRequest is detected.
 var ErrOpenOrderRequestIsNil = errors.New("OpenOrderRequest is nil")
 
-// ErrCancelOrderRequestIsNil is returned when a nil CancelOrderRequest is detected.
-var ErrCancelOrderRequestIsNil = errors.New("CancelOrderRequest is nil")
-
 // ErrOrderFragmentMappingRequestIsNil is returned when a nil OrderFragmentMappingRequest is detected.
 var ErrOrderFragmentMappingRequestIsNil = errors.New("OrderFragmentMappingRequest is nil")
 

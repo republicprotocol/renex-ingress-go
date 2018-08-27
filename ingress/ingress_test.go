@@ -1,8 +1,10 @@
 package ingress_test
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math/big"
@@ -64,6 +66,40 @@ var _ = Describe("Ingress", func() {
 		captureErrorsFromErrorChannel(errChProcess)
 
 		time.Sleep(time.Second)
+	})
+
+	Context("when approving withdrawals", func() {
+		It("should approve valid withdrawals with a valid signature", func() {
+			trader := [20]byte{}
+			_, err := rand.Read(trader[:])
+			Expect(err).ShouldNot(HaveOccurred())
+
+			tokenID := uint32(0)
+
+			signature, err := ingress.ApproveWithdrawal(trader, tokenID)
+			Expect(signature).ShouldNot(BeNil())
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Append trader
+			message := append([]byte("Republic Protocol: withdraw: "), trader[:]...)
+			// Append tokenID
+			buf := new(bytes.Buffer)
+			err = binary.Write(buf, binary.LittleEndian, tokenID)
+			if err != nil {
+				fmt.Println("binary.Write failed:", err)
+			}
+			message = append(message, buf.Bytes()...)
+
+			signatureData := crypto.Keccak256([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message)
+
+			// TODO: Retrieve trader nonce
+
+			broker, err := crypto.RecoverAddress(signatureData, signature[:])
+			Expect(err).ShouldNot(HaveOccurred())
+
+			Expect(broker).Should(Equal(ecdsaKey.Address()))
+
+		})
 	})
 
 	Context("when opening orders", func() {

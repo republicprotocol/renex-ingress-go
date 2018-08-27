@@ -99,7 +99,7 @@ var _ = Describe("Ingress Adapter", func() {
 		It("should return an error for malformed pod hashes", func() {
 			orderFragmentMappingIn[podHash[16:]] = orderFragmentMappingIn[podHash]
 			_, _, err := UnmarshalOrderFragmentMapping(orderFragmentMappingIn)
-			Expect(err).Should(HaveOccurred())
+			Expect(err).Should(MatchError(ErrInvalidPodHashLength))
 
 			delete(orderFragmentMappingIn, podHash[16:])
 			orderFragmentMappingIn["this is invalid"] = orderFragmentMappingIn[podHash]
@@ -120,7 +120,7 @@ var _ = Describe("Ingress Adapter", func() {
 				orderFragmentMappingIn[podHash][i].Price = []string{}
 			}
 			_, _, err := UnmarshalOrderFragmentMapping(orderFragmentMappingIn)
-			Expect(err).Should(HaveOccurred())
+			Expect(err).Should(MatchError(ErrInvalidEncryptedCoExpShareLength))
 
 			for i := range orderFragmentMappingIn[podHash] {
 				orderFragmentMappingIn[podHash][i].Price = []string{"this is invalid", "this is also invalid"}
@@ -134,7 +134,7 @@ var _ = Describe("Ingress Adapter", func() {
 				orderFragmentMappingIn[podHash][i].Volume = []string{}
 			}
 			_, _, err := UnmarshalOrderFragmentMapping(orderFragmentMappingIn)
-			Expect(err).Should(HaveOccurred())
+			Expect(err).Should(MatchError(ErrInvalidEncryptedCoExpShareLength))
 
 			for i := range orderFragmentMappingIn[podHash] {
 				orderFragmentMappingIn[podHash][i].Volume = []string{"this is invalid", "this is also invalid"}
@@ -148,7 +148,7 @@ var _ = Describe("Ingress Adapter", func() {
 				orderFragmentMappingIn[podHash][i].MinimumVolume = []string{}
 			}
 			_, _, err := UnmarshalOrderFragmentMapping(orderFragmentMappingIn)
-			Expect(err).Should(HaveOccurred())
+			Expect(err).Should(MatchError(ErrInvalidEncryptedCoExpShareLength))
 
 			for i := range orderFragmentMappingIn[podHash] {
 				orderFragmentMappingIn[podHash][i].MinimumVolume = []string{"this is invalid", "this is also invalid"}
@@ -179,7 +179,7 @@ var _ = Describe("Ingress Adapter", func() {
 			Expect(atomic.LoadInt64(&ingress.numOpened)).To(Equal(int64(1)))
 		})
 
-		It("should not call ingress.OpenOrder if signature is invalid", func() {
+		It("should not call ingress.OpenOrder if trader is invalid", func() {
 			ingress := &mockIngress{}
 			ingressAdapter := NewIngressAdapter(ingress)
 			traderBytes := []byte{}
@@ -191,14 +191,14 @@ var _ = Describe("Ingress Adapter", func() {
 			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
 
 			_, err := ingressAdapter.OpenOrder(string(traderBytes), orderFragmentMappingsIn)
-			Expect(err).Should(HaveOccurred())
+			Expect(err).Should(MatchError(ErrInvalidAddressLength))
 			Expect(atomic.LoadInt64(&ingress.numOpened)).To(Equal(int64(0)))
 		})
 
 		It("should not call ingress.OpenOrder if pool hash is invalid", func() {
 			ingress := &mockIngress{}
 			ingressAdapter := NewIngressAdapter(ingress)
-			traderBytes := [65]byte{}
+			traderBytes := [20]byte{}
 			_, err := rand.Read(traderBytes[:])
 			Expect(err).ShouldNot(HaveOccurred())
 			trader := base64.StdEncoding.EncodeToString(traderBytes[:])
@@ -211,6 +211,34 @@ var _ = Describe("Ingress Adapter", func() {
 			_, err = ingressAdapter.OpenOrder(trader, orderFragmentMappingsIn)
 			Expect(err).Should(HaveOccurred())
 			Expect(atomic.LoadInt64(&ingress.numOpened)).To(Equal(int64(0)))
+		})
+	})
+
+	Context("when approving withdrawals", func() {
+
+		It("should forward data to the ingress if the signature and mapping are well formed", func() {
+			ingress := &mockIngress{}
+			ingressAdapter := NewIngressAdapter(ingress)
+
+			traderBytes := [20]byte{}
+			_, err := rand.Read(traderBytes[:])
+			Expect(err).ShouldNot(HaveOccurred())
+			trader := base64.StdEncoding.EncodeToString(traderBytes[:])
+
+			_, err = ingressAdapter.ApproveWithdrawal(trader, 0)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(atomic.LoadInt64(&ingress.numWithdrawn)).To(Equal(int64(1)))
+		})
+
+		It("should not call ingress.ApproveWithdrawal if trader is invalid", func() {
+			ingress := &mockIngress{}
+			ingressAdapter := NewIngressAdapter(ingress)
+			traderBytes := []byte{}
+			copy(traderBytes[:], "incorrect trader")
+
+			_, err := ingressAdapter.ApproveWithdrawal(string(traderBytes), 0)
+			Expect(err).Should(MatchError(ErrInvalidAddressLength))
+			Expect(atomic.LoadInt64(&ingress.numWithdrawn)).To(Equal(int64(0)))
 		})
 	})
 })

@@ -103,14 +103,20 @@ func main() {
 	go func() {
 		// Add bootstrap nodes in the storer or load from the file .
 		for _, multiAddr := range config.BootstrapMultiAddresses {
-			multi, err := store.SwarmMultiAddressStore().MultiAddress(multiAddr.Address())
-			if err != nil && err != swarm.ErrMultiAddressNotFound {
+			if multiAddr.IsNil() {
+				logger.Network(logger.LevelError, "cannot store null bootstrap address from config file")
+				continue
+			}
+			_, err := store.SwarmMultiAddressStore().MultiAddress(multiAddr.Address())
+			if err == nil {
+				// Only add bootstrap multi-addresses that are not already in the store.
+				continue
+			}
+			if err != swarm.ErrMultiAddressNotFound {
 				logger.Network(logger.LevelError, fmt.Sprintf("cannot get bootstrap multi-address from store: %v", err))
 				continue
 			}
-			if err == nil {
-				multiAddr.Nonce = multi.Nonce
-			}
+
 			if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
 				logger.Network(logger.LevelError, fmt.Sprintf("cannot store bootstrap multiaddress in store: %v", err))
 			}
@@ -145,6 +151,9 @@ func main() {
 }
 
 func getMultiaddress(keystore crypto.Keystore, port string) (identity.MultiAddress, error) {
+	if len(port) == 0 {
+		return identity.MultiAddress{}, fmt.Errorf("cannot use nil port")
+	}
 	// Get our IP address
 	ipInfoOut, err := exec.Command("curl", "https://ipinfo.io/ip").Output()
 	if err != nil {

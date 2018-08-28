@@ -23,6 +23,11 @@ type OpenOrderRequest struct {
 // IsRequest implements the Request interface.
 func (req OpenOrderRequest) IsRequest() {}
 
+// IsNil returns true if the OpenOrderRequest contains nil fields
+func (req *OpenOrderRequest) IsNil() bool {
+	return req == nil || len(req.signature) != 65 || len(req.orderID) != 32
+}
+
 // An OpenOrderFragmentMappingRequest is a Request for the Ingress to open an
 // order.Order by forwarding order.Fragments to their respective Darknodes.
 type OpenOrderFragmentMappingRequest struct {
@@ -35,6 +40,11 @@ type OpenOrderFragmentMappingRequest struct {
 // IsRequest implements the Request interface.
 func (req OpenOrderFragmentMappingRequest) IsRequest() {}
 
+// IsNil returns true if the OpenOrderFragmentMappingRequest contains nil fields
+func (req *OpenOrderFragmentMappingRequest) IsNil() bool {
+	return req == nil || len(req.signature) != 65 || len(req.orderID) != 32 || len(req.orderFragmentMapping) == 0
+}
+
 // A CancelOrderRequest is a Request for the Ingress to cancel an order.Order
 // on the Ethereum blockchain.
 type CancelOrderRequest struct {
@@ -44,3 +54,8 @@ type CancelOrderRequest struct {
 
 // IsRequest implements the Request interface.
 func (req CancelOrderRequest) IsRequest() {}
+
+// IsNil returns true if the CancelOrderRequest contains nil fields
+func (req *CancelOrderRequest) IsNil() bool {
+	return req == nil || len(req.signature) != 65 || len(req.orderID) != 32
+}

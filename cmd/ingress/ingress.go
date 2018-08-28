@@ -97,16 +97,12 @@ func main() {
 	swarmer := swarm.NewSwarmer(swarmClient, store.SwarmMultiAddressStore(), alphaNum, &crypter)
 
 	orderbookClient := grpc.NewOrderbookClient()
-	ingresser := ingress.NewIngress(crypter, &binder, swarmer, orderbookClient, 4*time.Second)
+	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, swarmer, orderbookClient, 4*time.Second)
 	ingressAdapter := httpadapter.NewIngressAdapter(ingresser)
 
 	go func() {
 		// Add bootstrap nodes in the store or load from the file.
 		for _, multiAddr := range config.BootstrapMultiAddresses {
-			if multiAddr.IsNil() {
-				logger.Network(logger.LevelError, "cannot store null bootstrap address from config file")
-				continue
-			}
 			_, err := store.SwarmMultiAddressStore().MultiAddress(multiAddr.Address())
 			if err == nil {
 				// Only add bootstrap multi-addresses that are not already in the store.

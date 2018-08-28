@@ -41,22 +41,6 @@ var ErrInvalidNumberOfOrderFragments = errors.New("invalid number of order fragm
 // of an invalid length.
 var ErrInvalidOrderFragmentMapping = errors.New("invalid order fragment mappings")
 
-// ErrOrderFragmentIsNil is returned when a nil orderFragment is provided
-// upon verification.
-var ErrOrderFragmentIsNil = errors.New("order fragment is nil")
-
-// ErrMultiAddressIsNil is returned when a nil multi-address is detected.
-var ErrMultiAddressIsNil = errors.New("multi-address is nil")
-
-// ErrEpochIsNil is returned when a nil epoch is detected.
-var ErrEpochIsNil = errors.New("epoch is nil")
-
-// ErrOpenOrderRequestIsNil is returned when a nil OpenOrderRequest is detected.
-var ErrOpenOrderRequestIsNil = errors.New("OpenOrderRequest is nil")
-
-// ErrOrderFragmentMappingRequestIsNil is returned when a nil OrderFragmentMappingRequest is detected.
-var ErrOrderFragmentMappingRequestIsNil = errors.New("OrderFragmentMappingRequest is nil")
-
 // ErrInvalidEpochDepth is returned when an invalid epoch depth is provided
 // upon verification.
 var ErrInvalidEpochDepth = errors.New("invalid epoch depth")
@@ -150,11 +134,7 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 		close(errs)
 		return errs
 	}
-	if epoch.IsNil() {
-		errs <- ErrEpochIsNil
-		close(errs)
-		return errs
-	}
+
 	pods, err := ingress.contract.PreviousPods()
 	if err != nil {
 		errs <- err
@@ -191,10 +171,6 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 						case errs <- err:
 							continue
 						}
-					}
-
-					if nextEpoch.IsNil() {
-						continue
 					}
 
 					// Check if it equals what we think the current epoch is
@@ -349,10 +325,6 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 }
 
 func (ingress *ingress) processOpenOrderFragmentMappingRequest(req OpenOrderFragmentMappingRequest, done <-chan struct{}, errs chan<- error) {
-	if req.IsNil() {
-		errs <- ErrOrderFragmentMappingRequestIsNil
-		return
-	}
 	ingress.podsMu.RLock()
 	defer ingress.podsMu.RUnlock()
 
@@ -421,10 +393,6 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 				errs <- fmt.Errorf("no fragment found at index %v", i)
 				return
 			}
-			if orderFragment.IsNil() || orderFragment.EncryptedFragment.IsNil() {
-				errs <- fmt.Errorf("invalid order fragment found at index %v", i)
-				return
-			}
 
 			darknode := pod.Darknodes[i]
 
@@ -440,11 +408,6 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 			darknodeMultiAddr, err := ingress.swarmer.Query(ctx, darknode)
 			if err != nil {
 				errs <- fmt.Errorf("cannot send query to %v: %v", darknode, err)
-				return
-			}
-
-			if darknodeMultiAddr.IsNil() {
-				errs <- ErrMultiAddressIsNil
 				return
 			}
 
@@ -523,9 +486,6 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 		// Ensure order fragment Epoch depth matches up with value provided as
 		// parameter.
 		for _, orderFragment := range orderFragments {
-			if orderFragment.IsNil() {
-				return ErrOrderFragmentIsNil
-			}
 			if orderFragment.EpochDepth != order.FragmentEpochDepth(orderFragmentEpochDepth) {
 				return ErrInvalidEpochDepth
 			}

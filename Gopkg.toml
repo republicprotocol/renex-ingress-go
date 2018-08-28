@@ -9,7 +9,7 @@
 
 [[constraint]]
   name = "github.com/republicprotocol/republic-go"
-  branch = "null-pointer-protection"
+  branch = "contract-upgrades"
 
 # Temporary fix https://github.com/golang/dep/issues/1799
 [[override]]

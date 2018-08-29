@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	renExContract "github.com/republicprotocol/renex-ingress-go/contract"
 	"github.com/republicprotocol/renex-ingress-go/httpadapter"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
 	"github.com/republicprotocol/republic-go/contract"
@@ -26,7 +27,8 @@ import (
 )
 
 type config struct {
-	Ethereum                contract.Config         `json:"ethereum"`
+	Ethereum                contract.Config         `json:"republic"`
+	RenExEthereum           renExContract.Config    `json:"renex"`
 	BootstrapMultiAddresses identity.MultiAddresses `json:"bootstrapMultiAddresses"`
 }
 
@@ -78,6 +80,15 @@ func main() {
 		log.Fatalf("cannot create contract binder: %v", err)
 	}
 
+	renExConn, err := renExContract.Connect(config.RenExEthereum)
+	if err != nil {
+		log.Fatalf("cannot connect to ethereum: %v", err)
+	}
+	renExBinder, err := renExContract.NewBinder(auth, renExConn)
+	if err != nil {
+		log.Fatalf("cannot create contract binder: %v", err)
+	}
+
 	// New database for persistent storage
 	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour, 24*time.Hour)
 	if err != nil {
@@ -97,7 +108,7 @@ func main() {
 	swarmer := swarm.NewSwarmer(swarmClient, store.SwarmMultiAddressStore(), alphaNum, &crypter)
 
 	orderbookClient := grpc.NewOrderbookClient()
-	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, swarmer, orderbookClient, 4*time.Second)
+	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &renExBinder, swarmer, orderbookClient, 4*time.Second)
 	ingressAdapter := httpadapter.NewIngressAdapter(ingresser)
 
 	go func() {

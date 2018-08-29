@@ -5,7 +5,10 @@
         "/ip4/13.114.234.59/tcp/18514/republic/8MKKUenZG8inoZqd8boYxGb1J3waAg",
         "/ip4/35.154.181.5/tcp/18514/republic/8MJNi8mgfQqD52bjUCnUzJ64uneJbk"
     ],
-    "ethereum": {
+    "republic": {
+        "network": "falcon"
+    },
+    "renex": {
         "network": "falcon"
     }
 }

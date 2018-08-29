@@ -4,7 +4,10 @@
         "/ip4/52.62.18.91/tcp/18514/republic/8MJnjSUVJCgP6YVjNWzaJXtiKE3p1o",
         "/ip4/52.59.235.50/tcp/18514/republic/8MJJeN5VYNGqZtEiti5aZtzo7g6pgM"
     ],
-    "ethereum": {
+    "republic": {
+        "network": "nightly"
+    },
+    "renex": {
         "network": "nightly"
     }
 }

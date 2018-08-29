@@ -43,6 +43,7 @@ var _ = Describe("Ingress", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		contract = newIngressBinder()
+		// renExContract =
 
 		swarmer := mockSwarmer{}
 		orderbookClient := mockOrderbookClient{}

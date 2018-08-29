@@ -13,6 +13,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/dispatch"
 	"github.com/republicprotocol/republic-go/logger"
@@ -92,6 +94,7 @@ type Ingress interface {
 type ingress struct {
 	ecdsaKey          crypto.EcdsaKey
 	contract          ContractBinder
+	renExContract     RenExContractBinder
 	swarmer           swarm.Swarmer
 	orderbookClient   orderbook.Client
 	epochPollInterval time.Duration
@@ -106,10 +109,11 @@ type ingress struct {
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration) Ingress {
+func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration) Ingress {
 	ingress := &ingress{
 		ecdsaKey:          ecdsaKey,
 		contract:          contract,
+		renExContract:     renExContract,
 		swarmer:           swarmer,
 		orderbookClient:   orderbookClient,
 		epochPollInterval: epochPollInterval,
@@ -264,15 +268,27 @@ func (ingress *ingress) ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]
 	log.Printf("[info] (open) approving withdrawal for %v", trader)
 	// Append orderID
 	message := append([]byte("Republic Protocol: withdraw: "), trader[:]...)
-	// Append trader (TODO: Convert uint32 to bytes properly)
+
+	// Append tokenID
 	buf := new(bytes.Buffer)
 	err := binary.Write(buf, binary.LittleEndian, tokenID)
 	if err != nil {
-		fmt.Println("binary.Write failed:", err)
+		return [65]byte{}, err
+	}
+	message = append(message, buf.Bytes()...)
+
+	// Retrieve trader nonce
+	nonce, err := ingress.renExContract.GetTraderWithdrawalNonce(common.BytesToAddress(trader[:]))
+	if err != nil {
+		return [65]byte{}, err
 	}
 
-	// TODO: Retrieve trader nonce
-
+	// Append nonce
+	buf = new(bytes.Buffer)
+	err = binary.Write(buf, binary.LittleEndian, nonce)
+	if err != nil {
+		return [65]byte{}, err
+	}
 	message = append(message, buf.Bytes()...)
 
 	signatureData := crypto.Keccak256([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message)

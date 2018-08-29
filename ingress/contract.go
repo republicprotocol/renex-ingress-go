@@ -3,6 +3,7 @@ package ingress
 import (
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/republicprotocol/republic-go/registry"
 )
 
@@ -20,4 +21,8 @@ type ContractBinder interface {
 	Pods() ([]registry.Pod, error)
 
 	PreviousPods() ([]registry.Pod, error)
+}
+
+type RenExContractBinder interface {
+	GetTraderWithdrawalNonce(trader common.Address) (*big.Int, error)
 }

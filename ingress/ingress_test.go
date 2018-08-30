@@ -1,10 +1,8 @@
 package ingress_test
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"math/big"
@@ -79,30 +77,22 @@ var _ = Describe("Ingress", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			tokenID := uint32(0)
+			// TODO: Retrieve nonce from renExContract (without incrementing it)
+			traderNonce := big.NewInt(0)
 
 			signature, err := ingress.ApproveWithdrawal(trader, tokenID)
+			Expect(err).ShouldNot(HaveOccurred())
 			Expect(signature).ShouldNot(BeNil())
+
+			message, err := WithdrawalMessage(trader, tokenID, traderNonce)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			// Append trader
-			message := append([]byte("Republic Protocol: withdraw: "), trader[:]...)
-			// Append tokenID
-			buf := new(bytes.Buffer)
-			err = binary.Write(buf, binary.LittleEndian, tokenID)
-			if err != nil {
-				fmt.Println("binary.Write failed:", err)
-			}
-			message = append(message, buf.Bytes()...)
-
 			signatureData := crypto.Keccak256([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message)
-
-			// TODO: Retrieve trader nonce
 
 			broker, err := crypto.RecoverAddress(signatureData, signature[:])
 			Expect(err).ShouldNot(HaveOccurred())
 
 			Expect(broker).Should(Equal(ecdsaKey.Address()))
-
 		})
 	})
 
@@ -308,6 +298,9 @@ func newRenExBinder() *renExBinder {
 
 func (binder *renExBinder) GetTraderWithdrawalNonce(trader common.Address) (*big.Int, error) {
 	nonce := binder.traderNonces[trader]
+	if nonce == nil {
+		nonce = big.NewInt(0)
+	}
 	binder.traderNonces[trader] = big.NewInt(0).Add(big.NewInt(1), nonce)
 	return nonce, nil
 }

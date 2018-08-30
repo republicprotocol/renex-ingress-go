@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/big"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -228,7 +229,21 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 	return errs
 }
 
-func (ingress *ingress) OpenOrder(address [20]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) ([65]byte, error) {
+func OpenOrderMessage(trader [20]byte, orderID order.ID) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, []byte("Republic Protocol: open: ")); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, trader); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, orderID); err != nil {
+		return []byte{}, err
+	}
+	return buf.Bytes(), nil
+}
+
+func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) ([65]byte, error) {
 	// TODO: Verify that the signature is valid before sending it to the
 	// Orderbook. This is not strictly necessary but it can save the Ingress
 	// some gas.
@@ -237,12 +252,14 @@ func (ingress *ingress) OpenOrder(address [20]byte, orderID order.ID, orderFragm
 	}
 
 	log.Printf("[info] (open) signing order = %v", orderID)
-	// Append orderID
-	message := append([]byte("Republic Protocol: open: "), orderID[:]...)
-	// Append trader
-	message = append(message, address[:]...)
 
-	signatureData := crypto.Keccak256([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message)
+	message, err := OpenOrderMessage(trader, orderID)
+	if err != nil {
+		return [65]byte{}, err
+	}
+
+	signatureData2 := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
+	signatureData := crypto.Keccak256(signatureData2)
 	signature, err := ingress.ecdsaKey.Sign(signatureData)
 	if err != nil {
 		return [65]byte{}, err
@@ -264,32 +281,46 @@ func (ingress *ingress) OpenOrder(address [20]byte, orderID order.ID, orderFragm
 	return signature65, nil
 }
 
+func WithdrawalMessage(trader [20]byte, tokenID uint32, traderNonce *big.Int) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, []byte("Republic Protocol: withdraw: ")); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, trader); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, tokenID); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, uint64(0)); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, uint64(0)); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, uint64(0)); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, traderNonce.Uint64()); err != nil {
+		return []byte{}, err
+	}
+	return buf.Bytes(), nil
+}
+
 func (ingress *ingress) ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]byte, error) {
 	log.Printf("[info] (open) approving withdrawal for %v", trader)
 	// Append orderID
-	message := append([]byte("Republic Protocol: withdraw: "), trader[:]...)
-
-	// Append tokenID
-	buf := new(bytes.Buffer)
-	err := binary.Write(buf, binary.LittleEndian, tokenID)
-	if err != nil {
-		return [65]byte{}, err
-	}
-	message = append(message, buf.Bytes()...)
 
 	// Retrieve trader nonce
-	nonce, err := ingress.renExContract.GetTraderWithdrawalNonce(common.BytesToAddress(trader[:]))
+	traderNonce, err := ingress.renExContract.GetTraderWithdrawalNonce(common.BytesToAddress(trader[:]))
 	if err != nil {
 		return [65]byte{}, err
 	}
 
-	// Append nonce
-	buf = new(bytes.Buffer)
-	err = binary.Write(buf, binary.LittleEndian, nonce)
+	message, err := WithdrawalMessage(trader, tokenID, traderNonce)
 	if err != nil {
 		return [65]byte{}, err
 	}
-	message = append(message, buf.Bytes()...)
 
 	signatureData := crypto.Keccak256([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message)
 	signature, err := ingress.ecdsaKey.Sign(signatureData)

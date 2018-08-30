@@ -225,7 +225,7 @@
     "stackint/asm",
     "swarm"
   ]
-  revision = "19407fe8c7a5f4bd6003d8453d2f2573566cd31f"
+  revision = "da6d5b27dd6ee8c16a4955cf581b25ecb6c71e46"
 
 [[projects]]
   name = "github.com/rjeczalik/notify"

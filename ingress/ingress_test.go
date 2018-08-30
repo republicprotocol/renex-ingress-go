@@ -434,7 +434,7 @@ func (binder *ingressBinder) setOrderStatus(orderID order.ID, status order.Statu
 func createOrder() (order.Order, error) {
 	parity := order.ParityBuy
 	nonce := uint64(mathRand.Intn(1000000000))
-	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, order.TokensETHREN, 1, 1, 1, nonce), nil
+	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, order.TokensETHREN, 1e12, 1e12, 1e12, nonce), nil
 }
 
 type mockSwarmer struct {

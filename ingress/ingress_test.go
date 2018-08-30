@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/republicprotocol/renex-ingress-go/ingress"
@@ -26,7 +27,8 @@ var _ = Describe("Ingress", func() {
 
 	var rsaKey crypto.RsaKey
 	var ecdsaKey crypto.EcdsaKey
-	var contract *ingressBinder
+	var contract ContractBinder
+	var renExContract RenExContractBinder
 	var ingress Ingress
 	var done chan struct{}
 	var errChSync <-chan error
@@ -43,12 +45,13 @@ var _ = Describe("Ingress", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		contract = newIngressBinder()
-		// renExContract =
+
+		renExContract = newRenExBinder()
 
 		swarmer := mockSwarmer{}
 		orderbookClient := mockOrderbookClient{}
 
-		ingress = NewIngress(ecdsaKey, contract, &swarmer, &orderbookClient, time.Millisecond)
+		ingress = NewIngress(ecdsaKey, contract, renExContract, &swarmer, &orderbookClient, time.Millisecond)
 		errChSync = ingress.Sync(done)
 		errChProcess = ingress.ProcessRequests(done)
 
@@ -106,7 +109,7 @@ var _ = Describe("Ingress", func() {
 	Context("when opening orders", func() {
 
 		It("should open orders with a sufficient number of order fragments", func() {
-			ord, err := createOrder(order.ParityBuy)
+			ord, err := createOrder()
 			Expect(err).ShouldNot(HaveOccurred())
 			fragments, err := ord.Split(6, 4)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -136,7 +139,7 @@ var _ = Describe("Ingress", func() {
 		})
 
 		It("should not open orders with an insufficient number of order fragments", func() {
-			ord, err := createOrder(order.ParityBuy)
+			ord, err := createOrder()
 			Expect(err).ShouldNot(HaveOccurred())
 			fragments, err := ord.Split(int64(1), int64(4/3))
 			Expect(err).ShouldNot(HaveOccurred())
@@ -167,7 +170,7 @@ var _ = Describe("Ingress", func() {
 		})
 
 		It("should not open orders with malformed order fragments", func() {
-			ord, err := createOrder(order.ParityBuy)
+			ord, err := createOrder()
 			Expect(err).ShouldNot(HaveOccurred())
 
 			orderFragmentMappingIn := OrderFragmentMapping{}
@@ -188,7 +191,7 @@ var _ = Describe("Ingress", func() {
 		})
 
 		It("should not open orders with empty orderFragmentMappings", func() {
-			ord, err := createOrder(order.ParityBuy)
+			ord, err := createOrder()
 			Expect(err).ShouldNot(HaveOccurred())
 
 			orderFragmentMappingIn := OrderFragmentMappings{}
@@ -203,7 +206,7 @@ var _ = Describe("Ingress", func() {
 		})
 
 		It("should not open orders with unknown pod hashes", func() {
-			ord, err := createOrder(order.ParityBuy)
+			ord, err := createOrder()
 			Expect(err).ShouldNot(HaveOccurred())
 
 			orderFragmentMappingIn := OrderFragmentMapping{}
@@ -222,7 +225,7 @@ var _ = Describe("Ingress", func() {
 		})
 
 		It("should not open orders with an invalid number of pods", func() {
-			ord, err := createOrder(order.ParityBuy)
+			ord, err := createOrder()
 			Expect(err).ShouldNot(HaveOccurred())
 			fragments, err := ord.Split(6, 4)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -256,7 +259,7 @@ var _ = Describe("Ingress", func() {
 		})
 
 		It("should not open orders with an invalid epoch depth", func() {
-			ord, err := createOrder(order.ParityBuy)
+			ord, err := createOrder()
 			Expect(err).ShouldNot(HaveOccurred())
 			fragments, err := ord.Split(6, 4)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -292,6 +295,22 @@ var _ = Describe("Ingress", func() {
 
 // ErrOpenOpenedOrder is returned when trying to open an opened order.
 var ErrOpenOpenedOrder = errors.New("cannot open order that is already open")
+
+type renExBinder struct {
+	traderNonces map[common.Address]*big.Int
+}
+
+func newRenExBinder() *renExBinder {
+	return &renExBinder{
+		traderNonces: map[common.Address]*big.Int{},
+	}
+}
+
+func (binder *renExBinder) GetTraderWithdrawalNonce(trader common.Address) (*big.Int, error) {
+	nonce := binder.traderNonces[trader]
+	binder.traderNonces[trader] = big.NewInt(0).Add(big.NewInt(1), nonce)
+	return nonce, nil
+}
 
 // ingressBinder is a mock implementation of ingress.ContractBinder.
 type ingressBinder struct {
@@ -412,11 +431,10 @@ func (binder *ingressBinder) setOrderStatus(orderID order.ID, status order.Statu
 	return nil
 }
 
-func createOrder(parity order.Parity) (order.Order, error) {
-	price := uint64(mathRand.Intn(2000))
-	volume := uint64(mathRand.Intn(2000))
+func createOrder() (order.Order, error) {
+	parity := order.ParityBuy
 	nonce := uint64(mathRand.Intn(1000000000))
-	return order.NewOrder(order.TypeLimit, parity, order.SettlementRenEx, time.Now().Add(time.Hour), order.TokensETHREN, order.NewCoExp(price, 26), order.NewCoExp(volume, 26), order.NewCoExp(volume, 26), nonce), nil
+	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, order.TokensETHREN, 1, 1, 1, nonce), nil
 }
 
 type mockSwarmer struct {

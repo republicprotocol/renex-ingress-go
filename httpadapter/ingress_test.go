@@ -3,6 +3,7 @@ package httpadapter_test
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	mathRand "math/rand"
 	"sync/atomic"
 	"time"
@@ -167,7 +168,7 @@ var _ = Describe("Ingress Adapter", func() {
 			traderBytes := [20]byte{}
 			_, err := rand.Read(traderBytes[:])
 			Expect(err).ShouldNot(HaveOccurred())
-			trader := base64.StdEncoding.EncodeToString(traderBytes[:])
+			trader := hex.EncodeToString(traderBytes[:])
 
 			orderFragmentMappingIn := OrderFragmentMapping{}
 			orderFragmentMappingIn["Td2YBy0MRYPYqqBduRmDsIhTySQUlMhPBM+wnNPWKqq="] = []OrderFragment{}
@@ -201,7 +202,7 @@ var _ = Describe("Ingress Adapter", func() {
 			traderBytes := [20]byte{}
 			_, err := rand.Read(traderBytes[:])
 			Expect(err).ShouldNot(HaveOccurred())
-			trader := base64.StdEncoding.EncodeToString(traderBytes[:])
+			trader := hex.EncodeToString(traderBytes[:])
 			orderFragmentMappingIn := OrderFragmentMapping{}
 			orderFragmentMappingIn["some invalid hash"] = []OrderFragment{OrderFragment{OrderID: "thisIsAnOrderID"}}
 
@@ -223,7 +224,7 @@ var _ = Describe("Ingress Adapter", func() {
 			traderBytes := [20]byte{}
 			_, err := rand.Read(traderBytes[:])
 			Expect(err).ShouldNot(HaveOccurred())
-			trader := base64.StdEncoding.EncodeToString(traderBytes[:])
+			trader := hex.EncodeToString(traderBytes[:])
 
 			_, err = ingressAdapter.ApproveWithdrawal(trader, 0)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -268,8 +269,6 @@ func (ingress *mockIngress) ProcessRequests(done <-chan struct{}) <-chan error {
 
 func createOrder() (order.Order, error) {
 	parity := order.ParityBuy
-	price := uint64(mathRand.Intn(2000))
-	volume := uint64(mathRand.Intn(2000))
 	nonce := uint64(mathRand.Intn(1000000000))
-	return order.NewOrder(order.TypeLimit, parity, order.SettlementRenEx, time.Now().Add(time.Hour), order.TokensETHREN, order.NewCoExp(price, 26), order.NewCoExp(volume, 26), order.NewCoExp(volume, 26), nonce), nil
+	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, order.TokensETHREN, 1, 1, 1, nonce), nil
 }

@@ -3,6 +3,7 @@ package httpadapter
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -60,7 +61,7 @@ func MarshalSignature(signatureIn [65]byte) string {
 }
 
 func MarshalAddress(addressIn [32]byte) string {
-	return base64.StdEncoding.EncodeToString(addressIn[:])
+	return hex.EncodeToString(addressIn[:])
 }
 
 func MarshalOrderID(orderIDIn order.ID) string {
@@ -110,7 +111,7 @@ func UnmarshalSignature(signatureIn string) ([65]byte, error) {
 
 func UnmarshalAddress(addressIn string) ([20]byte, error) {
 	address := [20]byte{}
-	addressBytes, err := base64.StdEncoding.DecodeString(addressIn)
+	addressBytes, err := hex.DecodeString(addressIn)
 	if err != nil {
 		return address, fmt.Errorf("cannot decode address %v: %v", addressIn, err)
 	}

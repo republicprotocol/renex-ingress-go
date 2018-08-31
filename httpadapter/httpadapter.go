@@ -13,7 +13,7 @@ import (
 // NewIngressServer returns an http server that forwards requests to an
 // IngressAdapter.
 func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
-	limiter := rate.NewLimiter(20, 50)
+	limiter := rate.NewLimiter(10, 50)
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")

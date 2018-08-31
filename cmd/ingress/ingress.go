@@ -141,7 +141,7 @@ func main() {
 			}
 		}()
 
-		processErrs := ingresser.ProcessRequests(done)
+		processErrs := ingresser.[ProcessRequests(done)
 		go func() {
 			for err := range processErrs {
 				logger.Error(fmt.Sprintf("error processing: %v", err))

@@ -3,11 +3,12 @@ package httpadapter
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"golang.org/x/time/rate"
-	"log"
-	"net/http"
 )
 
 // NewIngressServer returns an http server that forwards requests to an

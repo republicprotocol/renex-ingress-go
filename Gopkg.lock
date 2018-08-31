@@ -244,7 +244,7 @@
 
 [[projects]]
   branch = "contract-upgrades"
-  digest = "1:6fd9291e7b2049f22d45b1b594c385d7babba2d79ab6be817d10aa07bdaac696"
+  digest = "1:e2dd36d1d271e481d61fe042aeb0c507947af0b0f287b439ff8c1dd37e57cd49"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -267,7 +267,7 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "b1bb4a6612d1dcc6911f70e5fd60cb89a984c519"
+  revision = "2dbe5f1d654d587810e975d12505400c4805d6a6"
 
 [[projects]]
   digest = "1:602081d2a289d1f76ea90b806b0c61c19038d76504e9005ccb969864dbaee339"

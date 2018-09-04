@@ -3,19 +3,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6ef484844b7d71500256c410601ae369090c47fca5e49383c6a1932c0a8b4a82"
+  digest = "1:fcee9109b202ec83e394090947c53d9a345c7843a8dd33dde5189ad0e75cbf63"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
   pruneopts = "T"
-  revision = "4dd728aa987e9168a1e609e4919921dbfac9bd7f"
+  revision = "c2e37c381520048ad67de8a2ef5c471603282ab7"
 
 [[projects]]
   branch = "master"
-  digest = "1:b9f5e0f033febe59a62d01e78486c0dd9e4afc9ac5d240aee6ce78a927142e8b"
+  digest = "1:f2d4beb3a1f1d5c59ed38864724bb098952c6230a22a226b30b8cb1dcb8daf79"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   pruneopts = "T"
-  revision = "79e00513b1011888b1e675157ab89f527f901cae"
+  revision = "cff30e1d23fc9e800b2b5b4b41ef1817dda07e9f"
 
 [[projects]]
   digest = "1:3e892a54552313db9f7eda71126179f4da5c9d15778681c662f0ef44471698ee"
@@ -243,8 +243,16 @@
   version = "v1.1"
 
 [[projects]]
-  branch = "contract-upgrades"
-  digest = "1:7c4c23be2b2da0568ab7513e2b41157dcccf1b0a286d94f39ded092dff192d84"
+  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "T"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
+  branch = "nightly"
+  digest = "1:128ef54fe8f6102a53e4e3590c5caee00beab1769de9866124b715c170d8d369"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -267,7 +275,7 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "24e7e2dbf5f614e26f1b196deb269a177dfac885"
+  revision = "3fb2a88f5aef50d120102490330f899ea5881144"
 
 [[projects]]
   digest = "1:602081d2a289d1f76ea90b806b0c61c19038d76504e9005ccb969864dbaee339"
@@ -350,14 +358,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9a36b4bcab9e134eca532df4e80927e808f39346d641c686877d41fdbabdd5cf"
+  digest = "1:bfa444982d49ce4ca1360599270a94de12a573ccd3bf04493c79bee09da3170b"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "T"
-  revision = "49385e6e15226593f68b26af201feec29d5bba22"
+  revision = "2b024373dcd9800f0cae693839fac6ede8d64a8c"
 
 [[projects]]
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
@@ -404,7 +412,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5e9594b3370fef04a0a16cc65bf7a1bafa026b02bbf767e6e625eb0f075595a6"
+  digest = "1:48881a3e1353058a0aa4c428c1e030e6e082c048610980f5eb2f103732f44a3c"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -412,15 +420,15 @@
     "internal/fastwalk",
   ]
   pruneopts = "T"
-  revision = "4bc20fc7916bc21abba37451a6923cffa9a2cd3f"
+  revision = "7ca132754999accbaa5c1735eda29e7ce0f3bf03"
 
 [[projects]]
   branch = "master"
-  digest = "1:960f1fa3f12667fe595c15c12523718ed8b1b5428c83d70da54bb014da9a4c1a"
+  digest = "1:e43f1cb3f488a0c2be85939c2a594636f60b442a12a196c778bd2d6c9aca3df7"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "T"
-  revision = "c66870c02cf823ceb633bcd05be3c7cda29976f4"
+  revision = "11092d34479b07829b72e10713b159248caf5dad"
 
 [[projects]]
   digest = "1:a985c4820889930a08c19181d2aeb1c57ab1929bce7a66b781109dd1db8fb433"

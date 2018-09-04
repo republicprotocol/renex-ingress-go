@@ -49,11 +49,31 @@ type ApproveWithdrawalAdapter interface {
 	ApproveWithdrawal(traderIn string, tokenID uint32) ([65]byte, error)
 }
 
+type GetAddressAdapter interface {
+	GetAddress(string) (string, error)
+}
+
+type PostAddressAdapter interface {
+	PostAddress(string, string) error
+}
+
+type GetSwapAdapter interface {
+	GetSwap(string) (string, error)
+}
+
+type PostSwapAdapter interface {
+	PostSwap(string, string) error
+}
+
 // An IngressAdapter implements the OpenOrderAdapter and the
 // ApproveWithdrawalAdapter.
 type IngressAdapter interface {
 	OpenOrderAdapter
 	ApproveWithdrawalAdapter
+	GetAddressAdapter
+	PostAddressAdapter
+	GetSwapAdapter
+	PostSwapAdapter
 }
 
 type ingressAdapter struct {
@@ -98,4 +118,20 @@ func (adapter *ingressAdapter) ApproveWithdrawal(traderIn string, tokenIDIn uint
 		trader,
 		tokenIDIn,
 	)
+}
+
+func (adapter *ingressAdapter) GetAddress(orderID string) (string, error) {
+	return adapter.SelectAddress(orderID)
+}
+
+func (adapter *ingressAdapter) PostAddress(orderID string, address string) error {
+	return adapter.InsertAddress(orderID, address)
+}
+
+func (adapter *ingressAdapter) GetSwap(orderID string) (string, error) {
+	return adapter.SelectSwapDetails(orderID)
+}
+
+func (adapter *ingressAdapter) PostSwap(orderID string, swap string) error {
+	return adapter.InsertSwapDetails(orderID, swap)
 }

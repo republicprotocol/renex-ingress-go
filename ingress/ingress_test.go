@@ -49,7 +49,7 @@ var _ = Describe("Ingress", func() {
 		swarmer := mockSwarmer{}
 		orderbookClient := mockOrderbookClient{}
 
-		ingress = NewIngress(ecdsaKey, contract, renExContract, &swarmer, &orderbookClient, time.Millisecond)
+		ingress = NewIngress(ecdsaKey, contract, renExContract, &swarmer, &orderbookClient, time.Millisecond, &mockSwapper{})
 		errChSync = ingress.Sync(done)
 		errChProcess = ingress.ProcessRequests(done)
 
@@ -467,4 +467,20 @@ func (client *mockOrderbookClient) OpenOrder(ctx context.Context, to identity.Mu
 func captureErrorsFromErrorChannel(errs <-chan error) {
 	for range errs {
 	}
+}
+
+type mockSwapper struct {
+}
+
+func (swapper *mockSwapper) SelectAddress(orderID string) (string, error) {
+	return "", nil
+}
+func (swapper *mockSwapper) InsertAddress(orderID string, address string) error {
+	return nil
+}
+func (swapper *mockSwapper) SelectSwapDetails(orderID string) (string, error) {
+	return "", nil
+}
+func (swapper *mockSwapper) InsertSwapDetails(orderID string, swapDetails string) error {
+	return nil
 }

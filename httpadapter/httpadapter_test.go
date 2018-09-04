@@ -30,6 +30,22 @@ func (adapter *weakAdapter) ApproveWithdrawal(trader string, tokenID uint32) ([6
 	return WEAK_SIGNATURE, nil
 }
 
+func (adapter *weakAdapter) GetAddress(string) (string, error) {
+	return "", nil
+}
+
+func (adapter *weakAdapter) PostAddress(string, string) error {
+	return nil
+}
+
+func (adapter *weakAdapter) GetSwap(string) (string, error) {
+	return "", nil
+}
+
+func (adapter *weakAdapter) PostSwap(string, string) error {
+	return nil
+}
+
 type errAdapter struct {
 }
 
@@ -39,6 +55,22 @@ func (adapter *errAdapter) OpenOrder(trader string, orderFragmentMapping OrderFr
 
 func (adapter *errAdapter) ApproveWithdrawal(trader string, tokenID uint32) ([65]byte, error) {
 	return [65]byte{}, errors.New("cannot approve withdrawal")
+}
+
+func (adapter *errAdapter) GetAddress(string) (string, error) {
+	return "", nil
+}
+
+func (adapter *errAdapter) PostAddress(string, string) error {
+	return nil
+}
+
+func (adapter *errAdapter) GetSwap(string) (string, error) {
+	return "", nil
+}
+
+func (adapter *errAdapter) PostSwap(string, string) error {
+	return nil
 }
 
 var _ = Describe("HTTP handlers", func() {

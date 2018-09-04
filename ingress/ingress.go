@@ -90,6 +90,9 @@ type Ingress interface {
 	// all processing. Running this background worker is required to open and
 	// cancel orders.
 	ProcessRequests(done <-chan struct{}) <-chan error
+
+	// Swapper interface implements atomic swapper network functions.
+	Swapper
 }
 
 type ingress struct {
@@ -105,17 +108,19 @@ type ingress struct {
 	podsPrev map[[32]byte]registry.Pod
 
 	queueRequests chan Request
+	Swapper
 }
 
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration) Ingress {
+func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper) Ingress {
 	ingress := &ingress{
 		ecdsaKey:          ecdsaKey,
 		contract:          contract,
 		renExContract:     renExContract,
 		swarmer:           swarmer,
+		Swapper:           swapper,
 		orderbookClient:   orderbookClient,
 		epochPollInterval: epochPollInterval,
 

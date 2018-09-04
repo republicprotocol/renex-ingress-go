@@ -54,6 +54,7 @@ func main() {
 	configParam := fmt.Sprintf("env/%v/config.json", networkParam)
 	keystoreParam := fmt.Sprintf("env/%v/%v.keystore.json", networkParam, os.Getenv("DYNO"))
 	keystorePassphraseParam := os.Getenv("KEYSTORE_PASSPHRASE")
+	dbParam := os.Getenv("DATABASE_URL")
 
 	config, err := loadConfig(configParam)
 	if err != nil {
@@ -88,6 +89,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot create contract binder: %v", err)
 	}
+	swapper, err := ingress.NewSwapper(dbParam)
+	if err != nil {
+		log.Fatalf("cannot connect to the database: %v", err)
+	}
 
 	// New database for persistent storage
 	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour, 24*time.Hour)
@@ -108,7 +113,7 @@ func main() {
 	swarmer := swarm.NewSwarmer(swarmClient, store.SwarmMultiAddressStore(), alphaNum, &crypter)
 
 	orderbookClient := grpc.NewOrderbookClient()
-	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &renExBinder, swarmer, orderbookClient, 4*time.Second)
+	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &renExBinder, swarmer, orderbookClient, 4*time.Second, swapper)
 	ingressAdapter := httpadapter.NewIngressAdapter(ingresser)
 
 	go func() {

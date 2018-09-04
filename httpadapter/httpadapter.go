@@ -41,8 +41,18 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter) http.HandlerFunc {
 			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
 			return
 		}
+
+		response, err := json.Marshal(OpenOrderResponse{
+			Signature: MarshalSignature(signature),
+		})
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			return
+		}
+
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(MarshalSignature(signature)))
+		w.Write(response)
 	}
 }
 
@@ -61,8 +71,18 @@ func ApproveWithdrawalHandler(approveWithdrawalAdapter ApproveWithdrawalAdapter)
 			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
 			return
 		}
+
+		response, err := json.Marshal(ApproveWithdrawalResponse{
+			Signature: MarshalSignature(signature),
+		})
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			return
+		}
+
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(MarshalSignature(signature)))
+		w.Write(response)
 	}
 }
 

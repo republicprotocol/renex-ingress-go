@@ -49,11 +49,19 @@ type OpenOrderRequest struct {
 	OrderFragmentMappings OrderFragmentMappings `json:"orderFragmentMappings"`
 }
 
+type OpenOrderResponse struct {
+	Signature string `json:"signature"`
+}
+
 // ApproveWithdrawalRequest is an JSON object sent to the HTTP handlers to
 // request the approval of a withdrawal.
 type ApproveWithdrawalRequest struct {
-	Trader  string `json:"trader"`
+	Trader  string `json:"address"`
 	TokenID uint32 `json:"tokenID"`
+}
+
+type ApproveWithdrawalResponse struct {
+	Signature string `json:"signature"`
 }
 
 func MarshalSignature(signatureIn [65]byte) string {

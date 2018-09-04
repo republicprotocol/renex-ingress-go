@@ -60,6 +60,12 @@ var _ = Describe("HTTP handlers", func() {
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusCreated))
+
+			var response OpenOrderResponse
+			err = json.Unmarshal(w.Body.Bytes(), &response)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(UnmarshalSignature(response.Signature)).To(Equal(WEAK_SIGNATURE))
+
 			Expect(atomic.LoadInt64(&adapter.numOpened)).To(Equal(int64(1)))
 		})
 
@@ -116,7 +122,12 @@ var _ = Describe("HTTP handlers", func() {
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusCreated))
-			Expect(UnmarshalSignature(w.Body.String())).To(Equal(WEAK_SIGNATURE))
+
+			var response ApproveWithdrawalResponse
+			err = json.Unmarshal(w.Body.Bytes(), &response)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(UnmarshalSignature(response.Signature)).To(Equal(WEAK_SIGNATURE))
+
 			Expect(atomic.LoadInt64(&adapter.numWithdrawn)).To(Equal(int64(1)))
 		})
 

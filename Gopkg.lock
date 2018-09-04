@@ -5,13 +5,13 @@
   branch = "master"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
-  revision = "4dd728aa987e9168a1e609e4919921dbfac9bd7f"
+  revision = "c2e37c381520048ad67de8a2ef5c471603282ab7"
 
 [[projects]]
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "79e00513b1011888b1e675157ab89f527f901cae"
+  revision = "cff30e1d23fc9e800b2b5b4b41ef1817dda07e9f"
 
 [[projects]]
   name = "github.com/ethereum/go-ethereum"
@@ -123,6 +123,15 @@
   version = "1.0.0"
 
 [[projects]]
+  name = "github.com/lib/pq"
+  packages = [
+    ".",
+    "oid"
+  ]
+  revision = "4ded0e9383f75c197b3a2aaa6d590ac52df6fd79"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/minio/blake2b-simd"
   packages = ["."]
@@ -203,7 +212,13 @@
   version = "v1.1"
 
 [[projects]]
-  branch = "contract-upgrades"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
+  branch = "nightly"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -225,7 +240,7 @@
     "stackint/asm",
     "swarm"
   ]
-  revision = "24e7e2dbf5f614e26f1b196deb269a177dfac885"
+  revision = "3fb2a88f5aef50d120102490330f899ea5881144"
 
 [[projects]]
   name = "github.com/rjeczalik/notify"
@@ -301,7 +316,7 @@
     "cpu",
     "unix"
   ]
-  revision = "49385e6e15226593f68b26af201feec29d5bba22"
+  revision = "2b024373dcd9800f0cae693839fac6ede8d64a8c"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -350,13 +365,13 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "4bc20fc7916bc21abba37451a6923cffa9a2cd3f"
+  revision = "7ca132754999accbaa5c1735eda29e7ce0f3bf03"
 
 [[projects]]
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "c66870c02cf823ceb633bcd05be3c7cda29976f4"
+  revision = "11092d34479b07829b72e10713b159248caf5dad"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -431,6 +446,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "036428cdeea4b2e33635c1c8ec734a165815fd62805d7109c5b42ff86576db72"
+  inputs-digest = "b7798faf7840d77a922551b80b8655c03ae31103876341b1ac45b9f13a3f44fd"
   solver-name = "gps-cdcl"
   solver-version = 1

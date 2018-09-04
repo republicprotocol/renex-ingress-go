@@ -258,9 +258,9 @@ func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragme
 		return [65]byte{}, err
 	}
 
-	signatureData2 := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
-	signatureData := crypto.Keccak256(signatureData2)
-	signature, err := ingress.ecdsaKey.Sign(signatureData)
+	signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
+	hashedSignatureData := crypto.Keccak256(signatureData)
+	signature, err := ingress.ecdsaKey.Sign(hashedSignatureData)
 	if err != nil {
 		return [65]byte{}, err
 	}
@@ -289,9 +289,11 @@ func WithdrawalMessage(trader [20]byte, tokenID uint32, traderNonce *big.Int) ([
 	if err := binary.Write(buf, binary.BigEndian, trader); err != nil {
 		return []byte{}, err
 	}
-	if err := binary.Write(buf, binary.BigEndian, tokenID); err != nil {
-		return []byte{}, err
-	}
+	// NOTE: The contracts do not yet expect a tokenID - this may change to
+	// restrict signatures to specific tokens
+	// if err := binary.Write(buf, binary.BigEndian, tokenID); err != nil {
+	// 	return []byte{}, err
+	// }
 	if err := binary.Write(buf, binary.BigEndian, uint64(0)); err != nil {
 		return []byte{}, err
 	}
@@ -322,8 +324,12 @@ func (ingress *ingress) ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]
 		return [65]byte{}, err
 	}
 
-	signatureData := crypto.Keccak256([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message)
-	signature, err := ingress.ecdsaKey.Sign(signatureData)
+	signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
+	hashedSignatureData := crypto.Keccak256(signatureData)
+	signature, err := ingress.ecdsaKey.Sign(hashedSignatureData)
+	if err != nil {
+		return [65]byte{}, err
+	}
 
 	var signature65 [65]byte
 	copy(signature65[:], signature[:65])

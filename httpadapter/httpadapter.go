@@ -3,18 +3,21 @@ package httpadapter
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	"golang.org/x/time/rate"
 )
 
 // NewIngressServer returns an http server that forwards requests to an
 // IngressAdapter.
 func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
+	limiter := rate.NewLimiter(10, 50)
 	r := mux.NewRouter().StrictSlash(true)
-	r.HandleFunc("/orders", OpenOrderHandler(ingressAdapter)).Methods("POST")
-	r.HandleFunc("/withdrawals", ApproveWithdrawalHandler(ingressAdapter)).Methods("POST")
+	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter))).Methods("POST")
+	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
 	r.Use(RecoveryHandler)
 
 	handler := cors.New(cors.Options{
@@ -97,4 +100,21 @@ func RecoveryHandler(h http.Handler) http.Handler {
 		}()
 		h.ServeHTTP(w, r)
 	})
+}
+
+func rateLimit(limiter *rate.Limiter, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// netAddr := r.RemoteAddr
+		// ipAddr := strings.Split(netAddr, ":")[0]
+		log.Println("before rate limiting ")
+		if limiter.Allow() {
+			log.Println("allow")
+			next.ServeHTTP(w, r)
+			return
+		}
+		log.Println("not allow")
+
+		w.WriteHeader(http.StatusTooManyRequests)
+		w.Write([]byte("too many request"))
+	}
 }

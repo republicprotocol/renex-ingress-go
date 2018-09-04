@@ -56,6 +56,16 @@ type ApproveWithdrawalRequest struct {
 	TokenID uint32 `json:"tokenID"`
 }
 
+type PostAddressRequest struct {
+	OrderID string `json:"orderID"`
+	Address string `json:"address"`
+}
+
+type PostSwapRequest struct {
+	OrderID string `json:"orderID"`
+	Swap    string `json:"swap"`
+}
+
 func MarshalSignature(signatureIn [65]byte) string {
 	return base64.StdEncoding.EncodeToString(signatureIn[:])
 }

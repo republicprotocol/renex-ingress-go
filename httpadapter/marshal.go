@@ -78,7 +78,7 @@ func MarshalSignature(signatureIn [65]byte) string {
 	return base64.StdEncoding.EncodeToString(signatureIn[:])
 }
 
-func MarshalAddress(addressIn [32]byte) string {
+func MarshalAddress(addressIn [20]byte) string {
 	return hex.EncodeToString(addressIn[:])
 }
 
@@ -129,6 +129,12 @@ func UnmarshalSignature(signatureIn string) ([65]byte, error) {
 
 func UnmarshalAddress(addressIn string) ([20]byte, error) {
 	address := [20]byte{}
+	// If the address starts with "0x", remove before decoding
+	if len(addressIn) > 1 {
+		if addressIn[0:2] == "0x" || addressIn[0:2] == "0X" {
+			addressIn = addressIn[2:]
+		}
+	}
 	addressBytes, err := hex.DecodeString(addressIn)
 	if err != nil {
 		return address, fmt.Errorf("cannot decode address %v: %v", addressIn, err)

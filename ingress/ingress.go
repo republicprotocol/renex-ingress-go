@@ -323,7 +323,6 @@ func (ingress *ingress) ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]
 	if err != nil {
 		return [65]byte{}, err
 	}
-	fmt.Println("trader:", common.BytesToAddress(trader[:]).Hex(), "traderNonce:", traderNonce)
 
 	message, err := WithdrawalMessage(trader, tokenID, traderNonce)
 	if err != nil {

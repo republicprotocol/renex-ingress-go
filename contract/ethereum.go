@@ -34,7 +34,7 @@ func Connect(config Config) (Conn, error) {
 	if config.RenExBrokerVerifierAddress == "" {
 		switch config.Network {
 		case NetworkNightly:
-			config.RenExBrokerVerifierAddress = "0x340B806594a87d87d904d641087e0c374800D00f"
+			config.RenExBrokerVerifierAddress = "0xcf2F6b4b698Cd6a6B3eb1d874a939742d15f8e7E"
 		case NetworkLocal:
 		default:
 			return Conn{}, fmt.Errorf("no default contract address on %s", config.Network)

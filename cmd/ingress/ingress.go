@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -95,7 +96,7 @@ func main() {
 	}
 
 	// New database for persistent storage
-	store, err := leveldb.NewStore("$HOME/data", 72*time.Hour, 24*time.Hour)
+	store, err := leveldb.NewStore(path.Join(os.Getenv("HOME"), "data"), 72*time.Hour, 24*time.Hour)
 	if err != nil {
 		log.Fatalf("cannot open leveldb: %v", err)
 	}

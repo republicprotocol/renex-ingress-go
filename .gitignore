@@ -6,3 +6,6 @@
 
 # Dep
 vendor
+
+# Local environment variables
+.env

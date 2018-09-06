@@ -99,6 +99,7 @@ func GetAddressHandler(getAddressAdapter GetAddressAdapter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		addr, err := getAddressAdapter.GetAddress(params["orderID"])
+		fmt.Println("Order ID: ", params["orderID"])
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))

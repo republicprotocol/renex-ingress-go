@@ -27,7 +27,7 @@ func NewSwapper(databaseURL string) (Swapper, error) {
 
 func (swapper *swapper) SelectAddress(orderID string) (string, error) {
 	var address string
-	if err := swapper.QueryRow("select address from swaps where orderID = $1", orderID).Scan(&address); err != nil {
+	if err := swapper.QueryRow("SELECT address FROM swaps WHERE orderID = $1", orderID).Scan(&address); err != nil {
 		return address, err
 	}
 	if address == "" {
@@ -37,13 +37,13 @@ func (swapper *swapper) SelectAddress(orderID string) (string, error) {
 }
 
 func (swapper *swapper) InsertAddress(orderID string, address string) error {
-	_, err := swapper.Exec("INSERT INTO swaps(orderID, address) VALUES($1,$2)", orderID, address)
+	_, err := swapper.Exec("INSERT INTO swaps (orderID, address) VALUES ($1,$2)", orderID, address)
 	return err
 }
 
 func (swapper *swapper) SelectSwapDetails(orderID string) (string, error) {
 	var swapDetails string
-	if err := swapper.QueryRow("select swapDetails from swaps where orderID = $1", orderID).Scan(&swapDetails); err != nil {
+	if err := swapper.QueryRow("SELECT swapDetails FROM swaps WHERE orderID = $1", orderID).Scan(&swapDetails); err != nil {
 		return "", err
 	}
 	if swapDetails == "" {
@@ -53,6 +53,6 @@ func (swapper *swapper) SelectSwapDetails(orderID string) (string, error) {
 }
 
 func (swapper *swapper) InsertSwapDetails(orderID string, swapDetails string) error {
-	_, err := swapper.Exec("INSERT INTO swaps(orderID, swapDetails) VALUES($1,$2)", orderID, swapDetails)
+	_, err := swapper.Exec("INSERT INTO swaps (orderID, swapDetails) VALUES ($1,$2)", orderID, swapDetails)
 	return err
 }

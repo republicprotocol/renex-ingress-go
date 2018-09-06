@@ -21,8 +21,8 @@ func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
-	r.HandleFunc("/address", rateLimit(limiter, GetAddressHandler(ingressAdapter))).Methods("GET")
-	r.HandleFunc("/swap", rateLimit(limiter, GetSwapHandler(ingressAdapter))).Methods("GET")
+	r.HandleFunc("/address/{orderID}", rateLimit(limiter, GetAddressHandler(ingressAdapter))).Methods("GET")
+	r.HandleFunc("/swap/{orderID}", rateLimit(limiter, GetSwapHandler(ingressAdapter))).Methods("GET")
 	r.Use(RecoveryHandler)
 
 	handler := cors.New(cors.Options{

@@ -19,10 +19,10 @@ func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
-	r.HandleFunc("/address", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
-	r.HandleFunc("/swap", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
-	r.HandleFunc("/address", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("GET")
-	r.HandleFunc("/swap", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("GET")
+	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
+	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
+	r.HandleFunc("/address", rateLimit(limiter, GetAddressHandler(ingressAdapter))).Methods("GET")
+	r.HandleFunc("/swap", rateLimit(limiter, GetSwapHandler(ingressAdapter))).Methods("GET")
 	r.Use(RecoveryHandler)
 
 	handler := cors.New(cors.Options{

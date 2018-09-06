@@ -27,6 +27,7 @@ func NewSwapper(databaseURL string) (Swapper, error) {
 
 func (swapper *swapper) SelectAddress(orderID string) (string, error) {
 	var address string
+	fmt.Println("Address", orderID)
 	if err := swapper.QueryRow("SELECT address FROM swaps WHERE orderID = $1", orderID).Scan(&address); err != nil {
 		return address, err
 	}

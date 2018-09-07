@@ -33,6 +33,8 @@ func Connect(config Config) (Conn, error) {
 
 	if config.RenExBrokerVerifierAddress == "" {
 		switch config.Network {
+		case NetworkFalcon:
+			config.RenExBrokerVerifierAddress = "0xb6A95aED1588bE477981dcdEacd13776570ecB3D"
 		case NetworkNightly:
 			config.RenExBrokerVerifierAddress = "0xcf2F6b4b698Cd6a6B3eb1d874a939742d15f8e7E"
 		case NetworkLocal:

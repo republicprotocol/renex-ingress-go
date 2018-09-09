@@ -4,14 +4,19 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"log"
+	"math/big"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+
+	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/dispatch"
 	"github.com/republicprotocol/republic-go/logger"
 	"github.com/republicprotocol/republic-go/order"
@@ -38,25 +43,6 @@ var ErrInvalidNumberOfOrderFragments = errors.New("invalid number of order fragm
 // ErrInvalidOrderFragmentMapping is returned when an order fragment mapping is
 // of an invalid length.
 var ErrInvalidOrderFragmentMapping = errors.New("invalid order fragment mappings")
-
-// ErrOrderFragmentIsNil is returned when a nil orderFragment is provided
-// upon verification.
-var ErrOrderFragmentIsNil = errors.New("order fragment is nil")
-
-// ErrMultiAddressIsNil is returned when a nil multi-address is detected.
-var ErrMultiAddressIsNil = errors.New("multi-address is nil")
-
-// ErrEpochIsNil is returned when a nil epoch is detected.
-var ErrEpochIsNil = errors.New("epoch is nil")
-
-// ErrOpenOrderRequestIsNil is returned when a nil OpenOrderRequest is detected.
-var ErrOpenOrderRequestIsNil = errors.New("OpenOrderRequest is nil")
-
-// ErrCancelOrderRequestIsNil is returned when a nil CancelOrderRequest is detected.
-var ErrCancelOrderRequestIsNil = errors.New("CancelOrderRequest is nil")
-
-// ErrOrderFragmentMappingRequestIsNil is returned when a nil OrderFragmentMappingRequest is detected.
-var ErrOrderFragmentMappingRequestIsNil = errors.New("OrderFragmentMappingRequest is nil")
 
 // ErrInvalidEpochDepth is returned when an invalid epoch depth is provided
 // upon verification.
@@ -85,30 +71,34 @@ type OrderFragment struct {
 	Index int64
 }
 
-// Ingress interface can open and cancel orders on behalf of a user.
+// Ingress interface can approve orders to opened on to the Orderbook and can
+// forward fragments on
 type Ingress interface {
 
 	// Sync the epoch.
 	Sync(<-chan struct{}) <-chan error
 
-	// OpenOrder on the Orderbook and on the Darkpool. A signature from the
-	// trader identifies them as the owner, the order ID is submitted to the
-	// Orderbook along with the necessary fee, and the order fragment mapping
-	// is used to send order fragments to pods in the Darkpool.
-	OpenOrder(signature [65]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) error
+	// OpenOrder on the Darkpool and returns a signed approval for the order to
+	// be opened in the Orderbook. The trader address and order ID are signed
+	// together so that the approval is only valid for that trader. The order
+	// fragment mapping is used to send order fragments to pods in the Darkpool.
+	OpenOrder(trader [20]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) ([65]byte, error)
 
-	// CancelOrder on the Orderbook. A signature from the trader is needed to
-	// verify the cancellation.
-	CancelOrder(signature [65]byte, orderID order.ID) error
+	ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]byte, error)
 
 	// ProcessRequests in the background. Closing the done channel will stop
 	// all processing. Running this background worker is required to open and
 	// cancel orders.
 	ProcessRequests(done <-chan struct{}) <-chan error
+
+	// Swapper interface implements atomic swapper network functions.
+	Swapper
 }
 
 type ingress struct {
+	ecdsaKey          crypto.EcdsaKey
 	contract          ContractBinder
+	renExContract     RenExContractBinder
 	swarmer           swarm.Swarmer
 	orderbookClient   orderbook.Client
 	epochPollInterval time.Duration
@@ -118,15 +108,19 @@ type ingress struct {
 	podsPrev map[[32]byte]registry.Pod
 
 	queueRequests chan Request
+	Swapper
 }
 
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(contract ContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration) Ingress {
+func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper) Ingress {
 	ingress := &ingress{
+		ecdsaKey:          ecdsaKey,
 		contract:          contract,
+		renExContract:     renExContract,
 		swarmer:           swarmer,
+		Swapper:           swapper,
 		orderbookClient:   orderbookClient,
 		epochPollInterval: epochPollInterval,
 
@@ -143,18 +137,14 @@ func NewIngress(contract ContractBinder, swarmer swarm.Swarmer, orderbookClient 
 func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 	errs := make(chan error, 1)
 
-	// Synchronise against the previous epoch
+	// Synchronize against the previous epoch
 	epoch, err := ingress.contract.PreviousEpoch()
 	if err != nil {
 		errs <- err
 		close(errs)
 		return errs
 	}
-	if epoch.IsNil() {
-		errs <- ErrEpochIsNil
-		close(errs)
-		return errs
-	}
+
 	pods, err := ingress.contract.PreviousPods()
 	if err != nil {
 		errs <- err
@@ -191,10 +181,6 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 						case errs <- err:
 							continue
 						}
-					}
-
-					if nextEpoch.IsNil() {
-						continue
 					}
 
 					// Check if it equals what we think the current epoch is
@@ -248,47 +234,111 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 	return errs
 }
 
-func (ingress *ingress) OpenOrder(signature [65]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) error {
+func OpenOrderMessage(trader [20]byte, orderID order.ID) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, []byte("Republic Protocol: open: ")); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, trader); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, orderID); err != nil {
+		return []byte{}, err
+	}
+	return buf.Bytes(), nil
+}
+
+func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) ([65]byte, error) {
 	// TODO: Verify that the signature is valid before sending it to the
 	// Orderbook. This is not strictly necessary but it can save the Ingress
 	// some gas.
 	if err := ingress.verifyOrderFragmentMappings(orderFragmentMappings); err != nil {
-		return err
+		return [65]byte{}, err
 	}
-	go func() {
-		log.Printf("[info] (open) queueing order = %v", orderID)
-		ingress.queueRequests <- OpenOrderRequest{
-			signature:   signature,
-			orderID:     orderID,
-			orderParity: ingress.orderParityFromOrderFragmentMappings(orderFragmentMappings),
-		}
-	}()
+
+	log.Printf("[info] (open) signing order = %v", orderID)
+
+	message, err := OpenOrderMessage(trader, orderID)
+	if err != nil {
+		return [65]byte{}, err
+	}
+
+	signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
+	hashedSignatureData := crypto.Keccak256(signatureData)
+	signature, err := ingress.ecdsaKey.Sign(hashedSignatureData)
+	if err != nil {
+		return [65]byte{}, err
+	}
+
 	for i := range orderFragmentMappings {
 		go func(i int) {
 			log.Printf("[info] (open) queueing order fragments order = %v at depth = %v", orderID, i)
 			ingress.queueRequests <- OpenOrderFragmentMappingRequest{
-				signature:               signature,
 				orderID:                 orderID,
 				orderFragmentMapping:    orderFragmentMappings[i],
 				orderFragmentEpochDepth: i,
 			}
 		}(i)
 	}
-	return nil
+
+	var signature65 [65]byte
+	copy(signature65[:], signature[:65])
+	return signature65, nil
 }
 
-func (ingress *ingress) CancelOrder(signature [65]byte, orderID order.ID) error {
-	// TODO: Verify that the signature is valid before NumBackgroundWorkers
-	// sending it to the Orderbook. This is not strictly necessary but it can
-	// save the Ingress some gas.
-	go func() {
-		log.Printf("[info] (cancel) queueing order = %v", orderID)
-		ingress.queueRequests <- CancelOrderRequest{
-			signature: signature,
-			orderID:   orderID,
-		}
-	}()
-	return nil
+func WithdrawalMessage(trader [20]byte, tokenID uint32, traderNonce *big.Int) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, []byte("Republic Protocol: withdraw: ")); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, trader); err != nil {
+		return []byte{}, err
+	}
+	// NOTE: The contracts do not yet expect a tokenID - this may change to
+	// restrict signatures to specific tokens
+	// if err := binary.Write(buf, binary.BigEndian, tokenID); err != nil {
+	// 	return []byte{}, err
+	// }
+	if err := binary.Write(buf, binary.BigEndian, uint64(0)); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, uint64(0)); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, uint64(0)); err != nil {
+		return []byte{}, err
+	}
+	if err := binary.Write(buf, binary.BigEndian, traderNonce.Uint64()); err != nil {
+		return []byte{}, err
+	}
+	return buf.Bytes(), nil
+}
+
+func (ingress *ingress) ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]byte, error) {
+	log.Printf("[info] (open) approving withdrawal for %v", trader)
+	// Append orderID
+
+	// Retrieve trader nonce
+	traderNonce, err := ingress.renExContract.GetTraderWithdrawalNonce(common.BytesToAddress(trader[:]))
+	if err != nil {
+		return [65]byte{}, err
+	}
+
+	message, err := WithdrawalMessage(trader, tokenID, traderNonce)
+	if err != nil {
+		return [65]byte{}, err
+	}
+
+	signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
+	hashedSignatureData := crypto.Keccak256(signatureData)
+	signature, err := ingress.ecdsaKey.Sign(hashedSignatureData)
+	if err != nil {
+		return [65]byte{}, err
+	}
+
+	var signature65 [65]byte
+	copy(signature65[:], signature[:65])
+	return signature65, nil
 }
 
 func (ingress *ingress) ProcessRequests(done <-chan struct{}) <-chan error {
@@ -322,12 +372,8 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 					return
 				}
 				switch req := request.(type) {
-				case OpenOrderRequest:
-					ingress.processOpenOrderRequest(req, done, errs)
 				case OpenOrderFragmentMappingRequest:
 					ingress.processOpenOrderFragmentMappingRequest(req, done, errs)
-				case CancelOrderRequest:
-					ingress.processCancelOrderRequest(req, done, errs)
 				default:
 					log.Printf("[error] unexpected request type %T", request)
 				}
@@ -336,43 +382,7 @@ func (ingress *ingress) processRequestQueue(done <-chan struct{}, errs chan<- er
 	})
 }
 
-func (ingress *ingress) processOpenOrderRequest(req OpenOrderRequest, done <-chan struct{}, errs chan<- error) {
-	if req.IsNil() {
-		errs <- ErrOpenOrderRequestIsNil
-		return
-	}
-	var err error
-	if req.orderParity == order.ParityBuy {
-		err = ingress.contract.OpenBuyOrder(req.signature, req.orderID)
-	} else {
-		err = ingress.contract.OpenSellOrder(req.signature, req.orderID)
-	}
-	if err != nil {
-		select {
-		case <-done:
-		case errs <- fmt.Errorf("[error] (open) order = %v: %v", req.orderID, err):
-		}
-	}
-}
-
-func (ingress *ingress) processCancelOrderRequest(req CancelOrderRequest, done <-chan struct{}, errs chan<- error) {
-	if req.IsNil() {
-		errs <- ErrCancelOrderRequestIsNil
-		return
-	}
-	if err := ingress.contract.CancelOrder(req.signature, req.orderID); err != nil {
-		select {
-		case <-done:
-		case errs <- fmt.Errorf("[error] (cancel) order = %v: %v", req.orderID, err):
-		}
-	}
-}
-
 func (ingress *ingress) processOpenOrderFragmentMappingRequest(req OpenOrderFragmentMappingRequest, done <-chan struct{}, errs chan<- error) {
-	if req.IsNil() {
-		errs <- ErrOrderFragmentMappingRequestIsNil
-		return
-	}
 	ingress.podsMu.RLock()
 	defer ingress.podsMu.RUnlock()
 
@@ -441,10 +451,6 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 				errs <- fmt.Errorf("no fragment found at index %v", i)
 				return
 			}
-			if orderFragment.IsNil() || orderFragment.EncryptedFragment.IsNil() {
-				errs <- fmt.Errorf("invalid order fragment found at index %v", i)
-				return
-			}
 
 			darknode := pod.Darknodes[i]
 
@@ -460,11 +466,6 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 			darknodeMultiAddr, err := ingress.swarmer.Query(ctx, darknode)
 			if err != nil {
 				errs <- fmt.Errorf("cannot send query to %v: %v", darknode, err)
-				return
-			}
-
-			if darknodeMultiAddr.IsNil() {
-				errs <- ErrMultiAddressIsNil
 				return
 			}
 
@@ -543,9 +544,6 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 		// Ensure order fragment Epoch depth matches up with value provided as
 		// parameter.
 		for _, orderFragment := range orderFragments {
-			if orderFragment.IsNil() {
-				return ErrOrderFragmentIsNil
-			}
 			if orderFragment.EpochDepth != order.FragmentEpochDepth(orderFragmentEpochDepth) {
 				return ErrInvalidEpochDepth
 			}

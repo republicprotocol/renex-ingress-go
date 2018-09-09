@@ -3,6 +3,7 @@ package httpadapter_test
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	mathRand "math/rand"
 	"sync/atomic"
 	"time"
@@ -99,7 +100,7 @@ var _ = Describe("Ingress Adapter", func() {
 		It("should return an error for malformed pod hashes", func() {
 			orderFragmentMappingIn[podHash[16:]] = orderFragmentMappingIn[podHash]
 			_, _, err := UnmarshalOrderFragmentMapping(orderFragmentMappingIn)
-			Expect(err).Should(HaveOccurred())
+			Expect(err).Should(MatchError(ErrInvalidPodHashLength))
 
 			delete(orderFragmentMappingIn, podHash[16:])
 			orderFragmentMappingIn["this is invalid"] = orderFragmentMappingIn[podHash]
@@ -120,7 +121,7 @@ var _ = Describe("Ingress Adapter", func() {
 				orderFragmentMappingIn[podHash][i].Price = []string{}
 			}
 			_, _, err := UnmarshalOrderFragmentMapping(orderFragmentMappingIn)
-			Expect(err).Should(HaveOccurred())
+			Expect(err).Should(MatchError(ErrInvalidEncryptedCoExpShareLength))
 
 			for i := range orderFragmentMappingIn[podHash] {
 				orderFragmentMappingIn[podHash][i].Price = []string{"this is invalid", "this is also invalid"}
@@ -134,7 +135,7 @@ var _ = Describe("Ingress Adapter", func() {
 				orderFragmentMappingIn[podHash][i].Volume = []string{}
 			}
 			_, _, err := UnmarshalOrderFragmentMapping(orderFragmentMappingIn)
-			Expect(err).Should(HaveOccurred())
+			Expect(err).Should(MatchError(ErrInvalidEncryptedCoExpShareLength))
 
 			for i := range orderFragmentMappingIn[podHash] {
 				orderFragmentMappingIn[podHash][i].Volume = []string{"this is invalid", "this is also invalid"}
@@ -148,7 +149,7 @@ var _ = Describe("Ingress Adapter", func() {
 				orderFragmentMappingIn[podHash][i].MinimumVolume = []string{}
 			}
 			_, _, err := UnmarshalOrderFragmentMapping(orderFragmentMappingIn)
-			Expect(err).Should(HaveOccurred())
+			Expect(err).Should(MatchError(ErrInvalidEncryptedCoExpShareLength))
 
 			for i := range orderFragmentMappingIn[podHash] {
 				orderFragmentMappingIn[podHash][i].MinimumVolume = []string{"this is invalid", "this is also invalid"}
@@ -161,105 +162,122 @@ var _ = Describe("Ingress Adapter", func() {
 	Context("when opening orders", func() {
 
 		It("should forward data to the ingress if the signature and mapping are well formed", func() {
-			ingress := &mockIngress{}
+			ingress := &mockIngress{&mockSwapper{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
 
-			signatureBytes := [65]byte{}
-			_, err := rand.Read(signatureBytes[:])
+			traderBytes := [20]byte{}
+			_, err := rand.Read(traderBytes[:])
 			Expect(err).ShouldNot(HaveOccurred())
-			signature := base64.StdEncoding.EncodeToString(signatureBytes[:])
+			trader := hex.EncodeToString(traderBytes[:])
 
 			orderFragmentMappingIn := OrderFragmentMapping{}
 			orderFragmentMappingIn["Td2YBy0MRYPYqqBduRmDsIhTySQUlMhPBM+wnNPWKqq="] = []OrderFragment{}
 
 			orderFragmentMappingsIn := OrderFragmentMappings{}
 			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
-			err = ingressAdapter.OpenOrder(signature, orderFragmentMappingsIn)
+			_, err = ingressAdapter.OpenOrder(trader, orderFragmentMappingsIn)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(atomic.LoadInt64(&ingress.numOpened)).To(Equal(int64(1)))
 		})
 
-		It("should not call ingress.OpenOrder if signature is invalid", func() {
-			ingress := &mockIngress{}
+		It("should not call ingress.OpenOrder if trader is invalid", func() {
+			ingress := &mockIngress{&mockSwapper{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
-			signatureBytes := []byte{}
-			copy(signatureBytes[:], "incorrect signature")
+			traderBytes := []byte{}
+			copy(traderBytes[:], "incorrect trader")
 			orderFragmentMappingIn := OrderFragmentMapping{}
 			orderFragmentMappingIn["Td2YBy0MRYPYqqBduRmDsIhTySQUlMhPBM+wnNPWKqq="] = []OrderFragment{}
 
 			orderFragmentMappingsIn := OrderFragmentMappings{}
 			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
 
-			err := ingressAdapter.OpenOrder(string(signatureBytes), orderFragmentMappingsIn)
-			Expect(err).Should(HaveOccurred())
+			_, err := ingressAdapter.OpenOrder(string(traderBytes), orderFragmentMappingsIn)
+			Expect(err).Should(MatchError(ErrInvalidAddressLength))
 			Expect(atomic.LoadInt64(&ingress.numOpened)).To(Equal(int64(0)))
 		})
 
 		It("should not call ingress.OpenOrder if pool hash is invalid", func() {
-			ingress := &mockIngress{}
+			ingress := &mockIngress{&mockSwapper{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
-			signatureBytes := [65]byte{}
-			_, err := rand.Read(signatureBytes[:])
+			traderBytes := [20]byte{}
+			_, err := rand.Read(traderBytes[:])
 			Expect(err).ShouldNot(HaveOccurred())
-			signature := base64.StdEncoding.EncodeToString(signatureBytes[:])
+			trader := hex.EncodeToString(traderBytes[:])
 			orderFragmentMappingIn := OrderFragmentMapping{}
-			orderFragmentMappingIn["some invalid hash"] = []OrderFragment{OrderFragment{OrderID: "thisisanorderid"}}
+			orderFragmentMappingIn["some invalid hash"] = []OrderFragment{OrderFragment{OrderID: "thisIsAnOrderID"}}
 
 			orderFragmentMappingsIn := OrderFragmentMappings{}
 			orderFragmentMappingsIn = append(orderFragmentMappingsIn, orderFragmentMappingIn)
 
-			err = ingressAdapter.OpenOrder(signature, orderFragmentMappingsIn)
+			_, err = ingressAdapter.OpenOrder(trader, orderFragmentMappingsIn)
 			Expect(err).Should(HaveOccurred())
 			Expect(atomic.LoadInt64(&ingress.numOpened)).To(Equal(int64(0)))
 		})
 	})
 
-	Context("when canceling orders", func() {
+	Context("when approving withdrawals", func() {
 
-		It("should call ingress.CancelOrder if signature and orderID is valid", func() {
-			ingress := &mockIngress{}
+		It("should forward data to the ingress if the signature and mapping are well formed", func() {
+			ingress := &mockIngress{&mockSwapper{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
-			signatureBytes := [65]byte{}
-			_, err := rand.Read(signatureBytes[:])
-			Expect(err).ShouldNot(HaveOccurred())
-			signature := base64.StdEncoding.EncodeToString(signatureBytes[:])
-			err = ingressAdapter.CancelOrder(signature, "Td2YBy0MRYPYqqBduRmDsIhTySQUlMhPBM+wnNPWKqq=")
 
-			Expect(err).To(BeNil())
-			Expect(atomic.LoadInt64(&ingress.numCanceled)).To(Equal(int64(1)))
+			traderBytes := [20]byte{}
+			_, err := rand.Read(traderBytes[:])
+			Expect(err).ShouldNot(HaveOccurred())
+			trader := hex.EncodeToString(traderBytes[:])
+
+			_, err = ingressAdapter.ApproveWithdrawal(trader, 0)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(atomic.LoadInt64(&ingress.numWithdrawn)).To(Equal(int64(1)))
 		})
 
-		It("should not call ingress.CancelOrder if orderID is invalid", func() {
-			ingress := &mockIngress{}
+		It("should not call ingress.ApproveWithdrawal if trader is invalid", func() {
+			ingress := &mockIngress{&mockSwapper{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
-			signatureBytes := [65]byte{}
-			_, err := rand.Read(signatureBytes[:])
-			Expect(err).ShouldNot(HaveOccurred())
-			signature := base64.StdEncoding.EncodeToString(signatureBytes[:])
-			err = ingressAdapter.CancelOrder(signature, "")
-			Expect(err).Should(Equal(ErrInvalidOrderIDLength))
-			Expect(atomic.LoadInt64(&ingress.numCanceled)).To(Equal(int64(0)))
+			traderBytes := []byte{}
+			copy(traderBytes[:], "incorrect trader")
+
+			_, err := ingressAdapter.ApproveWithdrawal(string(traderBytes), 0)
+			Expect(err).Should(MatchError(ErrInvalidAddressLength))
+			Expect(atomic.LoadInt64(&ingress.numWithdrawn)).To(Equal(int64(0)))
 		})
 	})
 })
 
+type mockSwapper struct {
+}
+
+func (swapper *mockSwapper) SelectAddress(orderID string) (string, error) {
+	return "", nil
+}
+func (swapper *mockSwapper) InsertAddress(orderID string, address string) error {
+	return nil
+}
+func (swapper *mockSwapper) SelectSwapDetails(orderID string) (string, error) {
+	return "", nil
+}
+func (swapper *mockSwapper) InsertSwapDetails(orderID string, swapDetails string) error {
+	return nil
+}
+
 type mockIngress struct {
-	numOpened   int64
-	numCanceled int64
+	ingress.Swapper
+	numOpened    int64
+	numWithdrawn int64
 }
 
 func (ingress *mockIngress) Sync(done <-chan struct{}) <-chan error {
 	return nil
 }
 
-func (ingress *mockIngress) OpenOrder(signature [65]byte, orderID order.ID, orderFragmentMapping ingress.OrderFragmentMappings) error {
+func (ingress *mockIngress) OpenOrder(address [20]byte, orderID order.ID, orderFragmentMappings ingress.OrderFragmentMappings) ([65]byte, error) {
 	atomic.AddInt64(&ingress.numOpened, 1)
-	return nil
+	return [65]byte{}, nil
 }
 
-func (ingress *mockIngress) CancelOrder(signature [65]byte, orderID order.ID) error {
-	atomic.AddInt64(&ingress.numCanceled, 1)
-	return nil
+func (ingress *mockIngress) ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]byte, error) {
+	atomic.AddInt64(&ingress.numWithdrawn, 1)
+	return [65]byte{}, nil
 }
 
 func (ingress *mockIngress) ProcessRequests(done <-chan struct{}) <-chan error {
@@ -268,8 +286,6 @@ func (ingress *mockIngress) ProcessRequests(done <-chan struct{}) <-chan error {
 
 func createOrder() (order.Order, error) {
 	parity := order.ParityBuy
-	price := uint64(mathRand.Intn(2000))
-	volume := uint64(mathRand.Intn(2000))
 	nonce := uint64(mathRand.Intn(1000000000))
-	return order.NewOrder(order.TypeLimit, parity, order.SettlementRenEx, time.Now().Add(time.Hour), order.TokensETHREN, order.NewCoExp(price, 26), order.NewCoExp(volume, 26), order.NewCoExp(volume, 26), nonce), nil
+	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, order.TokensETHREN, 1e12, 1e12, 1e12, nonce), nil
 }

@@ -14,29 +14,63 @@ import (
 )
 
 type weakAdapter struct {
-	numOpened   int64
-	numCanceled int64
+	numOpened    int64
+	numWithdrawn int64
 }
 
-func (adapter *weakAdapter) OpenOrder(signature string, orderFragmentMapping OrderFragmentMappings) error {
+var WEAK_SIGNATURE = [65]byte{'W', 'E', 'A', 'K'}
+
+func (adapter *weakAdapter) OpenOrder(trader string, orderFragmentMapping OrderFragmentMappings) ([65]byte, error) {
 	atomic.AddInt64(&adapter.numOpened, 1)
+	return WEAK_SIGNATURE, nil
+}
+
+func (adapter *weakAdapter) ApproveWithdrawal(trader string, tokenID uint32) ([65]byte, error) {
+	atomic.AddInt64(&adapter.numWithdrawn, 1)
+	return WEAK_SIGNATURE, nil
+}
+
+func (adapter *weakAdapter) GetAddress(string) (string, error) {
+	return "", nil
+}
+
+func (adapter *weakAdapter) PostAddress(string, string) error {
 	return nil
 }
 
-func (adapter *weakAdapter) CancelOrder(signature string, orderID string) error {
-	atomic.AddInt64(&adapter.numCanceled, 1)
+func (adapter *weakAdapter) GetSwap(string) (string, error) {
+	return "", nil
+}
+
+func (adapter *weakAdapter) PostSwap(string, string) error {
 	return nil
 }
 
 type errAdapter struct {
 }
 
-func (adapter *errAdapter) OpenOrder(signature string, orderFragmentMapping OrderFragmentMappings) error {
-	return errors.New("cannot open order")
+func (adapter *errAdapter) OpenOrder(trader string, orderFragmentMapping OrderFragmentMappings) ([65]byte, error) {
+	return [65]byte{}, errors.New("cannot open order")
 }
 
-func (adapter *errAdapter) CancelOrder(signature string, orderID string) error {
-	return errors.New("cannot cancel order")
+func (adapter *errAdapter) ApproveWithdrawal(trader string, tokenID uint32) ([65]byte, error) {
+	return [65]byte{}, errors.New("cannot approve withdrawal")
+}
+
+func (adapter *errAdapter) GetAddress(string) (string, error) {
+	return "", nil
+}
+
+func (adapter *errAdapter) PostAddress(string, string) error {
+	return nil
+}
+
+func (adapter *errAdapter) GetSwap(string) (string, error) {
+	return "", nil
+}
+
+func (adapter *errAdapter) PostSwap(string, string) error {
+	return nil
 }
 
 var _ = Describe("HTTP handlers", func() {
@@ -58,6 +92,12 @@ var _ = Describe("HTTP handlers", func() {
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusCreated))
+
+			var response OpenOrderResponse
+			err = json.Unmarshal(w.Body.Bytes(), &response)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(UnmarshalSignature(response.Signature)).To(Equal(WEAK_SIGNATURE))
+
 			Expect(atomic.LoadInt64(&adapter.numOpened)).To(Equal(int64(1)))
 		})
 
@@ -97,43 +137,59 @@ var _ = Describe("HTTP handlers", func() {
 		})
 	})
 
-	Context("when canceling orders", func() {
+	Context("when approving withdrawals", func() {
 
-		It("should return status 200 for a valid request", func() {
+		It("should return status 201 for a valid request", func() {
 
-			orderID := "vrZhWU3VV9LRIriRvuzT9CbVc57wQhbQ"
-			signature := "Td2YBy0MRYPYqqBduRmDsIhTySQUlMhPBM+wnNPWKqq="
+			mockOrder := new(ApproveWithdrawalRequest)
+			data, err := json.Marshal(mockOrder)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			body := bytes.NewBuffer(data)
 			w := httptest.NewRecorder()
-			r := httptest.NewRequest("DELETE", "http://localhost/orders?id="+orderID+"&signature="+signature, nil)
+			r := httptest.NewRequest("POST", "http://localhost/withdrawals", body)
 
 			adapter := weakAdapter{}
 			server := NewIngressServer(&adapter)
 			server.ServeHTTP(w, r)
 
-			Expect(w.Code).To(Equal(http.StatusOK))
-			Expect(atomic.LoadInt64(&adapter.numCanceled)).To(Equal(int64(1)))
+			Expect(w.Code).To(Equal(http.StatusCreated))
+
+			var response ApproveWithdrawalResponse
+			err = json.Unmarshal(w.Body.Bytes(), &response)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(UnmarshalSignature(response.Signature)).To(Equal(WEAK_SIGNATURE))
+
+			Expect(atomic.LoadInt64(&adapter.numWithdrawn)).To(Equal(int64(1)))
 		})
 
-		It("should return status 400 for an invalid signature", func() {
+		It("should return status 400 for an invalid request", func() {
 
-			orderID := "vrZhWU3VV9LRIriRvuzT9CbVc57wQhbQ"
+			mockOrder := ""
+			data, err := json.Marshal(mockOrder)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			body := bytes.NewBuffer(data)
 			w := httptest.NewRecorder()
-			r := httptest.NewRequest("DELETE", "http://localhost/orders?id="+orderID, nil)
+			r := httptest.NewRequest("POST", "http://localhost/withdrawals", body)
 
 			adapter := weakAdapter{}
 			server := NewIngressServer(&adapter)
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusBadRequest))
-			Expect(atomic.LoadInt64(&adapter.numOpened)).To(Equal(int64(0)))
+			Expect(atomic.LoadInt64(&adapter.numWithdrawn)).To(Equal(int64(0)))
 		})
 
 		It("should return status 500 for ingress adapter errors", func() {
 
-			orderID := "vrZhWU3VV9LRIriRvuzT9CbVc57wQhbQ"
-			signature := "Td2YBy0MRYPYqqBduRmDsIhTySQUlMhPBM+wnNPWKqq="
+			mockOrder := new(ApproveWithdrawalRequest)
+			data, err := json.Marshal(mockOrder)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			body := bytes.NewBuffer(data)
 			w := httptest.NewRecorder()
-			r := httptest.NewRequest("DELETE", "http://localhost/orders?id="+orderID+"&signature="+signature, nil)
+			r := httptest.NewRequest("POST", "http://localhost/withdrawals", body)
 
 			adapter := errAdapter{}
 			server := NewIngressServer(&adapter)

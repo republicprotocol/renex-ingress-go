@@ -7,7 +7,10 @@
         "/ip4/52.59.176.141/tcp/18514/republic/8MHX3awj1hj1x3XbKxq5uUuE8uQ6mq",
         "/ip4/18.228.50.197/tcp/18514/republic/8MJrKWdEmUFwZcKArzyABdYvovQQcP"
     ],
-    "ethereum": {
+    "republic": {
+        "network": "testnet"
+    },
+    "renex": {
         "network": "testnet"
     }
 }

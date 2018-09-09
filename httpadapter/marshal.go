@@ -3,6 +3,7 @@ package httpadapter
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 // in the OrderFragment. It is represented as a JSON object. This
 // representation is useful for HTTP drivers.
 type OrderFragment struct {
-	OrderSignature  string           `json:"orderSignature"`
 	OrderID         string           `json:"orderId"`
 	OrderType       order.Type       `json:"orderType"`
 	OrderParity     order.Parity     `json:"orderParity"`
@@ -45,12 +45,41 @@ type OrderFragmentMappings []OrderFragmentMapping
 // OpenOrderRequest is an JSON object sent to the HTTP handlers to request the
 // opening of an order.
 type OpenOrderRequest struct {
-	Signature             string                `json:"signature"`
+	Address               string                `json:"address"`
 	OrderFragmentMappings OrderFragmentMappings `json:"orderFragmentMappings"`
+}
+
+type OpenOrderResponse struct {
+	Signature string `json:"signature"`
+}
+
+// ApproveWithdrawalRequest is an JSON object sent to the HTTP handlers to
+// request the approval of a withdrawal.
+type ApproveWithdrawalRequest struct {
+	Trader  string `json:"address"`
+	TokenID uint32 `json:"tokenID"`
+}
+
+type ApproveWithdrawalResponse struct {
+	Signature string `json:"signature"`
+}
+
+type PostAddressRequest struct {
+	OrderID string `json:"orderID"`
+	Address string `json:"address"`
+}
+
+type PostSwapRequest struct {
+	OrderID string `json:"orderID"`
+	Swap    string `json:"swap"`
 }
 
 func MarshalSignature(signatureIn [65]byte) string {
 	return base64.StdEncoding.EncodeToString(signatureIn[:])
+}
+
+func MarshalAddress(addressIn [20]byte) string {
+	return hex.EncodeToString(addressIn[:])
 }
 
 func MarshalOrderID(orderIDIn order.ID) string {
@@ -96,6 +125,25 @@ func UnmarshalSignature(signatureIn string) ([65]byte, error) {
 	}
 	copy(signature[:], signatureBytes)
 	return signature, nil
+}
+
+func UnmarshalAddress(addressIn string) ([20]byte, error) {
+	address := [20]byte{}
+	// If the address starts with "0x", remove before decoding
+	if len(addressIn) > 1 {
+		if addressIn[0:2] == "0x" || addressIn[0:2] == "0X" {
+			addressIn = addressIn[2:]
+		}
+	}
+	addressBytes, err := hex.DecodeString(addressIn)
+	if err != nil {
+		return address, fmt.Errorf("cannot decode address %v: %v", addressIn, err)
+	}
+	if len(addressBytes) != 20 {
+		return address, ErrInvalidAddressLength
+	}
+	copy(address[:], addressBytes)
+	return address, nil
 }
 
 func UnmarshalOrderID(orderIDIn string) (order.ID, error) {

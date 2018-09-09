@@ -51,29 +51,16 @@ func main() {
 		log.Fatalf("cannot load smart contract: %v", err)
 	}
 
-	onePrice := order.CoExp{
-		Co:  2,
-		Exp: 40,
-	}
-	oneVol := order.CoExp{
-		Co:  5,
-		Exp: 12,
-	}
-	buy := order.NewOrder(order.TypeLimit, order.ParityBuy, order.SettlementRenEx, time.Now().Add(1*time.Hour), order.TokensDGXREN, onePrice, oneVol, oneVol, rand.Uint64())
-	sell := order.NewOrder(order.TypeLimit, order.ParitySell, order.SettlementRenEx, time.Now().Add(1*time.Hour), order.TokensDGXREN, onePrice, oneVol, oneVol, rand.Uint64())
-	ords := []order.Order{buy, sell}
+	onePrice := uint64(1)
+	oneVol := uint64(1)
+	buy := order.NewOrder(order.ParityBuy, order.TypeLimit, time.Now().Add(1*time.Hour), order.SettlementRenEx, order.TokensDGXREN, onePrice, oneVol, oneVol, rand.Uint64())
+	sell := order.NewOrder( order.ParitySell, order.TypeLimit, time.Now().Add(1*time.Hour), order.SettlementRenEx,order.TokensDGXREN, onePrice, oneVol, oneVol, rand.Uint64())
+	orders := []order.Order{buy, sell}
 
-	for _, ord := range ords {
-		message := append([]byte("Republic Protocol: open: "), ord.ID[:]...)
-		signatureData := crypto.Keccak256([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message)
-		signature, err := keystore.Sign(signatureData)
-		if err != nil {
-			log.Fatalf("cannot sign order: %v", err)
-		}
-
+	for _, ord := range orders {
 		log.Printf("order = %v, from = %v", ord.ID, contractBinder.From().String())
 		request := httpadapter.OpenOrderRequest{
-			Signature:             base64.StdEncoding.EncodeToString(signature),
+			Address:               contractBinder.From().String(),
 			OrderFragmentMappings: httpadapter.OrderFragmentMappings{},
 		}
 

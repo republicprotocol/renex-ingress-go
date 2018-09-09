@@ -262,13 +262,16 @@ func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragme
 	}
 
 	signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
-	fmt.Println("trader:", hex.EncodeToString(trader[:]), "orderID:", hex.EncodeToString(orderID[:]))
+	fmt.Println("Trader:", hex.EncodeToString(trader[:]))
+	fmt.Println("Order ID:", hex.EncodeToString(orderID[:]))
 	fmt.Println("Signature data:", hex.EncodeToString(signatureData))
 	hashedSignatureData := crypto.Keccak256(signatureData)
+	fmt.Println("Hashed signature data:", hex.EncodeToString(hashedSignatureData))
 	signature, err := ingress.ecdsaKey.Sign(hashedSignatureData)
 	if err != nil {
 		return [65]byte{}, err
 	}
+	fmt.Println("Signature:", hex.EncodeToString(signature))
 
 	for i := range orderFragmentMappings {
 		go func(i int) {

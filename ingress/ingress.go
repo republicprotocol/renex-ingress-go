@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
@@ -249,9 +250,6 @@ func OpenOrderMessage(trader [20]byte, orderID order.ID) ([]byte, error) {
 }
 
 func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) ([65]byte, error) {
-	// TODO: Verify that the signature is valid before sending it to the
-	// Orderbook. This is not strictly necessary but it can save the Ingress
-	// some gas.
 	if err := ingress.verifyOrderFragmentMappings(orderFragmentMappings); err != nil {
 		return [65]byte{}, err
 	}
@@ -264,6 +262,8 @@ func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragme
 	}
 
 	signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
+	fmt.Println("trader:", hex.EncodeToString(trader[:]), "orderID:", hex.EncodeToString(orderID[:]))
+	fmt.Println("Signature data:", hex.EncodeToString(signatureData))
 	hashedSignatureData := crypto.Keccak256(signatureData)
 	signature, err := ingress.ecdsaKey.Sign(hashedSignatureData)
 	if err != nil {

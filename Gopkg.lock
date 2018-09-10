@@ -270,7 +270,7 @@
   version = "v0.8.0"
 
 [[projects]]
-  branch = "develop"
+  branch = "nightly"
   digest = "1:3f8257ece097373f3f07812943572bb3d0a714587d3f8d66471ed3a23207e83b"
   name = "github.com/republicprotocol/republic-go"
   packages = [

@@ -3,7 +3,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:40a3716965c1e46688a3290d8043f5bbdfbcb218e4c1327384049a7ec2df92e0"
+  digest = "1:3c455450f26215a3f87f77d2d820779f3c10c8e60cf5151b05fe7a48c394043b"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
   pruneopts = "T"
@@ -11,14 +11,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f2d4beb3a1f1d5c59ed38864724bb098952c6230a22a226b30b8cb1dcb8daf79"
+  digest = "1:f396f994e277d42cdc3955080d849b6dc723880fee7ef5716b57494a4a9b728d"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   pruneopts = "T"
   revision = "cff30e1d23fc9e800b2b5b4b41ef1817dda07e9f"
 
 [[projects]]
-  digest = "1:3e892a54552313db9f7eda71126179f4da5c9d15778681c662f0ef44471698ee"
+  digest = "1:68ab6afdca4a2b711034ccb97ba084e05de6e4469ae9969ce7a855954db54551"
   name = "github.com/ethereum/go-ethereum"
   packages = [
     ".",
@@ -68,7 +68,7 @@
   version = "v1.8.0"
 
 [[projects]]
-  digest = "1:a2ecb56e5053d942aafc86738915fb94c9131bac848c543b8b6764365fd69080"
+  digest = "1:faeef19293b230683381d72720835b1074d8e8048a2db5d0d0f6372775602720"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -83,7 +83,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6027b20c168728321bd99ad01f35118eded457b01c03e647a84833ab331f2f5b"
+  digest = "1:968462840e6d86b12990015ac6ab297c022ccde102953040724be1df0e9e6c96"
   name = "github.com/golang/snappy"
   packages = ["."]
   pruneopts = "T"
@@ -115,7 +115,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6e7f344f0759e7bd98e5d373e3149b5fca4132261c241777a1c8e57176f1fe05"
+  digest = "1:2b7df6363912cb5b639ecc36a0324399f8a62dff3d831cadd7ea15d834240a54"
   name = "github.com/gxed/hashland"
   packages = ["keccakpg"]
   pruneopts = "T"
@@ -133,7 +133,7 @@
   version = "v0.5.0"
 
 [[projects]]
-  digest = "1:8f20c8dd713564fa97299fbcb77d729c6de9c33f3222812a76e6ecfaef80fd61"
+  digest = "1:5722c15fd5549fdf7d796fb1519236895ff8ba54b30ed500289fa7212348e97b"
   name = "github.com/hpcloud/tail"
   packages = [
     ".",
@@ -155,7 +155,7 @@
   version = "1.0.0"
 
 [[projects]]
-  digest = "1:2106821001befed6a5783b54950030dd0614257d18bef539e46cae9afd02b89b"
+  digest = "1:484281926c1352d651e66b3bf4b268f52b0226faa4aecd8f09b4da5c1e652cd4"
   name = "github.com/lib/pq"
   packages = [
     ".",
@@ -183,7 +183,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9209bb830bd368966f88ce5f6b56b555d7e1925b4474b273038bded54749360e"
+  digest = "1:820fceb445004f734a1d1b656299336ab791bad2354f85ea401710b1a92587f2"
   name = "github.com/mr-tron/base58"
   packages = ["base58"]
   pruneopts = "T"
@@ -191,7 +191,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ec5c1918a5f897bd6f2196846cdfad01ccfb8625bea6f7ea7f686156f402c5ef"
+  digest = "1:07ede8edd965de9bd086e7666abce840db8a4786d21575fa74404ece6205d9e4"
   name = "github.com/multiformats/go-multiaddr"
   packages = ["."]
   pruneopts = "T"
@@ -199,14 +199,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:37c156d97592a3ce045bb76b76aae82b72c7ba493dbcced1424c4ff55ac3343f"
+  digest = "1:a445d139711719a90bf5b8e76f6002795f749b255b9447b6b80407844282b03e"
   name = "github.com/multiformats/go-multihash"
   packages = ["."]
   pruneopts = "T"
   revision = "66cd79b386e51ddf63270f2b71c57436a60035f3"
 
 [[projects]]
-  digest = "1:99ec7b4370b05816679fe9ae77f1f8af4eae3df0abaeef8c3d2d42d86f55f549"
+  digest = "1:64fd328e9708232d27ef9f2f7f3ef2e96d8aca8f4177413552696d8e7468407a"
   name = "github.com/onsi/ginkgo"
   packages = [
     ".",
@@ -233,7 +233,7 @@
   version = "v1.6.0"
 
 [[projects]]
-  digest = "1:7343b611a01c3276e8d1bb69b38f94014dbe6bf92df545b069808f7e7531b802"
+  digest = "1:6744b32d1e10b7d8a02f2e47e6c0917827884e58f79a56661c03d2232bdd20f0"
   name = "github.com/onsi/gomega"
   packages = [
     ".",
@@ -270,8 +270,8 @@
   version = "v0.8.0"
 
 [[projects]]
-  branch = "develop"
-  digest = "1:c64b099a84d5a97a83bcebe1a8a0f4929629258f04b8bacee90031ebecd9f980"
+  branch = "master"
+  digest = "1:8c3d0a94cc5432b49e342a1a534c06b248334e65eb4b27f86ee0c3b09370f1d7"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -297,7 +297,7 @@
   revision = "4983df01bf84c26c833358f31b0a75e3d1fca3fc"
 
 [[projects]]
-  digest = "1:602081d2a289d1f76ea90b806b0c61c19038d76504e9005ccb969864dbaee339"
+  digest = "1:2dcc7d8a3fe136690b81476588e96d3e4388e06cf5ec2acad897224db805362b"
   name = "github.com/rjeczalik/notify"
   packages = ["."]
   pruneopts = "T"
@@ -305,7 +305,7 @@
   version = "v0.9.1"
 
 [[projects]]
-  digest = "1:6cae6970d70fc5fe75bf83c48ee33e9c4c561a62d0b033254bee8dd5942b815a"
+  digest = "1:88ddb405914747e299700c04b009bc9901657181ce48114863f215b2f2fa8e8f"
   name = "github.com/rs/cors"
   packages = ["."]
   pruneopts = "T"
@@ -322,7 +322,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ee395d0d8c1719b5a1407f34af93953b4763bacb19a8961aba5b6d312824da41"
+  digest = "1:7d465ad82b6f8d5c72d10211056458e2ee1e34d697ce47b62dbb1edf24519f6c"
   name = "github.com/syndtr/goleveldb"
   packages = [
     "leveldb",
@@ -343,7 +343,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:62fac8c414ce3fb59b87102ebebb04edd0287a721c0cd6b36f4dc866a42cf772"
+  digest = "1:42f1dc35d7981bb8448411083572956584ebbb7de96617b3eb945348a4885b54"
   name = "golang.org/x/crypto"
   packages = [
     "blake2s",
@@ -357,7 +357,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2584347a8e1438435975f69490a9aff755899d57f9afc67798cd2ae49ac16aaf"
+  digest = "1:f33e8ed11c0cb15e000db22bc4fae7a8eefd2a9ed0ca1ac4c1ce3f35d78979a4"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -377,7 +377,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:57d967d0c359c56065e766555f82df575d98c6b1979f7d257b83220ed1340d3b"
+  digest = "1:20391b1bb474520fea650104d49d2bace3af089846094a5902d3a165eb19df64"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -387,7 +387,7 @@
   revision = "d0be0721c37eeb5299f245a996a483160fc36940"
 
 [[projects]]
-  digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
+  digest = "1:24db346d9931fe01f1e9a02aba78ba22c1ecd55bf0f79dd10ba5169719cf002d"
   name = "golang.org/x/text"
   packages = [
     "collate",
@@ -431,7 +431,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e25487f99b5bbf2fec13fb7a91cf292f42941552ca732f3eef93f5a1295c4adc"
+  digest = "1:77de0e29354cedfa04629deb1f4d21a7330e23d536cf08f6d18a21c8fc3c5745"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -443,14 +443,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e43f1cb3f488a0c2be85939c2a594636f60b442a12a196c778bd2d6c9aca3df7"
+  digest = "1:7040eaf95eb09f6f69e1415074049a9a66236d59d8767f2d17b759b916f79fb1"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "T"
   revision = "11092d34479b07829b72e10713b159248caf5dad"
 
 [[projects]]
-  digest = "1:a985c4820889930a08c19181d2aeb1c57ab1929bce7a66b781109dd1db8fb433"
+  digest = "1:f12215200a2aa3770e8d1f53487ef66008de10b5cc5534bc752e5875374b919a"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -493,7 +493,7 @@
   version = "v0.1.0"
 
 [[projects]]
-  digest = "1:7fc160b460a6fc506b37fcca68332464c3f2cd57b6e3f111f26c5bbfd2d5518e"
+  digest = "1:1834c1bcecde8bc847628b7c316b8258315749995f0c3a398b1370db8c98a1b3"
   name = "gopkg.in/fsnotify.v1"
   packages = ["."]
   pruneopts = "T"
@@ -503,7 +503,7 @@
 
 [[projects]]
   branch = "v2"
-  digest = "1:dae137be246befa42ce4b48c0feff2c5796b8a5027139a283f31a21173744410"
+  digest = "1:35056a4c53d0b725735422545c3c11bdc9007da2fdb644fee96f3a6b7c42c69f"
   name = "gopkg.in/karalabe/cookiejar.v2"
   packages = ["collections/prque"]
   pruneopts = "T"

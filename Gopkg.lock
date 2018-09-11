@@ -271,7 +271,7 @@
 
 [[projects]]
   branch = "nightly"
-  digest = "1:3f8257ece097373f3f07812943572bb3d0a714587d3f8d66471ed3a23207e83b"
+  digest = "1:4ce0b8e0dfb1ce3077e2e624cc9cea59f0bd1d9b518f8626660e0800a0aa8ed0"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -294,7 +294,7 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "4277ed65af1d70a62b11e8f9566daaedae0cde39"
+  revision = "440cff91bfdbc0aff54631e10046c242031050c4"
 
 [[projects]]
   digest = "1:602081d2a289d1f76ea90b806b0c61c19038d76504e9005ccb969864dbaee339"
@@ -343,7 +343,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:490cbeb7a0a743de4cc0058a6d13ef6772c4d1e3d4d36a8f0428d3c5114012ff"
+  digest = "1:62fac8c414ce3fb59b87102ebebb04edd0287a721c0cd6b36f4dc866a42cf772"
   name = "golang.org/x/crypto"
   packages = [
     "blake2s",
@@ -353,7 +353,7 @@
     "sha3",
   ]
   pruneopts = "T"
-  revision = "0709b304e793a5edb4a2c0145f281ecdc20838a4"
+  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
 
 [[projects]]
   branch = "master"
@@ -431,7 +431,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7dd5c2181459fca2a99dba88d4c73b493a055efae533887b0b91a25ceaded457"
+  digest = "1:e25487f99b5bbf2fec13fb7a91cf292f42941552ca732f3eef93f5a1295c4adc"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -439,7 +439,7 @@
     "internal/fastwalk",
   ]
   pruneopts = "T"
-  revision = "becf93d7cfc653520cea308da2bc870574b0b3bb"
+  revision = "18207bb12d3a3338e74403fed8ca1ba866dd3a57"
 
 [[projects]]
   branch = "master"

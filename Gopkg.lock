@@ -271,7 +271,7 @@
 
 [[projects]]
   branch = "develop"
-  digest = "1:290cc9c255e71002afeb90168a79ac42dd87b42dbb3f717a33788e378dcd447d"
+  digest = "1:c736b07253b81a8edfa7cd91163876fa8cf3d46e1382a543a5859ca75a7d93af"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -294,7 +294,7 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "9baf6cbdc12b1c21c572b9a79e301a68c963cb52"
+  revision = "acb2963f620fc5ee119106cfa8fb002f7519eafe"
 
 [[projects]]
   digest = "1:602081d2a289d1f76ea90b806b0c61c19038d76504e9005ccb969864dbaee339"
@@ -343,7 +343,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:490cbeb7a0a743de4cc0058a6d13ef6772c4d1e3d4d36a8f0428d3c5114012ff"
+  digest = "1:62fac8c414ce3fb59b87102ebebb04edd0287a721c0cd6b36f4dc866a42cf772"
   name = "golang.org/x/crypto"
   packages = [
     "blake2s",
@@ -353,7 +353,7 @@
     "sha3",
   ]
   pruneopts = "T"
-  revision = "0709b304e793a5edb4a2c0145f281ecdc20838a4"
+  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
 
 [[projects]]
   branch = "master"
@@ -377,14 +377,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9a867c8d79596c22ba98d70837c854db4afa937183beccb75f6d888f4410fe54"
+  digest = "1:57d967d0c359c56065e766555f82df575d98c6b1979f7d257b83220ed1340d3b"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "T"
-  revision = "917fdcba135dcbaccd57425db91723541b4427c8"
+  revision = "d0be0721c37eeb5299f245a996a483160fc36940"
 
 [[projects]]
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
@@ -431,7 +431,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:dbc233c3e91caaf82db96f3bc5fcd5aa783f7b645022fd4ffc471e36f06df946"
+  digest = "1:e25487f99b5bbf2fec13fb7a91cf292f42941552ca732f3eef93f5a1295c4adc"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -439,7 +439,7 @@
     "internal/fastwalk",
   ]
   pruneopts = "T"
-  revision = "0aa4b8830f481fed77b73cf7cea2bc3129e05148"
+  revision = "18207bb12d3a3338e74403fed8ca1ba866dd3a57"
 
 [[projects]]
   branch = "master"

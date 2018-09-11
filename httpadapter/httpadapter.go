@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -179,13 +178,10 @@ func rateLimit(limiter *rate.Limiter, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// netAddr := r.RemoteAddr
 		// ipAddr := strings.Split(netAddr, ":")[0]
-		log.Println("before rate limiting ")
 		if limiter.Allow() {
-			log.Println("allow")
 			next.ServeHTTP(w, r)
 			return
 		}
-		log.Println("not allow")
 
 		w.WriteHeader(http.StatusTooManyRequests)
 		w.Write([]byte("too many request"))

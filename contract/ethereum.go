@@ -35,8 +35,10 @@ func Connect(config Config) (Conn, error) {
 		switch config.Network {
 		case NetworkFalcon:
 			config.RenExBrokerVerifierAddress = "0xb6A95aED1588bE477981dcdEacd13776570ecB3D"
+			config.WyreAddress = "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f"
 		case NetworkNightly:
 			config.RenExBrokerVerifierAddress = "0xcf2F6b4b698Cd6a6B3eb1d874a939742d15f8e7E"
+			config.WyreAddress = "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f"
 		case NetworkLocal:
 		default:
 			return Conn{}, fmt.Errorf("no default contract address on %s", config.Network)

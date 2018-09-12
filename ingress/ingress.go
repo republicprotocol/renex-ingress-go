@@ -250,6 +250,10 @@ func OpenOrderMessage(trader [20]byte, orderID order.ID) ([]byte, error) {
 }
 
 func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) ([65]byte, error) {
+	if err := ingress.verifyTrader(trader); err != nil {
+		return [65]byte{}, err
+	}
+
 	if err := ingress.verifyOrderFragmentMappings(orderFragmentMappings); err != nil {
 		return [65]byte{}, err
 	}
@@ -497,6 +501,15 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 	errNumMax := len(orderFragments) - pod.Threshold()
 	if len(pod.Darknodes) > 0 && errNum > errNumMax {
 		return fmt.Errorf("cannot send order fragments to %v nodes (out of %v nodes) in pod %v: %v", errNum, len(pod.Darknodes), base64.StdEncoding.EncodeToString(pod.Hash[:]), err)
+	}
+	return nil
+}
+
+func (ingress *ingress) verifyTrader(trader [20]byte) error {
+	// BalanceOf returns 1 if the trader is verified and 0 otherwise.
+	balance, err := ingress.contract.BalanceOf(trader)
+	if err != nil || balance.Cmp(big.NewInt(0)) == 0 {
+		return fmt.Errorf("trader is not verified: %v", err)
 	}
 	return nil
 }

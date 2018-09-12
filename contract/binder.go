@@ -20,6 +20,7 @@ type Binder struct {
 	callOpts     *bind.CallOpts
 
 	renExBrokerVerifier *bindings.RenExBrokerVerifier
+	wyre                *bindings.Wyre
 }
 
 // NewBinder returns a Binder to communicate with contracts
@@ -39,6 +40,12 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		return Binder{}, err
 	}
 
+	wyre, err := bindings.NewWyre(common.HexToAddress(conn.Config.WyreAddress), bind.ContractBackend(conn.Client))
+	if err != nil {
+		fmt.Println(fmt.Errorf("cannot bind to Wyre: %v", err))
+		return Binder{}, err
+	}
+
 	return Binder{
 		mu:           new(sync.RWMutex),
 		network:      conn.Config.Network,
@@ -47,6 +54,7 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		callOpts:     &bind.CallOpts{},
 
 		renExBrokerVerifier: renExBrokerVerifier,
+		wyre:                wyre,
 	}, nil
 }
 

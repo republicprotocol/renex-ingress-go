@@ -21,6 +21,8 @@ type ContractBinder interface {
 	Pods() ([]registry.Pod, error)
 
 	PreviousPods() ([]registry.Pod, error)
+
+	BalanceOf(common.Address) (*big.Int, error)
 }
 
 type RenExContractBinder interface {

@@ -92,6 +92,8 @@ type Ingress interface {
 	// cancel orders.
 	ProcessRequests(done <-chan struct{}) <-chan error
 
+	TraderVerified(trader [20]byte) (bool, error)
+
 	// Swapper interface implements atomic swapper network functions.
 	Swapper
 }
@@ -250,10 +252,6 @@ func OpenOrderMessage(trader [20]byte, orderID order.ID) ([]byte, error) {
 }
 
 func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragmentMappings OrderFragmentMappings) ([65]byte, error) {
-	if err := ingress.verifyTrader(trader); err != nil {
-		return [65]byte{}, err
-	}
-
 	if err := ingress.verifyOrderFragmentMappings(orderFragmentMappings); err != nil {
 		return [65]byte{}, err
 	}
@@ -291,6 +289,15 @@ func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragme
 	var signature65 [65]byte
 	copy(signature65[:], signature[:65])
 	return signature65, nil
+}
+
+func (ingress *ingress) TraderVerified(trader [20]byte) (bool, error) {
+	// BalanceOf returns 1 if the trader is verified and 0 otherwise.
+	balance, err := ingress.renExContract.BalanceOf(trader)
+	if err != nil || balance.Cmp(big.NewInt(0)) == 0 {
+		return false, fmt.Errorf("trader is not verified: %v", err)
+	}
+	return true, nil
 }
 
 func WithdrawalMessage(trader [20]byte, tokenID uint32, traderNonce *big.Int) ([]byte, error) {
@@ -501,15 +508,6 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 	errNumMax := len(orderFragments) - pod.Threshold()
 	if len(pod.Darknodes) > 0 && errNum > errNumMax {
 		return fmt.Errorf("cannot send order fragments to %v nodes (out of %v nodes) in pod %v: %v", errNum, len(pod.Darknodes), base64.StdEncoding.EncodeToString(pod.Hash[:]), err)
-	}
-	return nil
-}
-
-func (ingress *ingress) verifyTrader(trader [20]byte) error {
-	// BalanceOf returns 1 if the trader is verified and 0 otherwise.
-	balance, err := ingress.renExContract.BalanceOf(trader)
-	if err != nil || balance.Cmp(big.NewInt(0)) == 0 {
-		return fmt.Errorf("trader is not verified: %v", err)
 	}
 	return nil
 }

@@ -275,6 +275,10 @@ func (ingress *mockIngress) OpenOrder(address [20]byte, orderID order.ID, orderF
 	return [65]byte{}, nil
 }
 
+func (ingress *mockIngress) TraderVerified(address [20]byte) (bool, error) {
+	return true, nil
+}
+
 func (ingress *mockIngress) ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]byte, error) {
 	atomic.AddInt64(&ingress.numWithdrawn, 1)
 	return [65]byte{}, nil

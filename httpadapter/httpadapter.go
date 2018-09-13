@@ -42,6 +42,17 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter) http.HandlerFunc {
 			w.Write([]byte(fmt.Sprintf("cannot decode json into an order or a list of order fragments: %v", err)))
 			return
 		}
+		verified, err := openOrderAdapter.TraderVerified(openOrderRequest.Address)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("cannot check trader verification: %v", err)))
+			return
+		}
+		if !verified {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(fmt.Sprintf("trader is not verified")))
+			return
+		}
 		signature, err := openOrderAdapter.OpenOrder(openOrderRequest.Address, openOrderRequest.OrderFragmentMappings)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

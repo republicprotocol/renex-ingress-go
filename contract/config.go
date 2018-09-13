@@ -22,5 +22,5 @@ type Config struct {
 	Network                    Network `json:"network"`
 	URI                        string  `json:"uri"`
 	RenExBrokerVerifierAddress string  `json:"renExBrokerVerifier"`
-	WyreAddress                string  `json:wyre`
+	WyreAddress                string  `json:"wyre"`
 }

@@ -507,7 +507,7 @@ func (ingress *ingress) sendOrderFragmentsToPod(pod registry.Pod, orderFragments
 
 func (ingress *ingress) verifyTrader(trader [20]byte) error {
 	// BalanceOf returns 1 if the trader is verified and 0 otherwise.
-	balance, err := ingress.contract.BalanceOf(trader)
+	balance, err := ingress.renExContract.BalanceOf(trader)
 	if err != nil || balance.Cmp(big.NewInt(0)) == 0 {
 		return fmt.Errorf("trader is not verified: %v", err)
 	}

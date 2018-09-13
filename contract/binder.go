@@ -70,3 +70,15 @@ func (binder *Binder) GetTraderWithdrawalNonce(trader common.Address) (*big.Int,
 func (binder *Binder) getTraderWithdrawalNonce(trader common.Address) (*big.Int, error) {
 	return binder.renExBrokerVerifier.TraderNonces(binder.callOpts, trader)
 }
+
+// BalanceOf retrieves the Wyre KYC verification status of a trader.
+func (binder *Binder) BalanceOf(trader common.Address) (*big.Int, error) {
+	binder.mu.RLock()
+	defer binder.mu.RUnlock()
+
+	return binder.balanceOf(trader)
+}
+
+func (binder *Binder) balanceOf(trader common.Address) (*big.Int, error) {
+	return binder.wyre.BalanceOf(binder.callOpts, trader)
+}

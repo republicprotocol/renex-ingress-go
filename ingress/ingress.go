@@ -294,10 +294,10 @@ func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragme
 func (ingress *ingress) TraderVerified(trader [20]byte) (bool, error) {
 	// BalanceOf returns 1 if the trader is verified and 0 otherwise.
 	balance, err := ingress.renExContract.BalanceOf(trader)
-	if err != nil || balance.Cmp(big.NewInt(0)) == 0 {
-		return false, fmt.Errorf("trader is not verified: %v", err)
+	if err != nil {
+		return false, err
 	}
-	return true, nil
+	return balance.Cmp(big.NewInt(0)) == 1, nil
 }
 
 func WithdrawalMessage(trader [20]byte, tokenID uint32, traderNonce *big.Int) ([]byte, error) {

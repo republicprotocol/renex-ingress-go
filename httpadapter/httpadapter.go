@@ -15,7 +15,9 @@ import (
 // IngressAdapter.
 func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
 	approvedTraders := []string{
+		"0x3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
 		"3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
+		"0x26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
 		"26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
 	}
 	limiter := rate.NewLimiter(3, 20)

@@ -1,9 +1,11 @@
 package httpadapter
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -11,9 +13,38 @@ import (
 	"golang.org/x/time/rate"
 )
 
+type authRequest struct {
+	Type   string `json:"grant_type"`
+	Code   string `json:"code"`
+	URI    string `json:"redirect_uri"`
+	Key    string `json:"client_id"`
+	Secret string `json:"client_secret"`
+}
+
+type tokenResponse struct {
+	Type         string `json:"token_type"`
+	AccessToken  string `json:"access_token"`
+	Expiry       int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type userResponse struct {
+	UID    string `json:"uid"`
+	Name   string `json:"name"`
+	Type   string `json:"contact_type"`
+	ID     string `json:"contact_id"`
+	Status string `json:"kyc_status"`
+}
+
+const (
+	statusApproved string = "approved"
+	statusPending  string = "pending"
+	statusNone     string = "none"
+)
+
 // NewIngressServer returns an http server that forwards requests to an
 // IngressAdapter.
-func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
+func NewIngressServer(ingressAdapter IngressAdapter, kyberSecret string) http.Handler {
 	approvedTraders := []string{
 		"0x3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
 		"3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
@@ -23,6 +54,7 @@ func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
 	limiter := rate.NewLimiter(3, 20)
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter, approvedTraders))).Methods("POST")
+	r.HandleFunc("/kyber", rateLimit(limiter, KyberKYCHandler(kyberSecret))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
@@ -81,6 +113,88 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 
 		w.WriteHeader(http.StatusCreated)
 		w.Write(response)
+	}
+}
+
+// KyberKYCHandler handles all Kyber KYC verification requests.
+func KyberKYCHandler(kyberSecret string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Decode POST request data.
+		decoder := json.NewDecoder(r.Body)
+		var data authRequest
+		err := decoder.Decode(&data)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(fmt.Sprintf("cannot decode data: %v", err)))
+			return
+		}
+
+		// Construct new request object with Kyber secret key.
+		data.Secret = kyberSecret
+		byteArray, err := json.Marshal(data)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(fmt.Sprintf("cannot marshal data: %v", err)))
+			return
+		}
+
+		// Forward updated request data to Kyber.
+		url := "https://kyber.network/oauth/token"
+		postRequest, err := http.NewRequest("POST", url, bytes.NewBuffer(byteArray))
+		postRequest.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{}
+		resp, err := client.Do(postRequest)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("unable to forward request: %v", err)))
+			return
+		}
+		defer resp.Body.Close()
+
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("unable to read kyber response: %v", err)))
+			return
+		}
+
+		var tokenResp tokenResponse
+		if err := json.Unmarshal(bodyBytes, &tokenResp); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("unable to read kyber response: %v", err)))
+			return
+		}
+
+		// Send retrieved access token to Kyber to access user information.
+		userResp, err := http.Get("https://kyber.network/api/user_info?access_token=" + tokenResp.AccessToken)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("unable to retrieve user info: %v", err)))
+			return
+		}
+		defer userResp.Body.Close()
+
+		userBytes, err := ioutil.ReadAll(userResp.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("unable to read kyber response: %v", err)))
+			return
+		}
+
+		var userData userResponse
+		if err := json.Unmarshal(userBytes, &userData); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("unable to read kyber response: %v", err)))
+			return
+		}
+
+		if userData.Status == statusApproved {
+			// TODO: Store in database
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(userBytes)
 	}
 }
 

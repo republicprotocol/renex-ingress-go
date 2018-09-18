@@ -56,6 +56,7 @@ func main() {
 	keystoreParam := fmt.Sprintf("env/%v/%v.keystore.json", networkParam, os.Getenv("DYNO"))
 	keystorePassphraseParam := os.Getenv("KEYSTORE_PASSPHRASE")
 	dbParam := os.Getenv("DATABASE_URL")
+	kyberSecret := os.Getenv("KYBER_SECRET")
 
 	config, err := loadConfig(configParam)
 	if err != nil {
@@ -158,7 +159,7 @@ func main() {
 	log.Printf("address %v", multiAddr)
 	log.Printf("ethereum %v", auth.From.Hex())
 	log.Printf("listening at 0.0.0.0:%v...", os.Getenv("PORT"))
-	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), httpadapter.NewIngressServer(ingressAdapter)); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), httpadapter.NewIngressServer(ingressAdapter, kyberSecret)); err != nil {
 		log.Fatalf("error listening and serving: %v", err)
 	}
 }

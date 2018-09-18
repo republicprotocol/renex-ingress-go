@@ -14,7 +14,7 @@ import (
 // NewIngressServer returns an http server that forwards requests to an
 // IngressAdapter.
 func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
-	limiter := rate.NewLimiter(3, 20)
+	limiter := rate.NewLimiter(2, 5)
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
@@ -184,14 +184,14 @@ func rateLimit(limiter *rate.Limiter, next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusTooManyRequests)
-		w.Write([]byte("too many request"))
+		w.Write([]byte("too many requests"))
 	}
 }
 
 func toBytes32(b []byte) ([32]byte, error) {
 	bytes32 := [32]byte{}
 	if len(b) != 32 {
-		return bytes32, errors.New("Length mismatch")
+		return bytes32, errors.New("length mismatch")
 	}
 	copy(bytes32[:], b[:32])
 	return bytes32, nil

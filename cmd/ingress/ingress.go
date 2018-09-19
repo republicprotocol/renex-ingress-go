@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/getsentry/raven-go"
 	renExContract "github.com/republicprotocol/renex-ingress-go/contract"
 	"github.com/republicprotocol/renex-ingress-go/httpadapter"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
@@ -31,6 +32,15 @@ type config struct {
 	Ethereum                contract.Config         `json:"republic"`
 	RenExEthereum           renExContract.Config    `json:"renex"`
 	BootstrapMultiAddresses identity.MultiAddresses `json:"bootstrapMultiAddresses"`
+}
+
+func init() {
+	sentryDSN := os.Getenv("SENTRY_DSN")
+	if sentryDSN == "" {
+		log.Println("Could not find SENTRY_DSN env variable. Not using Sentry.")
+	} else {
+		raven.SetDSN(sentryDSN)
+	}
 }
 
 func main() {

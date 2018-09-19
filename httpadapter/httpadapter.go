@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"golang.org/x/time/rate"
@@ -87,11 +88,17 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("cannot check trader verification: %v", err)))
+				raven.CaptureErrorAndWait(err, map[string]string{
+					"trader": openOrderRequest.Address,
+				})
 				return
 			}
 			if !verified {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte(fmt.Sprintf("trader is not verified")))
+				raven.CaptureErrorAndWait(errors.New("open order attempt from unverified trader"), map[string]string{
+					"trader": openOrderRequest.Address,
+				})
 				return
 			}
 		}
@@ -99,6 +106,7 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			raven.CaptureErrorAndWait(err, nil)
 			return
 		}
 
@@ -108,6 +116,7 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			raven.CaptureErrorAndWait(err, nil)
 			return
 		}
 

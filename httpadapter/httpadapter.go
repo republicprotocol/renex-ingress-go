@@ -43,6 +43,7 @@ const (
 
 // NewIngressServer returns an http server that forwards requests to an
 // IngressAdapter.
+
 func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, kyberSecret string) http.Handler {
 	limiter := rate.NewLimiter(3, 20)
 	r := mux.NewRouter().StrictSlash(true)

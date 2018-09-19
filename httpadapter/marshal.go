@@ -69,6 +69,15 @@ type PostAddressRequest struct {
 	Address string `json:"address"`
 }
 
+type PostAuthorizeRequest struct {
+	atomAddresses AtomAddresses `json:"atomAddresses"`
+	signature     string        `json:"signature"`
+}
+
+type AtomAddresses struct {
+	Bitcoin  string `json:"bitcoin"`
+	Ethereum string `json:"ethereum"`
+}
 type PostSwapRequest struct {
 	OrderID string `json:"orderID"`
 	Swap    string `json:"swap"`

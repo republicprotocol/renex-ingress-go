@@ -1,8 +1,11 @@
 package httpadapter
 
 import (
+	"encoding/base64"
 	"errors"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
 )
 
@@ -65,6 +68,10 @@ type PostSwapAdapter interface {
 	PostSwap(string, string) error
 }
 
+type PostAuthorizeAdapter interface {
+	PostAuthorize(AtomAddresses, string)
+}
+
 // An IngressAdapter implements the OpenOrderAdapter and the
 // ApproveWithdrawalAdapter.
 type IngressAdapter interface {
@@ -74,8 +81,8 @@ type IngressAdapter interface {
 	PostAddressAdapter
 	GetSwapAdapter
 	PostSwapAdapter
+	PostAuthorizeAdapter
 }
-
 type ingressAdapter struct {
 	ingress.Ingress
 }
@@ -134,4 +141,23 @@ func (adapter *ingressAdapter) GetSwap(orderID string) (string, error) {
 
 func (adapter *ingressAdapter) PostSwap(orderID string, swap string) error {
 	return adapter.InsertSwapDetails(orderID, swap)
+}
+
+func (adapter *ingressAdapter) PostAuthorize(addr, signature string) error {
+	address := common.HexToAddress(addr)
+	hash := crypto.Keccak256(address.Bytes())
+
+	sigBytes, err := base64.StdEncoding.DecodeString(signature)
+	if err != nil {
+		return err
+	}
+
+	publicKey, err := crypto.SigToPub(hash, sigBytes)
+	if err != nil {
+		return err
+	}
+
+	kycAddress := crypto.PubkeyToAddress(*publicKey)
+	// TODO: Check KYC
+
 }

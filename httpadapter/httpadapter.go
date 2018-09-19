@@ -20,6 +20,7 @@ func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
+	r.HandleFunc("/authorize", rateLimit(limiter, PostAuthorizeHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/address/{orderID}", rateLimit(limiter, GetAddressHandler(ingressAdapter))).Methods("GET")
 	r.HandleFunc("/swap/{orderID}", rateLimit(limiter, GetSwapHandler(ingressAdapter))).Methods("GET")
 	r.Use(RecoveryHandler)
@@ -119,6 +120,24 @@ func PostAddressHandler(postAddressAdapter PostAddressAdapter) http.HandlerFunc 
 		}
 
 		if err := postAddressAdapter.PostAddress(postAddressRequest.OrderID, postAddressRequest.Address); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+	}
+}
+
+// PostAuthorizeHandler handles all HTTP post Authorize requests
+func PostAuthorizeHandler(postAuthorizeAdapter PostAuthorizeAdapter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		postAuthorizeRequest := PostAuthorizeRequest{}
+		if err := json.NewDecoder(r.Body).Decode(&postAuthorizeRequest); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(fmt.Sprintf("cannot decode json into a trader and token: %v", err)))
+			return
+		}
+		if err := postAuthorizeAdapter.PostAuthorize(postAuthorizeRequest.atomAddresses, postAuthorizeRequest.signature); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
 			return

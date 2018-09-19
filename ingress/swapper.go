@@ -8,6 +8,8 @@ import (
 )
 
 type Swapper interface {
+	InsertAuthorizedAddress(kycAddress string, atomAddress string) error
+	GetAuthorizedAddress(kycAddress string) (string, error)
 	SelectAddress(orderID string) (string, error)
 	InsertAddress(orderID string, address string) error
 	SelectSwapDetails(orderID string) (string, error)
@@ -54,5 +56,21 @@ func (swapper *swapper) SelectSwapDetails(orderID string) (string, error) {
 
 func (swapper *swapper) InsertSwapDetails(orderID string, swapDetails string) error {
 	_, err := swapper.Exec("INSERT INTO swaps (orderID, swapDetails) VALUES ($1,$2)", orderID, swapDetails)
+	return err
+}
+
+func (swapper *swapper) GetAuthorizedAddress(kycAddress string) (string, error) {
+	var authorizedAddress string
+	if err := swapper.QueryRow("SELECT authorizedAddresses FROM swaps WHERE kycAddress = $1", kycAddress).Scan(&authorizedAddress); err != nil {
+		return "", err
+	}
+	if authorizedAddress == "" {
+		return authorizedAddress, fmt.Errorf("Requested authorized address not found")
+	}
+	return authorizedAddress, nil
+}
+
+func (swapper *swapper) InsertAuthorizedAddress(kycAddress, authorizedAddress string) error {
+	_, err := swapper.Exec("INSERT INTO authorizedAddresses (kycAddress, authorizedAddress) VALUES ($1,$2)", kycAddress, authorizedAddress)
 	return err
 }

@@ -49,7 +49,7 @@ var _ = Describe("Ingress", func() {
 		swarmer := mockSwarmer{}
 		orderbookClient := mockOrderbookClient{}
 
-		ingress = NewIngress(ecdsaKey, contract, renExContract, &swarmer, &orderbookClient, time.Millisecond, &mockSwapper{})
+		ingress = NewIngress(ecdsaKey, contract, renExContract, &swarmer, &orderbookClient, time.Millisecond, &mockSwapper{}, &mockKYCer{})
 		errChSync = ingress.Sync(done)
 		errChProcess = ingress.ProcessRequests(done)
 
@@ -305,6 +305,10 @@ func (binder *renExBinder) GetTraderWithdrawalNonce(trader common.Address) (*big
 	return nonce, nil
 }
 
+func (binder *renExBinder) BalanceOf(common.Address) (*big.Int, error) {
+	return big.NewInt(1), nil
+}
+
 // ingressBinder is a mock implementation of ingress.ContractBinder.
 type ingressBinder struct {
 	buyOrdersMu *sync.Mutex
@@ -482,5 +486,16 @@ func (swapper *mockSwapper) SelectSwapDetails(orderID string) (string, error) {
 	return "", nil
 }
 func (swapper *mockSwapper) InsertSwapDetails(orderID string, swapDetails string) error {
+	return nil
+}
+
+type mockKYCer struct {
+}
+
+func (kycer *mockKYCer) SelectTrader(address string) (string, error) {
+	return "", nil
+}
+
+func (kycer *mockKYCer) InsertTrader(address string) error {
 	return nil
 }

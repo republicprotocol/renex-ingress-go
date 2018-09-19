@@ -270,8 +270,8 @@
   version = "v0.8.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:b2004ca8035488a87b228cf87272e14b0ab2b506284e3da4f890e38412d4c835"
+  branch = "develop"
+  digest = "1:1e7fed1456f312ab774a9a545503472ede3e88e2a43b60280c7ec72b61dd4182"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -294,7 +294,7 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "9b3d5010a69b3a9859186969656c7176d2cffd7f"
+  revision = "e424d80768134187743eb1b0305c856da7375483"
 
 [[projects]]
   digest = "1:602081d2a289d1f76ea90b806b0c61c19038d76504e9005ccb969864dbaee339"
@@ -377,14 +377,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:57d967d0c359c56065e766555f82df575d98c6b1979f7d257b83220ed1340d3b"
+  digest = "1:d3fb9613bfa0d1373755a4cec1f84907d41026ec3130d161244ba0b46e6e029f"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "T"
-  revision = "d0be0721c37eeb5299f245a996a483160fc36940"
+  revision = "ee1b12c67af419cf5a9be3bdbeea7fc1c5f32f11"
 
 [[projects]]
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
@@ -443,11 +443,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b5eb34042d1d82e055da36ad49c74b362be8d857a140239cdfc7ddca1f41019f"
+  digest = "1:b6225010c089d419d86aa7bc8e80f50364a9464adad138bb6b46f4012c052177"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "T"
-  revision = "4b56f30a1fd96a133a036b62cdd2a249883dd89b"
+  revision = "c3f76f3b92d1ffa4c58a9ff842a58b8877655e0f"
 
 [[projects]]
   digest = "1:1cbd746dcb73e28898e1539bf866044a9e5b96c965112772c111bffbb4037255"

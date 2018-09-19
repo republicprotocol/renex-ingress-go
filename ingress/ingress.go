@@ -92,8 +92,13 @@ type Ingress interface {
 	// cancel orders.
 	ProcessRequests(done <-chan struct{}) <-chan error
 
+	WyreVerified(trader [20]byte) (bool, error)
+
 	// Swapper interface implements atomic swapper network functions.
 	Swapper
+
+	// KYCer interface implements KYC database interaction functions.
+	KYCer
 }
 
 type ingress struct {
@@ -110,18 +115,20 @@ type ingress struct {
 
 	queueRequests chan Request
 	Swapper
+	KYCer
 }
 
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper) Ingress {
+func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper, kycer KYCer) Ingress {
 	ingress := &ingress{
 		ecdsaKey:          ecdsaKey,
 		contract:          contract,
 		renExContract:     renExContract,
 		swarmer:           swarmer,
 		Swapper:           swapper,
+		KYCer:             kycer,
 		orderbookClient:   orderbookClient,
 		epochPollInterval: epochPollInterval,
 
@@ -220,14 +227,14 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 					case <-ticker.C:
 					}
 
-					epoch, err := ingress.contract.NextEpoch()
+					/* epoch, err := ingress.contract.NextEpoch()
 					if err != nil {
 						// Ignore the error to prevent verbose logging
 						continue
 					}
 					// Wait for a lower bound on the epoch
 					log.Printf("[info] (epoch) latest epoch = %v", base64.StdEncoding.EncodeToString(epoch.Hash[:]))
-					time.Sleep(time.Duration(epoch.BlockInterval.Int64()) * ingress.epochPollInterval)
+					time.Sleep(time.Duration(epoch.BlockInterval.Int64()) * ingress.epochPollInterval) */
 				}
 			})
 	}()
@@ -287,6 +294,15 @@ func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragme
 	var signature65 [65]byte
 	copy(signature65[:], signature[:65])
 	return signature65, nil
+}
+
+func (ingress *ingress) WyreVerified(trader [20]byte) (bool, error) {
+	// BalanceOf returns 1 if the trader is verified and 0 otherwise.
+	balance, err := ingress.renExContract.BalanceOf(trader)
+	if err != nil {
+		return false, err
+	}
+	return balance.Cmp(big.NewInt(0)) == 1, nil
 }
 
 func WithdrawalMessage(trader [20]byte, tokenID uint32, traderNonce *big.Int) ([]byte, error) {

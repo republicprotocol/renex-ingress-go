@@ -46,6 +46,8 @@ var ErrEmptyOrderFragmentMapping = errors.New("empty order fragment mapping")
 // OrderFragmentMapping to the Darknodes in the network.
 type OpenOrderAdapter interface {
 	OpenOrder(traderIn string, orderFragmentMappings OrderFragmentMappings) ([65]byte, error)
+	WyreVerified(traderIn string) (bool, error)
+	GetTrader(string) (string, error)
 }
 
 type ApproveWithdrawalAdapter interface {
@@ -69,7 +71,10 @@ type PostSwapAdapter interface {
 }
 
 type PostAuthorizeAdapter interface {
-	PostAuthorize(AtomAddresses, string)
+	PostAuthorize(string, string) error
+}
+type KYCAdapter interface {
+	PostTrader(string) error
 }
 
 // An IngressAdapter implements the OpenOrderAdapter and the
@@ -82,6 +87,7 @@ type IngressAdapter interface {
 	GetSwapAdapter
 	PostSwapAdapter
 	PostAuthorizeAdapter
+	KYCAdapter
 }
 type ingressAdapter struct {
 	ingress.Ingress
@@ -112,6 +118,15 @@ func (adapter *ingressAdapter) OpenOrder(traderIn string, orderFragmentMappingsI
 		orderID,
 		orderFragmentMappings,
 	)
+}
+
+func (adapter *ingressAdapter) WyreVerified(traderIn string) (bool, error) {
+	trader, err := UnmarshalAddress(traderIn)
+	if err != nil {
+		return false, err
+	}
+
+	return adapter.Ingress.WyreVerified(trader)
 }
 
 // ApproveWithdrawal implements the ApproveWithdrawalAdapter interface.
@@ -160,4 +175,13 @@ func (adapter *ingressAdapter) PostAuthorize(addr, signature string) error {
 	kycAddress := crypto.PubkeyToAddress(*publicKey)
 	// TODO: Check KYC
 
+	return nil
+}
+
+func (adapter *ingressAdapter) GetTrader(address string) (string, error) {
+	return adapter.SelectTrader(address)
+}
+
+func (adapter *ingressAdapter) PostTrader(address string) error {
+	return adapter.InsertTrader(address)
 }

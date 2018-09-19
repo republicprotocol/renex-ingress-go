@@ -25,6 +25,10 @@ func (adapter *weakAdapter) OpenOrder(trader string, orderFragmentMapping OrderF
 	return WEAK_SIGNATURE, nil
 }
 
+func (adapter *weakAdapter) WyreVerified(trader string) (bool, error) {
+	return true, nil
+}
+
 func (adapter *weakAdapter) ApproveWithdrawal(trader string, tokenID uint32) ([65]byte, error) {
 	atomic.AddInt64(&adapter.numWithdrawn, 1)
 	return WEAK_SIGNATURE, nil
@@ -46,11 +50,23 @@ func (adapter *weakAdapter) PostSwap(string, string) error {
 	return nil
 }
 
+func (adapter *weakAdapter) GetTrader(string) (string, error) {
+	return "", nil
+}
+
+func (adapter *weakAdapter) PostTrader(string) error {
+	return nil
+}
+
 type errAdapter struct {
 }
 
 func (adapter *errAdapter) OpenOrder(trader string, orderFragmentMapping OrderFragmentMappings) ([65]byte, error) {
 	return [65]byte{}, errors.New("cannot open order")
+}
+
+func (adapter *errAdapter) WyreVerified(trader string) (bool, error) {
+	return false, errors.New("trader not verified")
 }
 
 func (adapter *errAdapter) ApproveWithdrawal(trader string, tokenID uint32) ([65]byte, error) {
@@ -73,6 +89,14 @@ func (adapter *errAdapter) PostSwap(string, string) error {
 	return nil
 }
 
+func (adapter *errAdapter) GetTrader(string) (string, error) {
+	return "", nil
+}
+
+func (adapter *errAdapter) PostTrader(string) error {
+	return nil
+}
+
 var _ = Describe("HTTP handlers", func() {
 
 	Context("when opening orders", func() {
@@ -88,7 +112,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/orders", body)
 
 			adapter := weakAdapter{}
-			server := NewIngressServer(&adapter)
+			server := NewIngressServer(&adapter, []string{}, "")
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusCreated))
@@ -112,7 +136,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/orders", body)
 
 			adapter := weakAdapter{}
-			server := NewIngressServer(&adapter)
+			server := NewIngressServer(&adapter, []string{}, "")
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusBadRequest))
@@ -130,7 +154,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/orders", body)
 
 			adapter := errAdapter{}
-			server := NewIngressServer(&adapter)
+			server := NewIngressServer(&adapter, []string{}, "")
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusInternalServerError))
@@ -150,7 +174,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/withdrawals", body)
 
 			adapter := weakAdapter{}
-			server := NewIngressServer(&adapter)
+			server := NewIngressServer(&adapter, []string{}, "")
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusCreated))
@@ -174,7 +198,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/withdrawals", body)
 
 			adapter := weakAdapter{}
-			server := NewIngressServer(&adapter)
+			server := NewIngressServer(&adapter, []string{}, "")
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusBadRequest))
@@ -192,7 +216,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/withdrawals", body)
 
 			adapter := errAdapter{}
-			server := NewIngressServer(&adapter)
+			server := NewIngressServer(&adapter, []string{}, "")
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusInternalServerError))

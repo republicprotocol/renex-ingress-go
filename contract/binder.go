@@ -20,6 +20,7 @@ type Binder struct {
 	callOpts     *bind.CallOpts
 
 	renExBrokerVerifier *bindings.RenExBrokerVerifier
+	wyre                *bindings.Wyre
 }
 
 // NewBinder returns a Binder to communicate with contracts
@@ -39,6 +40,12 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		return Binder{}, err
 	}
 
+	wyre, err := bindings.NewWyre(common.HexToAddress(conn.Config.WyreAddress), bind.ContractBackend(conn.Client))
+	if err != nil {
+		fmt.Println(fmt.Errorf("cannot bind to Wyre: %v", err))
+		return Binder{}, err
+	}
+
 	return Binder{
 		mu:           new(sync.RWMutex),
 		network:      conn.Config.Network,
@@ -47,6 +54,7 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		callOpts:     &bind.CallOpts{},
 
 		renExBrokerVerifier: renExBrokerVerifier,
+		wyre:                wyre,
 	}, nil
 }
 
@@ -61,4 +69,16 @@ func (binder *Binder) GetTraderWithdrawalNonce(trader common.Address) (*big.Int,
 
 func (binder *Binder) getTraderWithdrawalNonce(trader common.Address) (*big.Int, error) {
 	return binder.renExBrokerVerifier.TraderNonces(binder.callOpts, trader)
+}
+
+// BalanceOf retrieves the Wyre KYC verification status of a trader.
+func (binder *Binder) BalanceOf(trader common.Address) (*big.Int, error) {
+	binder.mu.RLock()
+	defer binder.mu.RUnlock()
+
+	return binder.balanceOf(trader)
+}
+
+func (binder *Binder) balanceOf(trader common.Address) (*big.Int, error) {
+	return binder.wyre.BalanceOf(binder.callOpts, trader)
 }

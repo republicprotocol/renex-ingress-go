@@ -162,7 +162,7 @@ var _ = Describe("Ingress Adapter", func() {
 	Context("when opening orders", func() {
 
 		It("should forward data to the ingress if the signature and mapping are well formed", func() {
-			ingress := &mockIngress{&mockSwapper{}, 0, 0}
+			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
 
 			traderBytes := [20]byte{}
@@ -181,7 +181,7 @@ var _ = Describe("Ingress Adapter", func() {
 		})
 
 		It("should not call ingress.OpenOrder if trader is invalid", func() {
-			ingress := &mockIngress{&mockSwapper{}, 0, 0}
+			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
 			traderBytes := []byte{}
 			copy(traderBytes[:], "incorrect trader")
@@ -197,7 +197,7 @@ var _ = Describe("Ingress Adapter", func() {
 		})
 
 		It("should not call ingress.OpenOrder if pool hash is invalid", func() {
-			ingress := &mockIngress{&mockSwapper{}, 0, 0}
+			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
 			traderBytes := [20]byte{}
 			_, err := rand.Read(traderBytes[:])
@@ -218,7 +218,7 @@ var _ = Describe("Ingress Adapter", func() {
 	Context("when approving withdrawals", func() {
 
 		It("should forward data to the ingress if the signature and mapping are well formed", func() {
-			ingress := &mockIngress{&mockSwapper{}, 0, 0}
+			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
 
 			traderBytes := [20]byte{}
@@ -232,7 +232,7 @@ var _ = Describe("Ingress Adapter", func() {
 		})
 
 		It("should not call ingress.ApproveWithdrawal if trader is invalid", func() {
-			ingress := &mockIngress{&mockSwapper{}, 0, 0}
+			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
 			traderBytes := []byte{}
 			copy(traderBytes[:], "incorrect trader")
@@ -260,8 +260,19 @@ func (swapper *mockSwapper) InsertSwapDetails(orderID string, swapDetails string
 	return nil
 }
 
+type mockKYCer struct {
+}
+
+func (kycer *mockKYCer) SelectTrader(address string) (string, error) {
+	return "", nil
+}
+func (kycer *mockKYCer) InsertTrader(address string) error {
+	return nil
+}
+
 type mockIngress struct {
 	ingress.Swapper
+	ingress.KYCer
 	numOpened    int64
 	numWithdrawn int64
 }
@@ -273,6 +284,10 @@ func (ingress *mockIngress) Sync(done <-chan struct{}) <-chan error {
 func (ingress *mockIngress) OpenOrder(address [20]byte, orderID order.ID, orderFragmentMappings ingress.OrderFragmentMappings) ([65]byte, error) {
 	atomic.AddInt64(&ingress.numOpened, 1)
 	return [65]byte{}, nil
+}
+
+func (ingress *mockIngress) WyreVerified(address [20]byte) (bool, error) {
+	return true, nil
 }
 
 func (ingress *mockIngress) ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]byte, error) {

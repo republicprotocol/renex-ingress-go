@@ -93,10 +93,13 @@ type Ingress interface {
 	// cancel orders.
 	ProcessRequests(done <-chan struct{}) <-chan error
 
-	TraderVerified(trader [20]byte) (bool, error)
+	WyreVerified(trader [20]byte) (bool, error)
 
 	// Swapper interface implements atomic swapper network functions.
 	Swapper
+
+	// KYCer interface implements KYC database interaction functions.
+	KYCer
 }
 
 type ingress struct {
@@ -113,18 +116,20 @@ type ingress struct {
 
 	queueRequests chan Request
 	Swapper
+	KYCer
 }
 
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper) Ingress {
+func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper, kycer KYCer) Ingress {
 	ingress := &ingress{
 		ecdsaKey:          ecdsaKey,
 		contract:          contract,
 		renExContract:     renExContract,
 		swarmer:           swarmer,
 		Swapper:           swapper,
+		KYCer:             kycer,
 		orderbookClient:   orderbookClient,
 		epochPollInterval: epochPollInterval,
 
@@ -293,7 +298,7 @@ func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragme
 	return signature65, nil
 }
 
-func (ingress *ingress) TraderVerified(trader [20]byte) (bool, error) {
+func (ingress *ingress) WyreVerified(trader [20]byte) (bool, error) {
 	// BalanceOf returns 1 if the trader is verified and 0 otherwise.
 	balance, err := ingress.renExContract.BalanceOf(trader)
 	if err != nil {

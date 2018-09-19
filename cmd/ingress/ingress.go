@@ -34,6 +34,14 @@ type config struct {
 	BootstrapMultiAddresses identity.MultiAddresses `json:"bootstrapMultiAddresses"`
 }
 
+// Manually approved traders (e.g. Lotan traders)
+var approvedTraders = []string{
+	"0x3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
+	"3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
+	"0x26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
+	"26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
+}
+
 func init() {
 	sentryDSN := os.Getenv("SENTRY_DSN")
 	if sentryDSN == "" {
@@ -93,15 +101,19 @@ func main() {
 		log.Fatalf("cannot create contract binder: %v", err)
 	}
 
-	renExConn, err := renExContract.Connect(config.RenExEthereum)
+	contractConn, err := renExContract.Connect(config.RenExEthereum)
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)
 	}
-	renExBinder, err := renExContract.NewBinder(auth, renExConn)
+	contractBinder, err := renExContract.NewBinder(auth, contractConn)
 	if err != nil {
 		log.Fatalf("cannot create contract binder: %v", err)
 	}
 	swapper, err := ingress.NewSwapper(dbParam)
+	if err != nil {
+		log.Fatalf("cannot connect to the database: %v", err)
+	}
+	kycer, err := ingress.NewKYCer(dbParam)
 	if err != nil {
 		log.Fatalf("cannot connect to the database: %v", err)
 	}
@@ -125,7 +137,7 @@ func main() {
 	swarmer := swarm.NewSwarmer(swarmClient, store.SwarmMultiAddressStore(), alphaNum, &crypter)
 
 	orderbookClient := grpc.NewOrderbookClient()
-	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &renExBinder, swarmer, orderbookClient, 4*time.Second, swapper)
+	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &contractBinder, swarmer, orderbookClient, 4*time.Second, swapper, kycer)
 	ingressAdapter := httpadapter.NewIngressAdapter(ingresser)
 
 	go func() {
@@ -169,7 +181,7 @@ func main() {
 	log.Printf("address %v", multiAddr)
 	log.Printf("ethereum %v", auth.From.Hex())
 	log.Printf("listening at 0.0.0.0:%v...", os.Getenv("PORT"))
-	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), httpadapter.NewIngressServer(ingressAdapter, kyberSecret)); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), httpadapter.NewIngressServer(ingressAdapter, approvedTraders, kyberSecret)); err != nil {
 		log.Fatalf("error listening and serving: %v", err)
 	}
 }

@@ -2,6 +2,7 @@ package httpadapter
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,11 +31,12 @@ type tokenResponse struct {
 }
 
 type userResponse struct {
-	UID    string `json:"uid"`
-	Name   string `json:"name"`
-	Type   string `json:"contact_type"`
-	ID     string `json:"contact_id"`
-	Status string `json:"kyc_status"`
+	UID       string   `json:"uid"`
+	Name      string   `json:"name"`
+	Type      string   `json:"contact_type"`
+	ID        string   `json:"contact_id"`
+	Status    string   `json:"kyc_status"`
+	Addresses []string `json:"active_wallets"`
 }
 
 const (
@@ -45,17 +47,11 @@ const (
 
 // NewIngressServer returns an http server that forwards requests to an
 // IngressAdapter.
-func NewIngressServer(ingressAdapter IngressAdapter, kyberSecret string) http.Handler {
-	approvedTraders := []string{
-		"0x3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
-		"3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
-		"0x26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
-		"26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
-	}
+func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, kyberSecret string) http.Handler {
 	limiter := rate.NewLimiter(3, 20)
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter, approvedTraders))).Methods("POST")
-	r.HandleFunc("/kyber", rateLimit(limiter, KyberKYCHandler(kyberSecret))).Methods("POST")
+	r.HandleFunc("/kyber", rateLimit(limiter, KyberKYCHandler(ingressAdapter, kyberSecret))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
@@ -83,8 +79,7 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 		}
 		// First check if trader has been manually approved (e.g. Lotan traders)
 		if !traderApproved(openOrderRequest.Address, approvedTraders) {
-			// If not, check the KYC status for the trader
-			verified, err := openOrderAdapter.TraderVerified(openOrderRequest.Address)
+			verified, err := traderVerified(openOrderAdapter, openOrderRequest.Address)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("cannot check trader verification: %v", err)))
@@ -125,10 +120,32 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 	}
 }
 
-// KyberKYCHandler handles all Kyber KYC verification requests.
-func KyberKYCHandler(kyberSecret string) http.HandlerFunc {
+func traderVerified(openOrderAdapter OpenOrderAdapter, address string) (bool, error) {
+	verified, err := openOrderAdapter.WyreVerified(address)
+	if err != nil {
+		return false, err
+	}
+	if verified {
+		return true, nil
+	}
+
+	// If the Wyre verification is unsuccessful, check if the
+	// trader has verified using Kyber.
+	_, err = openOrderAdapter.GetTrader(address)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
+// KyberKYCHandler handles all Kyber KYC verification requests
+func KyberKYCHandler(kycAdapter KYCAdapter, kyberSecret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Decode POST request data.
+		// Decode POST request data
 		decoder := json.NewDecoder(r.Body)
 		var data authRequest
 		err := decoder.Decode(&data)
@@ -138,7 +155,7 @@ func KyberKYCHandler(kyberSecret string) http.HandlerFunc {
 			return
 		}
 
-		// Construct new request object with Kyber secret key.
+		// Construct new request object with Kyber secret key
 		data.Secret = kyberSecret
 		byteArray, err := json.Marshal(data)
 		if err != nil {
@@ -147,7 +164,7 @@ func KyberKYCHandler(kyberSecret string) http.HandlerFunc {
 			return
 		}
 
-		// Forward updated request data to Kyber.
+		// Forward updated request data to Kyber
 		url := "https://kyber.network/oauth/token"
 		postRequest, err := http.NewRequest("POST", url, bytes.NewBuffer(byteArray))
 		postRequest.Header.Set("Content-Type", "application/json")
@@ -168,6 +185,12 @@ func KyberKYCHandler(kyberSecret string) http.HandlerFunc {
 			return
 		}
 
+		if len(bodyBytes) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("invalid authorization code"))
+			return
+		}
+
 		var tokenResp tokenResponse
 		if err := json.Unmarshal(bodyBytes, &tokenResp); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -175,7 +198,7 @@ func KyberKYCHandler(kyberSecret string) http.HandlerFunc {
 			return
 		}
 
-		// Send retrieved access token to Kyber to access user information.
+		// Send retrieved access token to Kyber to access user information
 		userResp, err := http.Get("https://kyber.network/api/user_info?access_token=" + tokenResp.AccessToken)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -199,7 +222,14 @@ func KyberKYCHandler(kyberSecret string) http.HandlerFunc {
 		}
 
 		if userData.Status == statusApproved {
-			// TODO: Store in database
+			for i := 0; i < len(userData.Addresses); i++ {
+				err := kycAdapter.PostTrader(userData.Addresses[i])
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(fmt.Sprintf("cannot store trader address: %v", err)))
+					return
+				}
+			}
 		}
 
 		w.WriteHeader(http.StatusOK)

@@ -19,6 +19,10 @@ func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
 		"3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
 		"0x26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
 		"26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
+		"0x513167dd7c2b1110e4ec212e79c430ee72efecf2",
+		"513167dd7c2b1110e4ec212e79c430ee72efecf2",
+		"0x0da229b2c0f57a2cfc54def6fa3650a9c4d511ee",
+		"0da229b2c0f57a2cfc54def6fa3650a9c4d511ee",
 	}
 	limiter := rate.NewLimiter(3, 20)
 	r := mux.NewRouter().StrictSlash(true)

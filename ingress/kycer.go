@@ -36,6 +36,7 @@ func (kycer *kycer) SelectTrader(address string) (string, error) {
 }
 
 func (kycer *kycer) InsertTrader(address string) error {
-	_, err := kycer.Exec("INSERT INTO kyber_traders (address, created_at, updated_at) VALUES ($1, $2, $3) ON DUPLICATE KEY UPDATE updated_at=$3", address, time.Now(), time.Now())
+	timestamp := time.Now().Unix()
+	_, err := kycer.Exec("INSERT INTO kyber_traders (address, created_at, updated_at) VALUES ($1, $2, $3) ON CONFLICT (address) DO UPDATE SET updated_at=$3", address, timestamp, timestamp)
 	return err
 }

@@ -92,6 +92,8 @@ type Ingress interface {
 	// cancel orders.
 	ProcessRequests(done <-chan struct{}) <-chan error
 
+	TraderVerified(trader [20]byte) (bool, error)
+
 	// Swapper interface implements atomic swapper network functions.
 	Swapper
 }
@@ -210,25 +212,25 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 				}
 			},
 			func() {
-				ticker := time.NewTicker(2 * ingress.epochPollInterval)
-				defer ticker.Stop()
-
-				for {
-					select {
-					case <-done:
-						return
-					case <-ticker.C:
-					}
-
-					epoch, err := ingress.contract.NextEpoch()
-					if err != nil {
-						// Ignore the error to prevent verbose logging
-						continue
-					}
-					// Wait for a lower bound on the epoch
-					log.Printf("[info] (epoch) latest epoch = %v", base64.StdEncoding.EncodeToString(epoch.Hash[:]))
-					time.Sleep(time.Duration(epoch.BlockInterval.Int64()) * ingress.epochPollInterval)
-				}
+				// ticker := time.NewTicker(2 * ingress.epochPollInterval)
+				// defer ticker.Stop()
+				//
+				// for {
+				// 	select {
+				// 	case <-done:
+				// 		return
+				// 	case <-ticker.C:
+				// 	}
+				//
+				// 	epoch, err := ingress.contract.NextEpoch()
+				// 	if err != nil {
+				// 		// Ignore the error to prevent verbose logging
+				// 		continue
+				// 	}
+				// 	// Wait for a lower bound on the epoch
+				// 	log.Printf("[info] (epoch) latest epoch = %v", base64.StdEncoding.EncodeToString(epoch.Hash[:]))
+				// 	time.Sleep(time.Duration(epoch.BlockInterval.Int64()) * ingress.epochPollInterval)
+				// }
 			})
 	}()
 
@@ -287,6 +289,15 @@ func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragme
 	var signature65 [65]byte
 	copy(signature65[:], signature[:65])
 	return signature65, nil
+}
+
+func (ingress *ingress) TraderVerified(trader [20]byte) (bool, error) {
+	// BalanceOf returns 1 if the trader is verified and 0 otherwise.
+	balance, err := ingress.renExContract.BalanceOf(trader)
+	if err != nil {
+		return false, err
+	}
+	return balance.Cmp(big.NewInt(0)) == 1, nil
 }
 
 func WithdrawalMessage(trader [20]byte, tokenID uint32, traderNonce *big.Int) ([]byte, error) {

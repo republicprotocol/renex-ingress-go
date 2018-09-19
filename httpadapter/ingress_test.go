@@ -286,7 +286,7 @@ func (ingress *mockIngress) OpenOrder(address [20]byte, orderID order.ID, orderF
 	return [65]byte{}, nil
 }
 
-func (ingress *mockIngress) TraderVerified(address [20]byte) (bool, error) {
+func (ingress *mockIngress) WyreVerified(address [20]byte) (bool, error) {
 	return true, nil
 }
 

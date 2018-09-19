@@ -78,28 +78,16 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 		}
 		// First check if trader has been manually approved (e.g. Lotan traders)
 		if !traderApproved(openOrderRequest.Address, approvedTraders) {
-			// If not, check the Wyre KYC status for the trader
-			verified, err := openOrderAdapter.TraderVerified(openOrderRequest.Address)
+			verified, err := traderVerified(openOrderAdapter, openOrderRequest.Address)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("cannot check trader verification: %v", err)))
 				return
 			}
-
 			if !verified {
-				// If the Wyre verification is unsuccessful, check if the
-				// trader has verified using Kyber.
-				_, err := openOrderAdapter.GetTrader(openOrderRequest.Address)
-				if err != nil {
-					if err == sql.ErrNoRows {
-						w.WriteHeader(http.StatusUnauthorized)
-						w.Write([]byte(fmt.Sprintf("trader is not verified")))
-						return
-					}
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(fmt.Sprintf("cannot check trader verification: %v", err)))
-					return
-				}
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(fmt.Sprintf("trader is not verified")))
+				return
 			}
 		}
 		signature, err := openOrderAdapter.OpenOrder(openOrderRequest.Address, openOrderRequest.OrderFragmentMappings)
@@ -121,6 +109,28 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 		w.WriteHeader(http.StatusCreated)
 		w.Write(response)
 	}
+}
+
+func traderVerified(openOrderAdapter OpenOrderAdapter, address string) (bool, error) {
+	verified, err := openOrderAdapter.WyreVerified(address)
+	if err != nil {
+		return false, err
+	}
+	if verified {
+		return true, nil
+	}
+
+	// If the Wyre verification is unsuccessful, check if the
+	// trader has verified using Kyber.
+	_, err = openOrderAdapter.GetTrader(address)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
 }
 
 // KyberKYCHandler handles all Kyber KYC verification requests

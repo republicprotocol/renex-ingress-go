@@ -25,7 +25,7 @@ func (adapter *weakAdapter) OpenOrder(trader string, orderFragmentMapping OrderF
 	return WEAK_SIGNATURE, nil
 }
 
-func (adapter *weakAdapter) TraderVerified(trader string) (bool, error) {
+func (adapter *weakAdapter) WyreVerified(trader string) (bool, error) {
 	return true, nil
 }
 
@@ -65,7 +65,7 @@ func (adapter *errAdapter) OpenOrder(trader string, orderFragmentMapping OrderFr
 	return [65]byte{}, errors.New("cannot open order")
 }
 
-func (adapter *errAdapter) TraderVerified(trader string) (bool, error) {
+func (adapter *errAdapter) WyreVerified(trader string) (bool, error) {
 	return false, errors.New("trader not verified")
 }
 

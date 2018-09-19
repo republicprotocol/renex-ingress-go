@@ -43,7 +43,7 @@ var ErrEmptyOrderFragmentMapping = errors.New("empty order fragment mapping")
 // OrderFragmentMapping to the Darknodes in the network.
 type OpenOrderAdapter interface {
 	OpenOrder(traderIn string, orderFragmentMappings OrderFragmentMappings) ([65]byte, error)
-	TraderVerified(traderIn string) (bool, error)
+	WyreVerified(traderIn string) (bool, error)
 	GetTrader(string) (string, error)
 }
 
@@ -114,13 +114,13 @@ func (adapter *ingressAdapter) OpenOrder(traderIn string, orderFragmentMappingsI
 	)
 }
 
-func (adapter *ingressAdapter) TraderVerified(traderIn string) (bool, error) {
+func (adapter *ingressAdapter) WyreVerified(traderIn string) (bool, error) {
 	trader, err := UnmarshalAddress(traderIn)
 	if err != nil {
 		return false, err
 	}
 
-	return adapter.Ingress.TraderVerified(trader)
+	return adapter.Ingress.WyreVerified(trader)
 }
 
 // ApproveWithdrawal implements the ApproveWithdrawalAdapter interface.

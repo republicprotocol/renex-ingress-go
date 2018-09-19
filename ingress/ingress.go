@@ -92,6 +92,8 @@ type Ingress interface {
 	// cancel orders.
 	ProcessRequests(done <-chan struct{}) <-chan error
 
+	TraderVerified(trader [20]byte) (bool, error)
+
 	// Swapper interface implements atomic swapper network functions.
 	Swapper
 }
@@ -287,6 +289,15 @@ func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragme
 	var signature65 [65]byte
 	copy(signature65[:], signature[:65])
 	return signature65, nil
+}
+
+func (ingress *ingress) TraderVerified(trader [20]byte) (bool, error) {
+	// BalanceOf returns 1 if the trader is verified and 0 otherwise.
+	balance, err := ingress.renExContract.BalanceOf(trader)
+	if err != nil {
+		return false, err
+	}
+	return balance.Cmp(big.NewInt(0)) == 1, nil
 }
 
 func WithdrawalMessage(trader [20]byte, tokenID uint32, traderNonce *big.Int) ([]byte, error) {

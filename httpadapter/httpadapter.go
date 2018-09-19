@@ -14,9 +14,15 @@ import (
 // NewIngressServer returns an http server that forwards requests to an
 // IngressAdapter.
 func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
-	limiter := rate.NewLimiter(2, 5)
+	approvedTraders := []string{
+		"0x3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
+		"3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
+		"0x26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
+		"26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
+	}
+	limiter := rate.NewLimiter(3, 20)
 	r := mux.NewRouter().StrictSlash(true)
-	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter))).Methods("POST")
+	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter, approvedTraders))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
@@ -34,13 +40,28 @@ func NewIngressServer(ingressAdapter IngressAdapter) http.Handler {
 }
 
 // OpenOrderHandler handles all HTTP open order requests
-func OpenOrderHandler(openOrderAdapter OpenOrderAdapter) http.HandlerFunc {
+func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		openOrderRequest := OpenOrderRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&openOrderRequest); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(fmt.Sprintf("cannot decode json into an order or a list of order fragments: %v", err)))
 			return
+		}
+		// First check if trader has been manually approved (e.g. Lotan traders)
+		if !traderApproved(openOrderRequest.Address, approvedTraders) {
+			// If not, check the KYC status for the trader
+			verified, err := openOrderAdapter.TraderVerified(openOrderRequest.Address)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("cannot check trader verification: %v", err)))
+				return
+			}
+			if !verified {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(fmt.Sprintf("trader is not verified")))
+				return
+			}
 		}
 		signature, err := openOrderAdapter.OpenOrder(openOrderRequest.Address, openOrderRequest.OrderFragmentMappings)
 		if err != nil {
@@ -172,6 +193,15 @@ func RecoveryHandler(h http.Handler) http.Handler {
 		}()
 		h.ServeHTTP(w, r)
 	})
+}
+
+func traderApproved(address string, approvedTraders []string) bool {
+	for _, trader := range approvedTraders {
+		if trader == address {
+			return true
+		}
+	}
+	return false
 }
 
 func rateLimit(limiter *rate.Limiter, next http.HandlerFunc) http.HandlerFunc {

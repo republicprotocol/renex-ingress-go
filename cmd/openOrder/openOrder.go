@@ -53,8 +53,8 @@ func main() {
 
 	onePrice := uint64(1)
 	oneVol := uint64(1)
-	buy := order.NewOrder(order.ParityBuy, order.TypeLimit, time.Now().Add(1*time.Hour), order.SettlementRenEx, order.TokensDGXREN, onePrice, oneVol, oneVol, rand.Uint64())
-	sell := order.NewOrder( order.ParitySell, order.TypeLimit, time.Now().Add(1*time.Hour), order.SettlementRenEx,order.TokensDGXREN, onePrice, oneVol, oneVol, rand.Uint64())
+	buy := order.NewOrder(order.ParityBuy, order.TypeLimit, time.Now().Add(1*time.Hour), order.SettlementRenEx, order.TokensETHREN, onePrice, oneVol, oneVol, rand.Uint64())
+	sell := order.NewOrder( order.ParitySell, order.TypeLimit, time.Now().Add(1*time.Hour), order.SettlementRenEx,order.TokensETHREN, onePrice, oneVol, oneVol, rand.Uint64())
 	orders := []order.Order{buy, sell}
 
 	for _, ord := range orders {

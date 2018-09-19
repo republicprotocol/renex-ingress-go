@@ -25,6 +25,10 @@ func (adapter *weakAdapter) OpenOrder(trader string, orderFragmentMapping OrderF
 	return WEAK_SIGNATURE, nil
 }
 
+func (adapter *weakAdapter) TraderVerified(trader string) (bool, error) {
+	return true, nil
+}
+
 func (adapter *weakAdapter) ApproveWithdrawal(trader string, tokenID uint32) ([65]byte, error) {
 	atomic.AddInt64(&adapter.numWithdrawn, 1)
 	return WEAK_SIGNATURE, nil
@@ -51,6 +55,10 @@ type errAdapter struct {
 
 func (adapter *errAdapter) OpenOrder(trader string, orderFragmentMapping OrderFragmentMappings) ([65]byte, error) {
 	return [65]byte{}, errors.New("cannot open order")
+}
+
+func (adapter *errAdapter) TraderVerified(trader string) (bool, error) {
+	return false, errors.New("trader not verified")
 }
 
 func (adapter *errAdapter) ApproveWithdrawal(trader string, tokenID uint32) ([65]byte, error) {

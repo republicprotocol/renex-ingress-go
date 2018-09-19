@@ -25,4 +25,6 @@ type ContractBinder interface {
 
 type RenExContractBinder interface {
 	GetTraderWithdrawalNonce(trader common.Address) (*big.Int, error)
+
+	BalanceOf(common.Address) (*big.Int, error)
 }

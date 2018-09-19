@@ -305,6 +305,10 @@ func (binder *renExBinder) GetTraderWithdrawalNonce(trader common.Address) (*big
 	return nonce, nil
 }
 
+func (binder *renExBinder) BalanceOf(common.Address) (*big.Int, error) {
+	return big.NewInt(1), nil
+}
+
 // ingressBinder is a mock implementation of ingress.ContractBinder.
 type ingressBinder struct {
 	buyOrdersMu *sync.Mutex

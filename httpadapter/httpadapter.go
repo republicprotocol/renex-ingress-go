@@ -35,7 +35,7 @@ type userResponse struct {
 	Type      string   `json:"contact_type"`
 	ID        string   `json:"contact_id"`
 	Status    string   `json:"kyc_status"`
-	Addresses []string `json:"addresses"`
+	Addresses []string `json:"active_wallets"`
 }
 
 const (

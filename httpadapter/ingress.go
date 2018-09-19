@@ -44,6 +44,7 @@ var ErrEmptyOrderFragmentMapping = errors.New("empty order fragment mapping")
 type OpenOrderAdapter interface {
 	OpenOrder(traderIn string, orderFragmentMappings OrderFragmentMappings) ([65]byte, error)
 	TraderVerified(traderIn string) (bool, error)
+	GetTrader(string) (string, error)
 }
 
 type ApproveWithdrawalAdapter interface {
@@ -66,6 +67,10 @@ type PostSwapAdapter interface {
 	PostSwap(string, string) error
 }
 
+type KYCAdapter interface {
+	PostTrader(string) error
+}
+
 // An IngressAdapter implements the OpenOrderAdapter and the
 // ApproveWithdrawalAdapter.
 type IngressAdapter interface {
@@ -75,6 +80,7 @@ type IngressAdapter interface {
 	PostAddressAdapter
 	GetSwapAdapter
 	PostSwapAdapter
+	KYCAdapter
 }
 
 type ingressAdapter struct {
@@ -144,4 +150,12 @@ func (adapter *ingressAdapter) GetSwap(orderID string) (string, error) {
 
 func (adapter *ingressAdapter) PostSwap(orderID string, swap string) error {
 	return adapter.InsertSwapDetails(orderID, swap)
+}
+
+func (adapter *ingressAdapter) GetTrader(address string) (string, error) {
+	return adapter.SelectTrader(address)
+}
+
+func (adapter *ingressAdapter) PostTrader(address string) error {
+	return adapter.InsertTrader(address)
 }

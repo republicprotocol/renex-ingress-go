@@ -96,6 +96,9 @@ type Ingress interface {
 
 	// Swapper interface implements atomic swapper network functions.
 	Swapper
+
+	// KYCer interface implements KYC database interaction functions.
+	KYCer
 }
 
 type ingress struct {
@@ -112,18 +115,20 @@ type ingress struct {
 
 	queueRequests chan Request
 	Swapper
+	KYCer
 }
 
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper) Ingress {
+func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper, kycer KYCer) Ingress {
 	ingress := &ingress{
 		ecdsaKey:          ecdsaKey,
 		contract:          contract,
 		renExContract:     renExContract,
 		swarmer:           swarmer,
 		Swapper:           swapper,
+		KYCer:             kycer,
 		orderbookClient:   orderbookClient,
 		epochPollInterval: epochPollInterval,
 

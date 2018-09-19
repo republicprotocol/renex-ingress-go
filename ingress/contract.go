@@ -26,5 +26,6 @@ type ContractBinder interface {
 type RenExContractBinder interface {
 	GetTraderWithdrawalNonce(trader common.Address) (*big.Int, error)
 
+	// Wyre KYC
 	BalanceOf(common.Address) (*big.Int, error)
 }

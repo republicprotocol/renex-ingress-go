@@ -176,6 +176,12 @@ func KyberKYCHandler(kycAdapter KYCAdapter, kyberSecret string) http.HandlerFunc
 			return
 		}
 
+		if len(bodyBytes) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("invalid authorization code"))
+			return
+		}
+
 		var tokenResp tokenResponse
 		if err := json.Unmarshal(bodyBytes, &tokenResp); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

@@ -47,7 +47,7 @@ var ErrEmptyOrderFragmentMapping = errors.New("empty order fragment mapping")
 type OpenOrderAdapter interface {
 	OpenOrder(traderIn string, orderFragmentMappings OrderFragmentMappings) ([65]byte, error)
 	WyreVerified(traderIn string) (bool, error)
-	GetTrader(string) (string, error)
+	GetTrader(address string) (string, error)
 }
 
 type ApproveWithdrawalAdapter interface {
@@ -73,6 +73,7 @@ type PostSwapAdapter interface {
 type PostAuthorizeAdapter interface {
 	PostAuthorizedAddress(string, string) error
 }
+
 type KYCAdapter interface {
 	PostTrader(string) error
 }

@@ -38,7 +38,7 @@ func (adapter *weakAdapter) GetAddress(string) (string, error) {
 	return "", nil
 }
 
-func (adapter *weakAdapter) PostAddress(string, string) error {
+func (adapter *weakAdapter) PostAddress(PostAddressInfo, string) error {
 	return nil
 }
 
@@ -46,7 +46,11 @@ func (adapter *weakAdapter) GetSwap(string) (string, error) {
 	return "", nil
 }
 
-func (adapter *weakAdapter) PostSwap(string, string) error {
+func (adapter *weakAdapter) PostSwap(PostSwapInfo, string) error {
+	return nil
+}
+
+func (adapter *weakAdapter) PostAuthorizedAddress(string, string) error {
 	return nil
 }
 
@@ -77,7 +81,7 @@ func (adapter *errAdapter) GetAddress(string) (string, error) {
 	return "", nil
 }
 
-func (adapter *errAdapter) PostAddress(string, string) error {
+func (adapter *errAdapter) PostAddress(PostAddressInfo, string) error {
 	return nil
 }
 
@@ -85,7 +89,11 @@ func (adapter *errAdapter) GetSwap(string) (string, error) {
 	return "", nil
 }
 
-func (adapter *errAdapter) PostSwap(string, string) error {
+func (adapter *errAdapter) PostSwap(PostSwapInfo, string) error {
+	return nil
+}
+
+func (adapter *errAdapter) PostAuthorizedAddress(string, string) error {
 	return nil
 }
 

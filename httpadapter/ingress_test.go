@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/republicprotocol/renex-ingress-go/httpadapter"
@@ -247,6 +248,14 @@ var _ = Describe("Ingress Adapter", func() {
 type mockSwapper struct {
 }
 
+func (swapper *mockSwapper) SelectAuthorizedAddress(kycAddress string) (string, error) {
+	return "", nil
+}
+
+func (swapper *mockSwapper) InsertAuthorizedAddress(kycAddress string, atomAddress string) error {
+	return nil
+}
+
 func (swapper *mockSwapper) SelectAddress(orderID string) (string, error) {
 	return "", nil
 }
@@ -293,6 +302,10 @@ func (ingress *mockIngress) WyreVerified(address [20]byte) (bool, error) {
 func (ingress *mockIngress) ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]byte, error) {
 	atomic.AddInt64(&ingress.numWithdrawn, 1)
 	return [65]byte{}, nil
+}
+
+func (ingress *mockIngress) GetOrderTrader(orderID [32]byte) (common.Address, error) {
+	return common.Address{}, nil
 }
 
 func (ingress *mockIngress) ProcessRequests(done <-chan struct{}) <-chan error {

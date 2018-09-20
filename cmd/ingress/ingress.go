@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/getsentry/raven-go"
 	renExContract "github.com/republicprotocol/renex-ingress-go/contract"
 	"github.com/republicprotocol/renex-ingress-go/httpadapter"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
@@ -43,6 +44,14 @@ var approvedTraders = []string{
 	"0da229B2C0F57a2cFC54DEf6fa3650A9c4d511ee",
 	"0x513167dd7C2B1110e4Ec212E79c430eE72efeCf2",
 	"513167dd7C2B1110e4Ec212E79c430eE72efeCf2",
+}
+
+func init() {
+	sentryDSN := os.Getenv("SENTRY_DSN")
+	if sentryDSN == "" {
+		log.Fatalln("cannot find SENTRY_DSN environment variable")
+	}
+	raven.SetDSN(sentryDSN)
 }
 
 func main() {

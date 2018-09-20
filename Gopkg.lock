@@ -286,7 +286,7 @@
   version = "v0.8.0"
 
 [[projects]]
-  branch = "develop"
+  branch = "master"
   digest = "1:6417be99ddc44f2d1fd4c11dc6500af069db7c2277b1e9198d550799359533e0"
   name = "github.com/republicprotocol/republic-go"
   packages = [
@@ -310,7 +310,7 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "133e2b7e524ec39fb8336e2b1352898570f92ca0"
+  revision = "f54b0c4c30d7befe392f6857186ca3dc75da60db"
 
 [[projects]]
   digest = "1:602081d2a289d1f76ea90b806b0c61c19038d76504e9005ccb969864dbaee339"

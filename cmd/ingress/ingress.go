@@ -42,7 +42,7 @@ var approvedTraders = []string{
 	"0da229B2C0F57a2cFC54DEf6fa3650A9c4d511ee",
 	"513167dd7C2B1110e4Ec212E79c430eE72efeCf2",
 	"117f2b4a0e602413b4dc7c1ec9643adb08bbabd8",
-	"6e7ac12794773bea133825fea7dc8d721f2834c5"
+	"6e7ac12794773bea133825fea7dc8d721f2834c5",
 }
 
 func init() {

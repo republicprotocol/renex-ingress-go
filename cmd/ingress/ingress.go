@@ -49,7 +49,7 @@ var approvedTraders = []string{
 func init() {
 	sentryDSN := os.Getenv("SENTRY_DSN")
 	if sentryDSN == "" {
-		log.Fatalln("Cannot find SENTRY_DSN environment variable. Exitting...")
+		log.Fatalln("Cannot find SENTRY_DSN environment variable. Exiting...")
 	}
 	raven.SetDSN(sentryDSN)
 }

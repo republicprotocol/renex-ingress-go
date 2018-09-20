@@ -73,6 +73,10 @@ type PostSwapAdapter interface {
 type PostAuthorizeAdapter interface {
 	PostAuthorizedAddress(string, string) error
 }
+
+type GetAuthorizeAdapter interface {
+	GetAuthorizedAddress(string) (string, error)
+}
 type KYCAdapter interface {
 	PostTrader(string) error
 }
@@ -87,6 +91,7 @@ type IngressAdapter interface {
 	GetSwapAdapter
 	PostSwapAdapter
 	PostAuthorizeAdapter
+	GetAuthorizeAdapter
 	KYCAdapter
 }
 type ingressAdapter struct {

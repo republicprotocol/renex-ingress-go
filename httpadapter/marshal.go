@@ -89,6 +89,10 @@ type PostAuthorizeRequest struct {
 	Signature   string `json:"signature"`
 }
 
+type GetAuthorizeResponse struct {
+	AtomAddress string `json:"atomAddress"`
+}
+
 func MarshalSignature(signatureIn [65]byte) string {
 	return base64.StdEncoding.EncodeToString(signatureIn[:])
 }

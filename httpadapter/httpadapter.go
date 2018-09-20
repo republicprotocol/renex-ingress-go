@@ -53,6 +53,7 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/authorize", rateLimit(limiter, PostAuthorizeHandler(ingressAdapter))).Methods("POST")
+	r.HandleFunc("/authorized/{address}", rateLimit(limiter, GetAuthorizedHandler(ingressAdapter))).Methods("GET")
 	r.HandleFunc("/address/{orderID}", rateLimit(limiter, GetAddressHandler(ingressAdapter))).Methods("GET")
 	r.HandleFunc("/swap/{orderID}", rateLimit(limiter, GetSwapHandler(ingressAdapter))).Methods("GET")
 	r.Use(RecoveryHandler)
@@ -303,7 +304,30 @@ func PostAddressHandler(postAddressAdapter PostAddressAdapter) http.HandlerFunc 
 	}
 }
 
-// PostAuthorizeHandler handles all HTTP post Authorize requests
+// GetAuthorizedHandler handles all HTTP get authorized requests
+func GetAuthorizedHandler(getAuthorizeAdapter GetAuthorizeAdapter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		addr, err := getAuthorizeAdapter.GetAuthorizedAddress(params["address"])
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			return
+		}
+		res := GetAuthorizeResponse{}
+		res.AtomAddress = addr
+		respBytes, err := json.Marshal(res)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("cannot encode json into the response format: %v", err)))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write(respBytes)
+	}
+}
+
+// PostAuthorizeHandler handles all HTTP post authorize requests
 func PostAuthorizeHandler(postAuthorizeAdapter PostAuthorizeAdapter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		postAuthorizeRequest := PostAuthorizeRequest{}

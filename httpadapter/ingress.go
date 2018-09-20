@@ -1,6 +1,7 @@
 package httpadapter
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 
@@ -41,6 +42,8 @@ var ErrInvalidPodHashLength = errors.New("invalid pod hash length")
 // ErrEmptyOrderFragmentMapping is returned when an OrderFragmentMapping does
 // not store any OrderFragments.
 var ErrEmptyOrderFragmentMapping = errors.New("empty order fragment mapping")
+
+var ErrUnauthorized = errors.New("unauthorized address")
 
 // An OpenOrderAdapter can be used to open an order.Order by sending an
 // OrderFragmentMapping to the Darknodes in the network.
@@ -244,10 +247,13 @@ func (adapter *ingressAdapter) IsAuthorized(orderID string, address string) erro
 	}
 	atomAddr, err := adapter.GetAuthorizedAddress(addr.String())
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return ErrUnauthorized
+		}
 		return err
 	}
 	if address != atomAddr {
-		return errors.New("Unauthorized Address")
+		return ErrUnauthorized
 	}
 	return nil
 }

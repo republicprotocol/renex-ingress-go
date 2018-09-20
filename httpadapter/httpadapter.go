@@ -313,6 +313,10 @@ func PostAuthorizeHandler(postAuthorizeAdapter PostAuthorizeAdapter) http.Handle
 			return
 		}
 		if err := postAuthorizeAdapter.PostAuthorizedAddress(postAuthorizeRequest.AtomAddress, postAuthorizeRequest.Signature); err != nil {
+			if err == ErrUnauthorized {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			}
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
 			return

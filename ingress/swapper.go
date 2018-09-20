@@ -46,7 +46,7 @@ func (swapper *swapper) SelectAddress(orderID string) (string, error) {
 		return address, err
 	}
 	if address == "" {
-		return address, fmt.Errorf("Requested address not found")
+		return address, fmt.Errorf("requested address not found")
 	}
 	return address, nil
 }
@@ -62,7 +62,7 @@ func (swapper *swapper) SelectSwapDetails(orderID string) (string, error) {
 		return "", err
 	}
 	if swapDetails == "" {
-		return swapDetails, fmt.Errorf("Requested swap details not found")
+		return swapDetails, fmt.Errorf("requested swap details not found")
 	}
 	return swapDetails, nil
 }
@@ -78,7 +78,7 @@ func (swapper *swapper) SelectAuthorizedAddress(kycAddress string) (string, erro
 		return "", err
 	}
 	if authorizedAddress == "" {
-		return authorizedAddress, fmt.Errorf("Requested authorized address not found")
+		return authorizedAddress, fmt.Errorf("requested authorized address not found")
 	}
 	return authorizedAddress, nil
 }

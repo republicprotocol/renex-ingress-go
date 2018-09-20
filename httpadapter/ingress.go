@@ -3,6 +3,7 @@ package httpadapter
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -60,7 +61,7 @@ type GetAddressAdapter interface {
 }
 
 type PostAddressAdapter interface {
-	PostAddress(string, string) error
+	PostAddress(PostAddressInfo, string) error
 }
 
 type GetSwapAdapter interface {
@@ -68,11 +69,11 @@ type GetSwapAdapter interface {
 }
 
 type PostSwapAdapter interface {
-	PostSwap(string, string) error
+	PostSwap(PostSwapInfo, string) error
 }
 
 type PostAuthorizeAdapter interface {
-	PostAuthorize(string, string) error
+	PostAuthorizedAddress(string, string) error
 }
 type KYCAdapter interface {
 	PostTrader(string) error
@@ -147,12 +148,12 @@ func (adapter *ingressAdapter) GetAddress(orderID string) (string, error) {
 	return adapter.SelectAddress(orderID)
 }
 
-func (adapter *ingressAdapter) PostAddress(orderID string, addr string, signature string) error {
-	addrBytes, err := hex.DecodeString(addr)
+func (adapter *ingressAdapter) PostAddress(info PostAddressInfo, signature string) error {
+	infoBytes, err := json.Marshal(info)
 	if err != nil {
 		return err
 	}
-	hash := crypto.Keccak256(addrBytes)
+	hash := crypto.Keccak256(infoBytes)
 	sigBytes, err := hex.DecodeString(signature)
 	if err != nil {
 		return err
@@ -163,18 +164,18 @@ func (adapter *ingressAdapter) PostAddress(orderID string, addr string, signatur
 		return err
 	}
 	address := crypto.PubkeyToAddress(*publicKey)
-	if err := adapter.IsAuthorized(orderID, address.String()); err != nil {
+	if err := adapter.IsAuthorized(info.OrderID, address.String()); err != nil {
 		return err
 	}
-	return adapter.InsertAddress(orderID, addr)
+	return adapter.InsertAddress(info.OrderID, info.Address)
 }
 
 func (adapter *ingressAdapter) GetSwap(orderID string) (string, error) {
 	return adapter.SelectSwapDetails(orderID)
 }
 
-func (adapter *ingressAdapter) PostSwap(orderID string, swap string, signature string) error {
-	swapBytes, err := hex.DecodeString(swap)
+func (adapter *ingressAdapter) PostSwap(info PostSwapInfo, signature string) error {
+	swapBytes, err := json.Marshal(info)
 	if err != nil {
 		return err
 	}
@@ -189,10 +190,10 @@ func (adapter *ingressAdapter) PostSwap(orderID string, swap string, signature s
 		return err
 	}
 	address := crypto.PubkeyToAddress(*publicKey)
-	if err := adapter.IsAuthorized(orderID, address.String()); err != nil {
+	if err := adapter.IsAuthorized(info.OrderID, address.String()); err != nil {
 		return err
 	}
-	return adapter.InsertSwapDetails(orderID, swap)
+	return adapter.InsertSwapDetails(info.OrderID, info.Swap)
 }
 
 func (adapter *ingressAdapter) PostAuthorizedAddress(addr, signature string) error {
@@ -238,11 +239,11 @@ func (adapter *ingressAdapter) IsAuthorized(orderID string, address string) erro
 	if err != nil {
 		return err
 	}
-	addr, err := adapter.Ingress.GetOrderTrader(orderID)
+	addr, err := adapter.Ingress.GetOrderTrader(id)
 	if err != nil {
 		return err
 	}
-	atomAddr, err := adapter.GetAuthorizedAddress(addr)
+	atomAddr, err := adapter.GetAuthorizedAddress(addr.String())
 	if err != nil {
 		return err
 	}

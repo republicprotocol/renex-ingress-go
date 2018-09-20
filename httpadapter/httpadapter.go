@@ -281,7 +281,7 @@ func PostAddressHandler(postAddressAdapter PostAddressAdapter) http.HandlerFunc 
 			return
 		}
 
-		if err := postAddressAdapter.PostAddress(postAddressRequest.OrderID, postAddressRequest.Address); err != nil {
+		if err := postAddressAdapter.PostAddress(postAddressRequest.Info, postAddressRequest.Signature); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
 			return
@@ -299,7 +299,7 @@ func PostAuthorizeHandler(postAuthorizeAdapter PostAuthorizeAdapter) http.Handle
 			w.Write([]byte(fmt.Sprintf("cannot decode json into a trader and token: %v", err)))
 			return
 		}
-		if err := postAuthorizeAdapter.PostAuthorize(postAuthorizeRequest.atomAddresses, postAuthorizeRequest.signature); err != nil {
+		if err := postAuthorizeAdapter.PostAuthorizedAddress(postAuthorizeRequest.AtomAddress, postAuthorizeRequest.Signature); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
 			return
@@ -333,7 +333,7 @@ func PostSwapHandler(postSwapAdapter PostSwapAdapter) http.HandlerFunc {
 			return
 		}
 
-		if err := postSwapAdapter.PostSwap(postSwapRequest.OrderID, postSwapRequest.Swap); err != nil {
+		if err := postSwapAdapter.PostSwap(postSwapRequest.Info, postSwapRequest.Signature); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
 			return

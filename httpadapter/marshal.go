@@ -64,23 +64,29 @@ type ApproveWithdrawalResponse struct {
 	Signature string `json:"signature"`
 }
 
-type PostAddressRequest struct {
+type PostAddressInfo struct {
 	OrderID string `json:"orderID"`
 	Address string `json:"address"`
 }
 
-type PostAuthorizeRequest struct {
-	atomAddresses AtomAddresses `json:"atomAddresses"`
-	signature     string        `json:"signature"`
+type PostAddressRequest struct {
+	Info      PostAddressInfo `json:"info"`
+	Signature string          `json:"signature"`
 }
 
-type AtomAddresses struct {
-	Bitcoin  string `json:"bitcoin"`
-	Ethereum string `json:"ethereum"`
-}
-type PostSwapRequest struct {
+type PostSwapInfo struct {
 	OrderID string `json:"orderID"`
 	Swap    string `json:"swap"`
+}
+
+type PostSwapRequest struct {
+	Info      PostSwapInfo `json:"info"`
+	Signature string       `json:"signature"`
+}
+
+type PostAuthorizeRequest struct {
+	AtomAddress string `json:"atomAddress"`
+	Signature   string `json:"signature"`
 }
 
 func MarshalSignature(signatureIn [65]byte) string {

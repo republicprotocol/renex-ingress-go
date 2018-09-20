@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/getsentry/raven-go"
 
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/dispatch"
@@ -186,6 +187,8 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 					// Get the current epoch
 					nextEpoch, err := ingress.contract.Epoch()
 					if err != nil {
+						errString := fmt.Sprintf("could not call Epoch(): %v", err)
+						raven.CaptureErrorAndWait(errors.New(errString), nil)
 						select {
 						case <-done:
 							return
@@ -555,6 +558,7 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 	for hash, orderFragments := range orderFragmentMapping {
 		pod, ok := pods[hash]
 		if !ok {
+			raven.CaptureErrorAndWait(ErrUnknownPod, nil)
 			return ErrUnknownPod
 		}
 		if len(orderFragments) > len(pod.Darknodes) || len(orderFragments) < pod.Threshold() {

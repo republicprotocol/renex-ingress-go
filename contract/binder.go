@@ -20,6 +20,7 @@ type Binder struct {
 	callOpts     *bind.CallOpts
 
 	renExBrokerVerifier *bindings.RenExBrokerVerifier
+	orderbook           *bindings.Orderbook
 	wyre                *bindings.Wyre
 }
 
@@ -40,6 +41,12 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		return Binder{}, err
 	}
 
+	orderbook, err := bindings.NewOrderbook(common.HexToAddress(conn.Config.OrderbookAddress), bind.ContractBackend(conn.Client))
+	if err != nil {
+		fmt.Println(fmt.Errorf("cannot bind to Orderbook: %v", err))
+		return Binder{}, err
+	}
+
 	wyre, err := bindings.NewWyre(common.HexToAddress(conn.Config.WyreAddress), bind.ContractBackend(conn.Client))
 	if err != nil {
 		fmt.Println(fmt.Errorf("cannot bind to Wyre: %v", err))
@@ -54,6 +61,7 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		callOpts:     &bind.CallOpts{},
 
 		renExBrokerVerifier: renExBrokerVerifier,
+		orderbook:           orderbook,
 		wyre:                wyre,
 	}, nil
 }
@@ -81,4 +89,9 @@ func (binder *Binder) BalanceOf(trader common.Address) (*big.Int, error) {
 
 func (binder *Binder) balanceOf(trader common.Address) (*big.Int, error) {
 	return binder.wyre.BalanceOf(binder.callOpts, trader)
+}
+
+// GetOrderTrader of the given order id.
+func (binder *Binder) GetOrderTrader(orderID [32]byte) (common.Address, error) {
+	return binder.orderbook.OrderTrader(&bind.CallOpts{}, orderID)
 }

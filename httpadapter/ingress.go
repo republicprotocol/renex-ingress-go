@@ -2,6 +2,7 @@ package httpadapter
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -146,19 +147,55 @@ func (adapter *ingressAdapter) GetAddress(orderID string) (string, error) {
 	return adapter.SelectAddress(orderID)
 }
 
-func (adapter *ingressAdapter) PostAddress(orderID string, address string) error {
-	return adapter.InsertAddress(orderID, address)
+func (adapter *ingressAdapter) PostAddress(orderID string, addr string, signature string) error {
+	addrBytes, err := hex.DecodeString(addr)
+	if err != nil {
+		return err
+	}
+	hash := crypto.Keccak256(addrBytes)
+	sigBytes, err := hex.DecodeString(signature)
+	if err != nil {
+		return err
+	}
+
+	publicKey, err := crypto.SigToPub(hash, sigBytes)
+	if err != nil {
+		return err
+	}
+	address := crypto.PubkeyToAddress(*publicKey)
+	if err := adapter.IsAuthorized(orderID, address.String()); err != nil {
+		return err
+	}
+	return adapter.InsertAddress(orderID, addr)
 }
 
 func (adapter *ingressAdapter) GetSwap(orderID string) (string, error) {
 	return adapter.SelectSwapDetails(orderID)
 }
 
-func (adapter *ingressAdapter) PostSwap(orderID string, swap string) error {
+func (adapter *ingressAdapter) PostSwap(orderID string, swap string, signature string) error {
+	swapBytes, err := hex.DecodeString(swap)
+	if err != nil {
+		return err
+	}
+	hash := crypto.Keccak256(swapBytes)
+	sigBytes, err := hex.DecodeString(signature)
+	if err != nil {
+		return err
+	}
+
+	publicKey, err := crypto.SigToPub(hash, sigBytes)
+	if err != nil {
+		return err
+	}
+	address := crypto.PubkeyToAddress(*publicKey)
+	if err := adapter.IsAuthorized(orderID, address.String()); err != nil {
+		return err
+	}
 	return adapter.InsertSwapDetails(orderID, swap)
 }
 
-func (adapter *ingressAdapter) PostAuthorize(addr, signature string) error {
+func (adapter *ingressAdapter) PostAuthorizedAddress(addr, signature string) error {
 	address := common.HexToAddress(addr)
 	hash := crypto.Keccak256(address.Bytes())
 
@@ -173,9 +210,19 @@ func (adapter *ingressAdapter) PostAuthorize(addr, signature string) error {
 	}
 
 	kycAddress := crypto.PubkeyToAddress(*publicKey)
-	// TODO: Check KYC
+	verified, err := traderVerified(adapter, kycAddress.String())
+	if err != nil {
+		return err
+	}
+	if !verified {
+		return errors.New("address not verified")
+	}
 
-	return nil
+	return adapter.InsertAuthorizedAddress(kycAddress.String(), addr)
+}
+
+func (adapter *ingressAdapter) GetAuthorizedAddress(addr string) (string, error) {
+	return adapter.SelectAuthorizedAddress(addr)
 }
 
 func (adapter *ingressAdapter) GetTrader(address string) (string, error) {
@@ -184,4 +231,23 @@ func (adapter *ingressAdapter) GetTrader(address string) (string, error) {
 
 func (adapter *ingressAdapter) PostTrader(address string) error {
 	return adapter.InsertTrader(address)
+}
+
+func (adapter *ingressAdapter) IsAuthorized(orderID string, address string) error {
+	id, err := UnmarshalOrderID(orderID)
+	if err != nil {
+		return err
+	}
+	addr, err := adapter.Ingress.GetOrderTrader(orderID)
+	if err != nil {
+		return err
+	}
+	atomAddr, err := adapter.GetAuthorizedAddress(addr)
+	if err != nil {
+		return err
+	}
+	if address != atomAddr {
+		return errors.New("Unauthorized Address")
+	}
+	return nil
 }

@@ -94,6 +94,9 @@ type Ingress interface {
 
 	WyreVerified(trader [20]byte) (bool, error)
 
+	// GetOrderTrader of the given order id
+	GetOrderTrader(orderID [32]byte) (common.Address, error)
+
 	// Swapper interface implements atomic swapper network functions.
 	Swapper
 
@@ -582,4 +585,8 @@ func (ingress *ingress) orderParityFromOrderFragmentMappings(orderFragmentMappin
 	}
 
 	return order.ParityBuy
+}
+
+func (ingress *ingress) GetOrderTrader(orderID [32]byte) (common.Address, error) {
+	return ingress.renExContract.GetOrderTrader(orderID)
 }

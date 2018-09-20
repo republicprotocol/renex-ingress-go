@@ -28,4 +28,6 @@ type RenExContractBinder interface {
 
 	// Wyre KYC
 	BalanceOf(common.Address) (*big.Int, error)
+
+	GetOrderTrader(orderID [32]byte) (common.Address, error)
 }

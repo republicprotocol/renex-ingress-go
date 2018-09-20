@@ -199,11 +199,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9209bb830bd368966f88ce5f6b56b555d7e1925b4474b273038bded54749360e"
+  digest = "1:25adb195c50fff1666779f4f3cb88fc04ff789aa83929a9da8ade0ae4863bcc1"
   name = "github.com/mr-tron/base58"
   packages = ["base58"]
   pruneopts = "T"
-  revision = "f84df45a6b88974a98d1473e9f0de0eac859a3d9"
+  revision = "cee214dccb3e8160bdf79ed48a851f3a95a124ff"
 
 [[projects]]
   branch = "master"
@@ -287,7 +287,7 @@
 
 [[projects]]
   branch = "develop"
-  digest = "1:1e7fed1456f312ab774a9a545503472ede3e88e2a43b60280c7ec72b61dd4182"
+  digest = "1:8a806d6848d0018a47aacce996d343ce80f199176ebafba0dfaf4bf70cde214b"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -310,7 +310,7 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "e424d80768134187743eb1b0305c856da7375483"
+  revision = "2963c9cab59137d5447c472b6adae4e85002165b"
 
 [[projects]]
   digest = "1:602081d2a289d1f76ea90b806b0c61c19038d76504e9005ccb969864dbaee339"
@@ -393,14 +393,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d3fb9613bfa0d1373755a4cec1f84907d41026ec3130d161244ba0b46e6e029f"
+  digest = "1:76e0759f6c8926e0d17d6276a8b05cf853975b1a9ec30979569f5ee3341a6326"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "T"
-  revision = "ee1b12c67af419cf5a9be3bdbeea7fc1c5f32f11"
+  revision = "1561086e645b2809fb9f8a1e2a38160bf8d53bf4"
 
 [[projects]]
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
@@ -558,6 +558,7 @@
     "github.com/ethereum/go-ethereum/accounts/abi/bind",
     "github.com/ethereum/go-ethereum/common",
     "github.com/ethereum/go-ethereum/core/types",
+    "github.com/ethereum/go-ethereum/crypto",
     "github.com/ethereum/go-ethereum/ethclient",
     "github.com/ethereum/go-ethereum/event",
     "github.com/ethereum/go-ethereum/rpc",

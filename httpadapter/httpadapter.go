@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	raven "github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"golang.org/x/time/rate"

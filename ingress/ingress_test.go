@@ -309,6 +309,10 @@ func (binder *renExBinder) BalanceOf(common.Address) (*big.Int, error) {
 	return big.NewInt(1), nil
 }
 
+func (binder *renExBinder) GetOrderTrader(orderID [32]byte) (common.Address, error) {
+	return common.Address{}, nil
+}
+
 // ingressBinder is a mock implementation of ingress.ContractBinder.
 type ingressBinder struct {
 	buyOrdersMu *sync.Mutex
@@ -476,6 +480,12 @@ func captureErrorsFromErrorChannel(errs <-chan error) {
 type mockSwapper struct {
 }
 
+func (swapper *mockSwapper) SelectAuthorizedAddress(kycAddress string) (string, error) {
+	return "", nil
+}
+func (swapper *mockSwapper) InsertAuthorizedAddress(kycAddress string, atomAddress string) error {
+	return nil
+}
 func (swapper *mockSwapper) SelectAddress(orderID string) (string, error) {
 	return "", nil
 }

@@ -18,9 +18,9 @@ type Conn struct {
 func Connect(config Config) (Conn, error) {
 	if config.URI == "" {
 		switch config.Network {
+		case NetworkMainnet:
+			config.URI = "https://mainnet.infura.io"
 		case NetworkTestnet:
-			config.URI = "https://kovan.infura.io"
-		case NetworkFalcon:
 			config.URI = "https://kovan.infura.io"
 		case NetworkNightly:
 			config.URI = "https://kovan.infura.io"
@@ -33,14 +33,17 @@ func Connect(config Config) (Conn, error) {
 
 	if config.RenExBrokerVerifierAddress == "" {
 		switch config.Network {
+		case NetworkMainnet:
+			config.RenExBrokerVerifierAddress = ""
+			config.OrderbookAddress = ""
+			config.WyreAddress = "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f"
 		case NetworkTestnet:
 			config.RenExBrokerVerifierAddress = "0x5BF19a6Ea8631BB722ade58e0D2C5813740c88fD"
-			config.WyreAddress = "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f"
-		case NetworkFalcon:
-			config.RenExBrokerVerifierAddress = "0xb6A95aED1588bE477981dcdEacd13776570ecB3D"
+			config.OrderbookAddress = "0xA53Da4093c682a4259DE38302341BFEf7e9f7a4f"
 			config.WyreAddress = "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f"
 		case NetworkNightly:
 			config.RenExBrokerVerifierAddress = "0xcf2F6b4b698Cd6a6B3eb1d874a939742d15f8e7E"
+			config.OrderbookAddress = "0x376127aDc18260fc238eBFB6626b2F4B59eC9b66"
 			config.WyreAddress = "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f"
 		case NetworkLocal:
 		default:

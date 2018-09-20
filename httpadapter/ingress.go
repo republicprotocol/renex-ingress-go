@@ -1,8 +1,6 @@
 package httpadapter
 
 import (
-	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 
@@ -154,12 +152,12 @@ func (adapter *ingressAdapter) PostAddress(info PostAddressInfo, signature strin
 		return err
 	}
 	hash := crypto.Keccak256(infoBytes)
-	sigBytes, err := hex.DecodeString(signature)
+	sigBytes, err := UnmarshalSignature(signature)
 	if err != nil {
 		return err
 	}
 
-	publicKey, err := crypto.SigToPub(hash, sigBytes)
+	publicKey, err := crypto.SigToPub(hash, sigBytes[:])
 	if err != nil {
 		return err
 	}
@@ -180,12 +178,12 @@ func (adapter *ingressAdapter) PostSwap(info PostSwapInfo, signature string) err
 		return err
 	}
 	hash := crypto.Keccak256(swapBytes)
-	sigBytes, err := hex.DecodeString(signature)
+	sigBytes, err := UnmarshalSignature(signature)
 	if err != nil {
 		return err
 	}
 
-	publicKey, err := crypto.SigToPub(hash, sigBytes)
+	publicKey, err := crypto.SigToPub(hash, sigBytes[:])
 	if err != nil {
 		return err
 	}
@@ -200,12 +198,12 @@ func (adapter *ingressAdapter) PostAuthorizedAddress(addr, signature string) err
 	address := common.HexToAddress(addr)
 	hash := crypto.Keccak256(address.Bytes())
 
-	sigBytes, err := base64.StdEncoding.DecodeString(signature)
+	sigBytes, err := UnmarshalSignature(signature)
 	if err != nil {
 		return err
 	}
 
-	publicKey, err := crypto.SigToPub(hash, sigBytes)
+	publicKey, err := crypto.SigToPub(hash, sigBytes[:])
 	if err != nil {
 		return err
 	}

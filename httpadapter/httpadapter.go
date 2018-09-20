@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"golang.org/x/time/rate"
@@ -369,6 +368,9 @@ func RecoveryHandler(h http.Handler) http.Handler {
 }
 
 func traderApproved(address string, approvedTraders []string) bool {
+	if address[:2] == "0x" {
+		address = address[2:]
+	}
 	for _, trader := range approvedTraders {
 		if trader == address {
 			return true

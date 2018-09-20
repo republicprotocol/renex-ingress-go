@@ -35,15 +35,14 @@ type config struct {
 }
 
 // Manually approved traders (e.g. Lotan traders)
+// TODO: Use different list for each network to reduce list size
 var approvedTraders = []string{
-	"0x3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
 	"3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
-	"0x26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
 	"26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
-	"0x0da229B2C0F57a2cFC54DEf6fa3650A9c4d511ee",
 	"0da229B2C0F57a2cFC54DEf6fa3650A9c4d511ee",
-	"0x513167dd7C2B1110e4Ec212E79c430eE72efeCf2",
 	"513167dd7C2B1110e4Ec212E79c430eE72efeCf2",
+	"117f2b4a0e602413b4dc7c1ec9643adb08bbabd8",
+	"6e7ac12794773bea133825fea7dc8d721f2834c5"
 }
 
 func init() {

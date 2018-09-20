@@ -184,7 +184,8 @@ func (ingress *ingress) Sync(done <-chan struct{}) <-chan error {
 					// Get the current epoch
 					nextEpoch, err := ingress.contract.Epoch()
 					if err != nil {
-						raven.CaptureErrorAndWait(err, nil)
+						errString := fmt.Sprintf("could not call Epoch(): %v", err)
+						raven.CaptureErrorAndWait(errors.New(errString), nil)
 						select {
 						case <-done:
 							return

@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	raven "github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
@@ -130,6 +131,9 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 
 func traderVerified(openOrderAdapter OpenOrderAdapter, address string) (bool, error) {
 	log.Println("we're trying to verify ", address)
+	if strings.HasPrefix(address, "0x"){
+		address = "0x"+ address
+	}
 	verified, err := openOrderAdapter.WyreVerified(address)
 	if err != nil {
 		log.Println("fail to verify with wyre:",  err )

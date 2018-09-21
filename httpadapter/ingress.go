@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -204,8 +205,11 @@ func (adapter *ingressAdapter) PostSwap(info PostSwapInfo, signature string) err
 
 func (adapter *ingressAdapter) PostAuthorizedAddress(addr, signature string) error {
 	address := common.HexToAddress(addr)
-	hash := crypto.Keccak256(address.Bytes())
 
+	message := append([]byte("RenEx: authorize: "), address.Bytes()...)
+	signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
+
+	hash := crypto.Keccak256(signatureData)
 	sigBytes, err := UnmarshalSignature(signature)
 	if err != nil {
 		return err

@@ -131,7 +131,7 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 
 func traderVerified(openOrderAdapter OpenOrderAdapter, address string) (bool, error) {
 	log.Println("we're trying to verify ", address)
-	if strings.HasPrefix(address, "0x"){
+	if !strings.HasPrefix(address, "0x"){
 		address = "0x"+ address
 	}
 	verified, err := openOrderAdapter.WyreVerified(address)

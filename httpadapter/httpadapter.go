@@ -129,6 +129,7 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 }
 
 func traderVerified(openOrderAdapter OpenOrderAdapter, address string) (bool, error) {
+	log.Println("we're trying to verify ", address)
 	verified, err := openOrderAdapter.WyreVerified(address)
 	if err != nil {
 		return false, err
@@ -136,11 +137,13 @@ func traderVerified(openOrderAdapter OpenOrderAdapter, address string) (bool, er
 	if verified {
 		return true, nil
 	}
+	log.Println("fail to verify with wyre:",  err )
 
 	// If the Wyre verification is unsuccessful, check if the
 	// trader has verified using Kyber.
 	_, err = openOrderAdapter.GetTrader(address)
 	if err != nil {
+		log.Println("fail to verify with kyber:",  err )
 		if err == sql.ErrNoRows {
 			return false, nil
 		}

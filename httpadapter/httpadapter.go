@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	raven "github.com/getsentry/raven-go"
@@ -81,6 +82,7 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 			verified, err := traderVerified(openOrderAdapter, openOrderRequest.Address)
 			if err != nil {
 				errString := fmt.Sprintf("cannot check trader verification: %v", err)
+				log.Println(errString)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(errString))
 				raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
@@ -90,6 +92,7 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 			}
 			if !verified {
 				errString := fmt.Sprintf("trader is not verified")
+				log.Println(errString)
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte(errString))
 				raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
@@ -101,6 +104,7 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 		signature, err := openOrderAdapter.OpenOrder(openOrderRequest.Address, openOrderRequest.OrderFragmentMappings)
 		if err != nil {
 			errString := fmt.Sprintf("cannot open order: %v", err)
+			log.Println(errString)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(errString))
 			raven.CaptureErrorAndWait(errors.New(errString), nil)
@@ -112,6 +116,7 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 		})
 		if err != nil {
 			errString := fmt.Sprintf("cannot open order: %v", err)
+			log.Println(errString)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(errString))
 			raven.CaptureErrorAndWait(errors.New(errString), nil)

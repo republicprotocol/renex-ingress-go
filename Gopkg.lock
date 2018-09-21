@@ -373,7 +373,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a42c6aed51ed8b42dae608760a24ce53b799ede0c31637dfcbf1116cd0c23b03"
+  digest = "1:0d3b3ce2b76e0d10fc5e804e51a92c4466b05a92de06e61e96d7035deab04c41"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -389,18 +389,18 @@
     "websocket",
   ]
   pruneopts = "T"
-  revision = "26e67e76b6c3f6ce91f7c52def5af501b4e0f3a2"
+  revision = "2f5d2388922f370f4355f327fcf4cfe9f5583908"
 
 [[projects]]
   branch = "master"
-  digest = "1:76e0759f6c8926e0d17d6276a8b05cf853975b1a9ec30979569f5ee3341a6326"
+  digest = "1:6acc06b9cbb44d203b7eeb5a8e82e2220fa520d0f62706e0c7b1abde24e38015"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "T"
-  revision = "1561086e645b2809fb9f8a1e2a38160bf8d53bf4"
+  revision = "d641721ec2dead6fe5ca284096fe4b1fcd49e427"
 
 [[projects]]
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"

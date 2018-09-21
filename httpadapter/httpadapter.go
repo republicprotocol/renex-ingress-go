@@ -132,12 +132,13 @@ func traderVerified(openOrderAdapter OpenOrderAdapter, address string) (bool, er
 	log.Println("we're trying to verify ", address)
 	verified, err := openOrderAdapter.WyreVerified(address)
 	if err != nil {
+		log.Println("fail to verify with wyre:",  err )
 		return false, err
 	}
 	if verified {
 		return true, nil
 	}
-	log.Println("fail to verify with wyre:",  err )
+	log.Println("fail to verify with wyre:",  verified )
 
 	// If the Wyre verification is unsuccessful, check if the
 	// trader has verified using Kyber.

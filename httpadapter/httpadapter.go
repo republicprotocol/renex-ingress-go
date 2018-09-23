@@ -333,16 +333,16 @@ func PostAuthorizeHandler(postAuthorizeAdapter PostAuthorizeAdapter) http.Handle
 		postAuthorizeRequest := PostAuthorizeRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&postAuthorizeRequest); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("cannot decode json into a trader and token: %v", err)))
+			w.Write([]byte(fmt.Sprintf("cannot decode json into address and atom address: %v", err)))
 			return
 		}
 		if err := postAuthorizeAdapter.PostAuthorizedAddress(postAuthorizeRequest.AtomAddress, postAuthorizeRequest.Signature); err != nil {
 			if err == ErrUnauthorized {
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+				w.Write([]byte(fmt.Sprintf("Signing address is not KYC'd: %v", err)))
 			}
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			w.Write([]byte(fmt.Sprintf("Failed to authorize: %v", err)))
 			return
 		}
 		w.WriteHeader(http.StatusCreated)

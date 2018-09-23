@@ -1,0 +1,18 @@
+{
+    "bootstrapMultiAddresses": [
+        "/ip4/35.174.101.254/tcp/18514/republic/8MHmkFdy1miDmChmv243WTVg8U8H1t",
+        "/ip4/18.221.96.210/tcp/18514/republic/8MHdjyZxfuQT7unjYWzFCpm6m4qJNL",
+        "/ip4/52.9.204.195/tcp/18514/republic/8MG7prjbz51yqn1fqSygKSJfW3geBF",
+        "/ip4/54.201.216.97/tcp/18514/republic/8MKXcuQAjR2eEq8bsSHDPkYEmqmjtj",
+        "/ip4/52.77.88.84/tcp/18514/republic/8MJE7dUD8rHbYJ4RoWuVD6re4LKPVL",
+        "/ip4/54.252.152.19/tcp/18514/republic/8MJXyfjYuVZDPAfDm63G1NH1khgb2A",
+        "/ip4/18.195.208.147/tcp/18514/republic/8MHe93qDv1dBxoxygKLmeRwmMvpRam",
+        "/ip4/54.171.114.214/tcp/18514/republic/8MH2zgndxdCYReXL6uwggaCKGRHzdw"
+    ],
+    "republic": {
+        "network": "mainnet"
+    },
+    "renex": {
+        "network": "mainnet"
+    }
+}

@@ -3,6 +3,7 @@ package contract
 import (
 	"context"
 	"fmt"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"sync"
 
@@ -47,7 +48,11 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		return Binder{}, err
 	}
 
-	wyre, err := bindings.NewWyre(common.HexToAddress(conn.Config.WyreAddress), bind.ContractBackend(conn.Client))
+	client,err := ethclient.Dial("https://kovan.infura.io")
+	if err != nil {
+		return Binder{}, err
+	}
+	wyre, err := bindings.NewWyre(common.HexToAddress(conn.Config.WyreAddress), bind.ContractBackend(client))
 	if err != nil {
 		fmt.Println(fmt.Errorf("cannot bind to Wyre: %v", err))
 		return Binder{}, err

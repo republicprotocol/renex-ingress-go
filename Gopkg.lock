@@ -11,11 +11,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f2d4beb3a1f1d5c59ed38864724bb098952c6230a22a226b30b8cb1dcb8daf79"
+  digest = "1:e599801f29de116faca9d3c1937c0f03c7629de72dab7365684179068d2cd315"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   pruneopts = "T"
-  revision = "cff30e1d23fc9e800b2b5b4b41ef1817dda07e9f"
+  revision = "2a560b2036bee5e3679ec2133eb6520b2f195213"
 
 [[projects]]
   digest = "1:fed1f537c2f1269fe475a8556c393fe466641682d73ef8fd0491cd3aa1e47bad"
@@ -199,11 +199,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:25adb195c50fff1666779f4f3cb88fc04ff789aa83929a9da8ade0ae4863bcc1"
+  digest = "1:f8a9ee1594aa4a39d11a82f0524f94189c4c5c7e0e0d4614d80afa4358f36f7e"
   name = "github.com/mr-tron/base58"
   packages = ["base58"]
   pruneopts = "T"
-  revision = "cee214dccb3e8160bdf79ed48a851f3a95a124ff"
+  revision = "9ad991d48a423a0e52c77eac173b1b589665492a"
 
 [[projects]]
   branch = "master"
@@ -286,8 +286,8 @@
   version = "v0.8.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:6417be99ddc44f2d1fd4c11dc6500af069db7c2277b1e9198d550799359533e0"
+  branch = "develop"
+  digest = "1:8c749ea14767f9310a17bc9105bbb9a03cabbdb561aabd7a815e917941c5c308"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -310,7 +310,7 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "f54b0c4c30d7befe392f6857186ca3dc75da60db"
+  revision = "30d41f48892081094521e8af320eee617a908517"
 
 [[projects]]
   digest = "1:602081d2a289d1f76ea90b806b0c61c19038d76504e9005ccb969864dbaee339"
@@ -393,14 +393,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6acc06b9cbb44d203b7eeb5a8e82e2220fa520d0f62706e0c7b1abde24e38015"
+  digest = "1:3e9bd94639076b465dc569efb3a36be8569d2366c426b7f1143ad3ff8395b48a"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "T"
-  revision = "d641721ec2dead6fe5ca284096fe4b1fcd49e427"
+  revision = "d47a0f3392421c5624713c9a19fe781f651f8a50"
 
 [[projects]]
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"

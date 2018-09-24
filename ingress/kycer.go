@@ -3,6 +3,7 @@ package ingress
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -26,7 +27,7 @@ func NewKYCer(databaseURL string) (KYCer, error) {
 
 func (kycer *kycer) SelectTrader(address string) (string, error) {
 	var trader string
-	if err := kycer.QueryRow("SELECT time FROM kyber_traders WHERE address = $1", address).Scan(&trader); err != nil {
+	if err := kycer.QueryRow("SELECT created_at FROM kyber_traders WHERE address = $1", strings.ToLower(address)).Scan(&trader); err != nil {
 		return trader, err
 	}
 	if trader == "" {
@@ -37,6 +38,6 @@ func (kycer *kycer) SelectTrader(address string) (string, error) {
 
 func (kycer *kycer) InsertTrader(address string) error {
 	timestamp := time.Now().Unix()
-	_, err := kycer.Exec("INSERT INTO kyber_traders (address, created_at, updated_at) VALUES ($1, $2, $3) ON CONFLICT (address) DO UPDATE SET updated_at=$3", address, timestamp, timestamp)
+	_, err := kycer.Exec("INSERT INTO kyber_traders (address, created_at, updated_at) VALUES ($1, $2, $3) ON CONFLICT (address) DO UPDATE SET updated_at=$3", strings.ToLower(address), timestamp, timestamp)
 	return err
 }

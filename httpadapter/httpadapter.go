@@ -130,25 +130,21 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 }
 
 func traderVerified(openOrderAdapter OpenOrderAdapter, address string) (bool, error) {
-	log.Println("we're trying to verify ", address)
 	if !strings.HasPrefix(address, "0x"){
 		address = "0x"+ address
 	}
 	verified, err := openOrderAdapter.WyreVerified(address)
 	if err != nil {
-		log.Println("fail to verify with wyre:",  err )
 		return false, err
 	}
 	if verified {
 		return true, nil
 	}
-	log.Println("fail to verify with wyre:",  verified )
 
 	// If the Wyre verification is unsuccessful, check if the
 	// trader has verified using Kyber.
 	_, err = openOrderAdapter.GetTrader(address)
 	if err != nil {
-		log.Println("fail to verify with kyber:",  err )
 		if err == sql.ErrNoRows {
 			return false, nil
 		}
@@ -237,14 +233,18 @@ func KyberKYCHandler(kycAdapter KYCAdapter, kyberSecret string) http.HandlerFunc
 			return
 		}
 
-		if userData.Status == statusApproved {
-			for i := 0; i < len(userData.Addresses); i++ {
-				err := kycAdapter.PostTrader(userData.Addresses[i])
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(fmt.Sprintf("cannot store trader address: %v", err)))
-					return
-				}
+		if userData.Status != statusApproved {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(fmt.Sprintf("trader is not authorized: kyber status = %v",userData.Status)))
+			return
+		}
+
+		for i := 0; i < len(userData.Addresses); i++ {
+			err := kycAdapter.PostTrader(userData.Addresses[i])
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("cannot store trader address: %v", err)))
+				return
 			}
 		}
 

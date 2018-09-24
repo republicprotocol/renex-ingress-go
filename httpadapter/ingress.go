@@ -2,6 +2,8 @@ package httpadapter
 
 import (
 	"database/sql"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -246,7 +248,11 @@ func (adapter *ingressAdapter) PostTrader(address string) error {
 }
 
 func (adapter *ingressAdapter) IsAuthorized(orderID string, address string) error {
-	id, err := UnmarshalOrderID(orderID)
+	hexBytes, err := hex.DecodeString(orderID)
+	if err != nil {
+		return err
+	}
+	id, err := UnmarshalOrderID(base64.StdEncoding.EncodeToString(hexBytes))
 	if err != nil {
 		return err
 	}

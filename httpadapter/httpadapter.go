@@ -130,8 +130,8 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 }
 
 func traderVerified(openOrderAdapter OpenOrderAdapter, address string) (bool, error) {
-	if !strings.HasPrefix(address, "0x"){
-		address = "0x"+ address
+	if !strings.HasPrefix(address, "0x") {
+		address = "0x" + address
 	}
 	verified, err := openOrderAdapter.WyreVerified(address)
 	if err != nil {
@@ -235,7 +235,7 @@ func KyberKYCHandler(kycAdapter KYCAdapter, kyberSecret string) http.HandlerFunc
 
 		if userData.Status != statusApproved {
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(fmt.Sprintf("trader is not authorized: kyber status = %v",userData.Status)))
+			w.Write([]byte(fmt.Sprintf("trader is not authorized: kyber status = %v", userData.Status)))
 			return
 		}
 
@@ -324,7 +324,7 @@ func GetAuthorizedHandler(getAuthorizeAdapter GetAuthorizeAdapter) http.HandlerF
 		res := GetAuthorizeResponse{}
 		addr, err := getAuthorizeAdapter.GetAuthorizedAddress(params["address"])
 		if err != nil {
-			if err == sql.ErrNoRows{
+			if err == sql.ErrNoRows {
 				res.Status = false
 			} else {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -419,8 +419,9 @@ func traderApproved(address string, approvedTraders []string) bool {
 	if address[:2] == "0x" {
 		address = address[2:]
 	}
+	address = strings.ToLower(address)
 	for _, trader := range approvedTraders {
-		if trader == address {
+		if strings.ToLower(trader) == address {
 			return true
 		}
 	}

@@ -552,6 +552,11 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 	}
 
 	if len(orderFragmentMapping) == 0 || len(orderFragmentMapping) > len(pods) {
+		for _, j  := range orderFragmentMapping{
+			for _, fragment := range j{
+				log.Println("epoch depth =", fragment.EpochDepth)
+			}
+		}
 		logger.Error(fmt.Sprintf("invalid number of pods: got %v, expected %v", len(orderFragmentMapping), len(pods)))
 		return ErrInvalidNumberOfPods
 	}

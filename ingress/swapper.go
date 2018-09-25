@@ -84,6 +84,6 @@ func (swapper *swapper) SelectAuthorizedAddress(kycAddress string) (string, erro
 }
 
 func (swapper *swapper) InsertAuthorizedAddress(kycAddress, authorizedAddress string) error {
-	_, err := swapper.Exec("INSERT INTO auth_addresses (address, atom_address) VALUES ($1,$2)", kycAddress, authorizedAddress)
+	_, err := swapper.Exec("INSERT INTO auth_addresses (address, atom_address) VALUES ($1,$2) ON CONFLICT (address) DO UPDATE SET atom_address = EXCLUDED.atom_address;", kycAddress, authorizedAddress)
 	return err
 }

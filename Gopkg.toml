@@ -9,7 +9,7 @@
 
 [[constraint]]
   name = "github.com/republicprotocol/republic-go"
-  branch = "master"
+  branch = "nightly"
 
 # Fix to resolve dependency issues within go-ethereum
 [[override]]

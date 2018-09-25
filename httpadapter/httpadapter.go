@@ -259,13 +259,13 @@ func ApproveWithdrawalHandler(approveWithdrawalAdapter ApproveWithdrawalAdapter)
 		approveWithdrawalRequest := ApproveWithdrawalRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&approveWithdrawalRequest); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("cannot decode json into a trader and token: %v", err)))
+			w.Write([]byte(fmt.Sprintf("cannot decode json into approve withdrawal request: %v", err)))
 			return
 		}
 		signature, err := approveWithdrawalAdapter.ApproveWithdrawal(approveWithdrawalRequest.Trader, approveWithdrawalRequest.TokenID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			w.Write([]byte(fmt.Sprintf("failed to approve withdrawal: %v", err)))
 			return
 		}
 
@@ -274,7 +274,7 @@ func ApproveWithdrawalHandler(approveWithdrawalAdapter ApproveWithdrawalAdapter)
 		})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			w.Write([]byte(fmt.Sprintf("jailed to marshal ApproveWithdrawalResponse: %v", err)))
 			return
 		}
 
@@ -290,7 +290,7 @@ func GetAddressHandler(getAddressAdapter GetAddressAdapter) http.HandlerFunc {
 		addr, err := getAddressAdapter.GetAddress(params["orderID"])
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			w.Write([]byte(fmt.Sprintf("failed to find the required address: %v", err)))
 			return
 		}
 		w.WriteHeader(http.StatusOK)
@@ -304,13 +304,13 @@ func PostAddressHandler(postAddressAdapter PostAddressAdapter) http.HandlerFunc 
 		postAddressRequest := PostAddressRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&postAddressRequest); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("cannot decode json into a trader and token: %v", err)))
+			w.Write([]byte(fmt.Sprintf("cannot decode json into post address request: %v", err)))
 			return
 		}
 
 		if err := postAddressAdapter.PostAddress(postAddressRequest.Info, postAddressRequest.Signature); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			w.Write([]byte(fmt.Sprintf("failed to post address: %v", err)))
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -338,7 +338,7 @@ func GetAuthorizedHandler(getAuthorizeAdapter GetAuthorizeAdapter) http.HandlerF
 		respBytes, err := json.Marshal(res)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("cannot encode json into the response format: %v", err)))
+			w.Write([]byte(fmt.Sprintf("cannot encode json into the expected response format: %v", err)))
 			return
 		}
 		w.WriteHeader(http.StatusOK)
@@ -352,16 +352,16 @@ func PostAuthorizeHandler(postAuthorizeAdapter PostAuthorizeAdapter) http.Handle
 		postAuthorizeRequest := PostAuthorizeRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&postAuthorizeRequest); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("cannot decode json into a trader and token: %v", err)))
+			w.Write([]byte(fmt.Sprintf("cannot decode json into address and atom address: %v", err)))
 			return
 		}
 		if err := postAuthorizeAdapter.PostAuthorizedAddress(postAuthorizeRequest.AtomAddress, postAuthorizeRequest.Signature); err != nil {
 			if err == ErrUnauthorized {
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+				w.Write([]byte(fmt.Sprintf("Signing address is not KYC'd: %v", err)))
 			}
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			w.Write([]byte(fmt.Sprintf("Failed to authorize: %v", err)))
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -389,13 +389,13 @@ func PostSwapHandler(postSwapAdapter PostSwapAdapter) http.HandlerFunc {
 		postSwapRequest := PostSwapRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&postSwapRequest); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("cannot decode json into a trader and token: %v", err)))
+			w.Write([]byte(fmt.Sprintf("cannot decode json into post swap request: %v", err)))
 			return
 		}
 
 		if err := postSwapAdapter.PostSwap(postSwapRequest.Info, postSwapRequest.Signature); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
+			w.Write([]byte(fmt.Sprintf("failed to save the swap datails: %v", err)))
 			return
 		}
 		w.WriteHeader(http.StatusCreated)

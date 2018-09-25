@@ -207,11 +207,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e99f1d56b0f803584519e26b677ab160855f83d7bf3975ff7daa96add5b3f9ef"
+  digest = "1:e9e1342e8075a7d4d3d5e1ce3765fd84e9968280af3dc0d59a028552e095853c"
   name = "github.com/multiformats/go-multiaddr"
   packages = ["."]
   pruneopts = "T"
-  revision = "de7d6d81956bd35b2b64ca4244b3abb6489827ec"
+  revision = "a80cfc331ffff8bc519e401d8789d324196d1775"
 
 [[projects]]
   branch = "master"
@@ -286,8 +286,8 @@
   version = "v0.8.0"
 
 [[projects]]
-  branch = "develop"
-  digest = "1:8c749ea14767f9310a17bc9105bbb9a03cabbdb561aabd7a815e917941c5c308"
+  branch = "master"
+  digest = "1:2a10541dc29d7e8ba8b1d8bf55b11d05fbceb0f34850d9ce947e337f9fb7018e"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -310,7 +310,7 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "30d41f48892081094521e8af320eee617a908517"
+  revision = "094f772ad0d4baa3d31b1d3b2c7681f182db093c"
 
 [[projects]]
   digest = "1:602081d2a289d1f76ea90b806b0c61c19038d76504e9005ccb969864dbaee339"
@@ -393,14 +393,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3e9bd94639076b465dc569efb3a36be8569d2366c426b7f1143ad3ff8395b48a"
+  digest = "1:153c61460456a812f7d45cb6834d348a3d4b5f377f1381d659c9be1d34090218"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "T"
-  revision = "d47a0f3392421c5624713c9a19fe781f651f8a50"
+  revision = "90868a75fefd03942536221d7c0e2f84ec62a668"
 
 [[projects]]
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
@@ -447,7 +447,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cb1e49e44ee2c2e747ac5aff392dc05e20bbcf2706219c8dbb0f7f21d19ff1ae"
+  digest = "1:e6bdc146e4f8ef85e7c0666f55185eda9044e25d052e8d8ee922c532763a9f80"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -455,15 +455,15 @@
     "internal/fastwalk",
   ]
   pruneopts = "T"
-  revision = "90fa682c2a6e6a37b3a1364ce2fe1d5e41af9d6d"
+  revision = "e93be7f42f9fcac2c537bcd78bab08e6e63ed5bf"
 
 [[projects]]
   branch = "master"
-  digest = "1:b6225010c089d419d86aa7bc8e80f50364a9464adad138bb6b46f4012c052177"
+  digest = "1:36b9e78a171b849928b686bcf8ba7d6036d8f6132bbe22044af0ec5e7ba60d23"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "T"
-  revision = "c3f76f3b92d1ffa4c58a9ff842a58b8877655e0f"
+  revision = "221a8d4f74948678f06caaa13c9d41d22e069ae8"
 
 [[projects]]
   digest = "1:1cbd746dcb73e28898e1539bf866044a9e5b96c965112772c111bffbb4037255"

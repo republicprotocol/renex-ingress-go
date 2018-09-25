@@ -3,7 +3,6 @@ package contract
 import (
 	"context"
 	"fmt"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"sync"
 

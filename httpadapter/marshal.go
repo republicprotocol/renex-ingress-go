@@ -91,6 +91,7 @@ type PostAuthorizeRequest struct {
 
 type GetAuthorizeResponse struct {
 	AtomAddress string `json:"atomAddress"`
+	Status      bool   `json:"status"`
 }
 
 func MarshalSignature(signatureIn [65]byte) string {

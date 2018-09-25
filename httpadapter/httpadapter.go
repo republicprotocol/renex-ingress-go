@@ -321,14 +321,20 @@ func PostAddressHandler(postAddressAdapter PostAddressAdapter) http.HandlerFunc 
 func GetAuthorizedHandler(getAuthorizeAdapter GetAuthorizeAdapter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
+		res := GetAuthorizeResponse{}
 		addr, err := getAuthorizeAdapter.GetAuthorizedAddress(params["address"])
 		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(fmt.Sprintf("cannot open order: %v", err)))
-			return
+			if err == sql.ErrNoRows{
+				res.Status = false
+			} else {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("cannot get authorization status: %v", err)))
+				return
+			}
+		} else {
+			res.AtomAddress = addr
+			res.Status = true
 		}
-		res := GetAuthorizeResponse{}
-		res.AtomAddress = addr
 		respBytes, err := json.Marshal(res)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

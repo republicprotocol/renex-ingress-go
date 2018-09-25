@@ -47,12 +47,7 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		fmt.Println(fmt.Errorf("cannot bind to Orderbook: %v", err))
 		return Binder{}, err
 	}
-
-	client,err := ethclient.Dial("https://kovan.infura.io")
-	if err != nil {
-		return Binder{}, err
-	}
-	wyre, err := bindings.NewWyre(common.HexToAddress(conn.Config.WyreAddress), bind.ContractBackend(client))
+	wyre, err := bindings.NewWyre(common.HexToAddress(conn.Config.WyreAddress), bind.ContractBackend(conn.Client))
 	if err != nil {
 		fmt.Println(fmt.Errorf("cannot bind to Wyre: %v", err))
 		return Binder{}, err

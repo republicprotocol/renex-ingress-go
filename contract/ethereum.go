@@ -36,7 +36,7 @@ func Connect(config Config) (Conn, error) {
 		case NetworkMainnet:
 			config.RenExBrokerVerifierAddress = "0x31a0d1a199631d244761eeba67e8501296d2e383"
 			config.OrderbookAddress = "0x6b8bb175c092de7d81860b18db360b734a2598e0"
-			config.WyreAddress = "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f"
+			config.WyreAddress = "0x9f2a7b5e6280727cd6c8486f5f96e5f76164f2df"
 		case NetworkTestnet:
 			config.RenExBrokerVerifierAddress = "0x5BF19a6Ea8631BB722ade58e0D2C5813740c88fD"
 			config.OrderbookAddress = "0xA53Da4093c682a4259DE38302341BFEf7e9f7a4f"

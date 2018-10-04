@@ -37,6 +37,7 @@ type config struct {
 // Manually approved traders (e.g. Lotan traders)
 // TODO: Use different list for each network to reduce list size
 var approvedTraders = []string{
+	"fe45ab17919759cfa2ce35215ead5ca4d1fc73c7",
 	"3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
 	"26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
 	"0da229B2C0F57a2cFC54DEf6fa3650A9c4d511ee",

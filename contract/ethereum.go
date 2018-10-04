@@ -38,8 +38,8 @@ func Connect(config Config) (Conn, error) {
 			config.OrderbookAddress = "0x6b8bb175c092de7d81860b18db360b734a2598e0"
 			config.WyreAddress = "0x9f2a7b5e6280727cd6c8486f5f96e5f76164f2df"
 		case NetworkTestnet:
-			config.RenExBrokerVerifierAddress = "0x5BF19a6Ea8631BB722ade58e0D2C5813740c88fD"
-			config.OrderbookAddress = "0xA53Da4093c682a4259DE38302341BFEf7e9f7a4f"
+			config.RenExBrokerVerifierAddress = "0x60fD65ab8db0EdEC2Fc4df254888232e30416f7f"
+			config.OrderbookAddress = "0xA9b453FC64b4766Aab8a867801d0a4eA7b1474E0"
 			config.WyreAddress = "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f"
 		case NetworkNightly:
 			config.RenExBrokerVerifierAddress = "0xcf2F6b4b698Cd6a6B3eb1d874a939742d15f8e7E"

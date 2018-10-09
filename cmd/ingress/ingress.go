@@ -28,12 +28,6 @@ import (
 	"github.com/republicprotocol/republic-go/swarm"
 )
 
-type config struct {
-	Ethereum                contract.Config         `json:"republic"`
-	RenExEthereum           renExContract.Config    `json:"renex"`
-	BootstrapMultiAddresses identity.MultiAddresses `json:"bootstrapMultiAddresses"`
-}
-
 // Manually approved traders (e.g. Lotan traders)
 // TODO: Use different list for each network to reduce list size
 var approvedTraders = []string{
@@ -206,15 +200,15 @@ func getMultiaddress(keystore crypto.Keystore, port string) (identity.MultiAddre
 	return ingressMultiaddress, nil
 }
 
-func loadConfig(configFile string) (config, error) {
+func loadConfig(configFile string) (renExContract.Config, error) {
 	file, err := os.Open(configFile)
 	if err != nil {
-		return config{}, err
+		return renExContract.Config{}, err
 	}
 	defer file.Close()
-	c := config{}
+	c := renExContract.Config{}
 	if err := json.NewDecoder(file).Decode(&c); err != nil {
-		return config{}, err
+		return renExContract.Config{}, err
 	}
 	return c, nil
 }

@@ -28,18 +28,6 @@ import (
 	"github.com/republicprotocol/republic-go/swarm"
 )
 
-// Manually approved traders (e.g. Lotan traders)
-// TODO: Use different list for each network to reduce list size
-var approvedTraders = []string{
-	"fe45ab17919759cfa2ce35215ead5ca4d1fc73c7",
-	"3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
-	"26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
-	"0da229B2C0F57a2cFC54DEf6fa3650A9c4d511ee",
-	"513167dd7C2B1110e4Ec212E79c430eE72efeCf2",
-	"117f2b4a0e602413b4dc7c1ec9643adb08bbabd8",
-	"6e7ac12794773bea133825fea7dc8d721f2834c5",
-}
-
 func init() {
 	sentryDSN := os.Getenv("SENTRY_DSN")
 	if sentryDSN == "" {
@@ -178,7 +166,7 @@ func main() {
 	log.Printf("address %v", multiAddr)
 	log.Printf("ethereum %v", auth.From.Hex())
 	log.Printf("listening at 0.0.0.0:%v...", os.Getenv("PORT"))
-	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), httpadapter.NewIngressServer(ingressAdapter, approvedTraders, kyberSecret)); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), httpadapter.NewIngressServer(ingressAdapter, config.ApprovedTraders, kyberSecret)); err != nil {
 		log.Fatalf("error listening and serving: %v", err)
 	}
 }

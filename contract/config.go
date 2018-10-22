@@ -23,6 +23,7 @@ type Config struct {
 	Ethereum                republicContract.Config `json:"republic"`
 	RenExEthereum           RenExConfig             `json:"renex"`
 	BootstrapMultiAddresses identity.MultiAddresses `json:"bootstrapMultiAddresses"`
+	ApprovedTraders         []string                `json:"approvedTraders"`
 }
 
 // RenExConfig defines the different settings for connecting to Ethereum on

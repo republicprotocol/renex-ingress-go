@@ -20,7 +20,7 @@ const (
 )
 
 type Config struct {
-	Ethereum                republicContract.Config `json:"republic"`
+	Republic                republicContract.Config `json:"republic"`
 	RenExEthereum           RenExConfig             `json:"renex"`
 	BootstrapMultiAddresses identity.MultiAddresses `json:"bootstrapMultiAddresses"`
 	ApprovedTraders         []string                `json:"approvedTraders"`

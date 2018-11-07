@@ -90,7 +90,7 @@ type KYCAdapter interface {
 
 type LoginAdapter interface {
 	GetLogin(address string) (string, error)
-	PostLogin(address, referral string) error
+	PostLogin(address, referrer string) error
 }
 
 // An IngressAdapter implements the OpenOrderAdapter and the
@@ -258,8 +258,8 @@ func (adapter *ingressAdapter) GetLogin(address string) (string, error) {
 	return adapter.SelectLogin(address)
 }
 
-func (adapter *ingressAdapter) PostLogin(address, referral string) error {
-	return adapter.InsertLogin(address, referral)
+func (adapter *ingressAdapter) PostLogin(address, referrer string) error {
+	return adapter.InsertLogin(address, referrer)
 }
 
 func (adapter *ingressAdapter) IsAuthorized(orderID string, address string) error {

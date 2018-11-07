@@ -27,7 +27,7 @@ type authRequest struct {
 
 type loginRequest struct {
 	Address  string `json:"address"`
-	Referral string `json:"referral"`
+	Referrer string `json:"referrer"`
 }
 
 type tokenResponse struct {
@@ -275,7 +275,7 @@ func LoginHandler(loginAdapter LoginAdapter) http.HandlerFunc {
 		_, err = loginAdapter.GetLogin(data.Address)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				if err := loginAdapter.PostLogin(data.Address, data.Referral); err != nil {
+				if err := loginAdapter.PostLogin(data.Address, data.Referrer); err != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte(fmt.Sprintf("cannot store login address: %v", err)))
 					return

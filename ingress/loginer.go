@@ -15,7 +15,7 @@ var (
 
 type Loginer interface {
 	SelectLogin(address string) (string, error)
-	InsertLogin(address, referral string) error
+	InsertLogin(address, referrer string) error
 }
 
 type loginer struct {
@@ -40,8 +40,8 @@ func (loginer *loginer) SelectLogin(address string) (string, error) {
 	return timestamp, nil
 }
 
-func (loginer *loginer) InsertLogin(address, referral string) error {
+func (loginer *loginer) InsertLogin(address, referrer string) error {
 	timestamp := time.Now().Unix()
-	_, err := loginer.Exec("INSERT INTO traders (address, referral, created_at) VALUES ($1, $2, $3)", strings.ToLower(address), strings.ToLower(referral), timestamp)
+	_, err := loginer.Exec("INSERT INTO traders (address, referrer, created_at) VALUES ($1, $2, $3)", strings.ToLower(address), strings.ToLower(referrer), timestamp)
 	return err
 }

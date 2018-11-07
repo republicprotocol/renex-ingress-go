@@ -13,7 +13,6 @@ import (
 
 	raven "github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
-	"github.com/republicprotocol/renex-ingress-go/ingress"
 	"github.com/rs/cors"
 	"golang.org/x/time/rate"
 )
@@ -275,7 +274,7 @@ func LoginHandler(loginAdapter LoginAdapter) http.HandlerFunc {
 		// Store address in database if it does not already exist
 		_, err = loginAdapter.GetLogin(data.Address)
 		if err != nil {
-			if err == ingress.ErrAddressNotFound {
+			if err == sql.ErrNoRows {
 				if err := loginAdapter.PostLogin(data.Address, data.Referral); err != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte(fmt.Sprintf("cannot store login address: %v", err)))

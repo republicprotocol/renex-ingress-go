@@ -83,8 +83,14 @@ type PostAuthorizeAdapter interface {
 type GetAuthorizeAdapter interface {
 	GetAuthorizedAddress(string) (string, error)
 }
+
 type KYCAdapter interface {
 	PostTrader(string) error
+}
+
+type LoginAdapter interface {
+	GetLogin(address string) (string, error)
+	PostLogin(address, referral string) error
 }
 
 // An IngressAdapter implements the OpenOrderAdapter and the
@@ -99,6 +105,7 @@ type IngressAdapter interface {
 	PostAuthorizeAdapter
 	GetAuthorizeAdapter
 	KYCAdapter
+	LoginAdapter
 }
 type ingressAdapter struct {
 	ingress.Ingress
@@ -245,6 +252,14 @@ func (adapter *ingressAdapter) GetTrader(address string) (string, error) {
 
 func (adapter *ingressAdapter) PostTrader(address string) error {
 	return adapter.InsertTrader(address)
+}
+
+func (adapter *ingressAdapter) GetLogin(address string) (string, error) {
+	return adapter.SelectLogin(address)
+}
+
+func (adapter *ingressAdapter) PostLogin(address, referral string) error {
+	return adapter.InsertLogin(address, referral)
 }
 
 func (adapter *ingressAdapter) IsAuthorized(orderID string, address string) error {

@@ -13,6 +13,7 @@ import (
 
 	raven "github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
+	"github.com/republicprotocol/renex-ingress-go/ingress"
 	"github.com/rs/cors"
 	"golang.org/x/time/rate"
 )
@@ -23,6 +24,11 @@ type authRequest struct {
 	URI    string `json:"redirect_uri"`
 	Key    string `json:"client_id"`
 	Secret string `json:"client_secret"`
+}
+
+type loginRequest struct {
+	Address  string `json:"address"`
+	Referral string `json:"referral"`
 }
 
 type tokenResponse struct {
@@ -51,6 +57,7 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter, approvedTraders))).Methods("POST")
 	r.HandleFunc("/kyber", rateLimit(limiter, KyberKYCHandler(ingressAdapter, kyberSecret))).Methods("POST")
+	r.HandleFunc("/login", rateLimit(limiter, LoginHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
@@ -250,6 +257,38 @@ func KyberKYCHandler(kycAdapter KYCAdapter, kyberSecret string) http.HandlerFunc
 
 		w.WriteHeader(http.StatusOK)
 		w.Write(userBytes)
+	}
+}
+
+func LoginHandler(loginAdapter LoginAdapter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Decode POST request data
+		decoder := json.NewDecoder(r.Body)
+		var data loginRequest
+		err := decoder.Decode(&data)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(fmt.Sprintf("cannot decode data: %v", err)))
+			return
+		}
+
+		// Store address in database if it does not already exist
+		_, err = loginAdapter.GetLogin(data.Address)
+		if err != nil {
+			if err == ingress.ErrAddressNotFound {
+				if err := loginAdapter.PostLogin(data.Address, data.Referral); err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(fmt.Sprintf("cannot store login address: %v", err)))
+					return
+				}
+			} else {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("cannot retrieve login information: %v", err)))
+				return
+			}
+		}
+
+		w.WriteHeader(http.StatusOK)
 	}
 }
 

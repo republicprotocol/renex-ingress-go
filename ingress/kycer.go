@@ -2,7 +2,6 @@ package ingress
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 	"time"
 
@@ -26,14 +25,14 @@ func NewKYCer(databaseURL string) (KYCer, error) {
 }
 
 func (kycer *kycer) SelectTrader(address string) (string, error) {
-	var trader string
-	if err := kycer.QueryRow("SELECT created_at FROM kyber_traders WHERE address = $1", strings.ToLower(address)).Scan(&trader); err != nil {
-		return trader, err
+	var timestamp string
+	if err := kycer.QueryRow("SELECT created_at FROM kyber_traders WHERE address = $1", strings.ToLower(address)).Scan(&timestamp); err != nil {
+		return timestamp, err
 	}
-	if trader == "" {
-		return trader, fmt.Errorf("requested address not found")
+	if timestamp == "" {
+		return timestamp, ErrAddressNotFound
 	}
-	return trader, nil
+	return timestamp, nil
 }
 
 func (kycer *kycer) InsertTrader(address string) error {

@@ -17,17 +17,24 @@ import (
 	"golang.org/x/time/rate"
 )
 
+type loginRequest struct {
+	Address  string `json:"address"`
+	Referrer string `json:"referrer"`
+}
+
+type verificationRequest struct {
+	Address string `json:"address"`
+	UID     string `json:"uid"`
+	KYCType int    `json:"kycType"`
+}
+
+// Kyber request and response types
 type authRequest struct {
 	Type   string `json:"grant_type"`
 	Code   string `json:"code"`
 	URI    string `json:"redirect_uri"`
 	Key    string `json:"client_id"`
 	Secret string `json:"client_secret"`
-}
-
-type loginRequest struct {
-	Address  string `json:"address"`
-	Referrer string `json:"referrer"`
 }
 
 type tokenResponse struct {
@@ -57,6 +64,7 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter, approvedTraders))).Methods("POST")
 	r.HandleFunc("/kyber", rateLimit(limiter, KyberKYCHandler(ingressAdapter, kyberSecret))).Methods("POST")
 	r.HandleFunc("/login", rateLimit(limiter, LoginHandler(ingressAdapter))).Methods("POST")
+	r.HandleFunc("/verify", rateLimit(limiter, VerificationHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
@@ -245,20 +253,12 @@ func KyberKYCHandler(kycAdapter KYCAdapter, kyberSecret string) http.HandlerFunc
 			return
 		}
 
-		for i := 0; i < len(userData.Addresses); i++ {
-			err := kycAdapter.PostTrader(userData.Addresses[i])
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("cannot store trader address: %v", err)))
-				return
-			}
-		}
-
 		w.WriteHeader(http.StatusOK)
 		w.Write(userBytes)
 	}
 }
 
+// LoginHandler handles trader address requests prior to KYC
 func LoginHandler(loginAdapter LoginAdapter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Decode POST request data
@@ -280,11 +280,34 @@ func LoginHandler(loginAdapter LoginAdapter) http.HandlerFunc {
 					w.Write([]byte(fmt.Sprintf("cannot store login address: %v", err)))
 					return
 				}
-			} else {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("cannot retrieve login information: %v", err)))
-				return
 			}
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("cannot retrieve login information: %v", err)))
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// VerificationHandler handles trader KYC verification requests
+func VerificationHandler(verificationAdapter VerificationAdapter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Decode POST request data
+		decoder := json.NewDecoder(r.Body)
+		var data verificationRequest
+		err := decoder.Decode(&data)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(fmt.Sprintf("cannot decode data: %v", err)))
+			return
+		}
+
+		// Store address in database if it does not already exist
+		if err := verificationAdapter.PostVerification(data.Address, data.UID, data.KYCType); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("cannot store verification data: %v", err)))
+			return
 		}
 
 		w.WriteHeader(http.StatusOK)

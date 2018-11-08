@@ -93,6 +93,10 @@ type LoginAdapter interface {
 	PostLogin(address, referrer string) error
 }
 
+type VerificationAdapter interface {
+	PostVerification(address, uID string, kycType int) error
+}
+
 // An IngressAdapter implements the OpenOrderAdapter and the
 // ApproveWithdrawalAdapter.
 type IngressAdapter interface {
@@ -106,6 +110,7 @@ type IngressAdapter interface {
 	GetAuthorizeAdapter
 	KYCAdapter
 	LoginAdapter
+	VerificationAdapter
 }
 type ingressAdapter struct {
 	ingress.Ingress
@@ -260,6 +265,10 @@ func (adapter *ingressAdapter) GetLogin(address string) (string, error) {
 
 func (adapter *ingressAdapter) PostLogin(address, referrer string) error {
 	return adapter.InsertLogin(address, referrer)
+}
+
+func (adapter *ingressAdapter) PostVerification(address, uID string, kycType int) error {
+	return adapter.UpdateLogin(address, uID, kycType)
 }
 
 func (adapter *ingressAdapter) IsAuthorized(orderID string, address string) error {

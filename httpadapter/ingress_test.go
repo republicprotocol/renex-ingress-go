@@ -163,7 +163,7 @@ var _ = Describe("Ingress Adapter", func() {
 	Context("when opening orders", func() {
 
 		It("should forward data to the ingress if the signature and mapping are well formed", func() {
-			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, 0, 0}
+			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, &mockLoginer{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
 
 			traderBytes := [20]byte{}
@@ -182,7 +182,7 @@ var _ = Describe("Ingress Adapter", func() {
 		})
 
 		It("should not call ingress.OpenOrder if trader is invalid", func() {
-			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, 0, 0}
+			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, &mockLoginer{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
 			traderBytes := []byte{}
 			copy(traderBytes[:], "incorrect trader")
@@ -198,7 +198,7 @@ var _ = Describe("Ingress Adapter", func() {
 		})
 
 		It("should not call ingress.OpenOrder if pool hash is invalid", func() {
-			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, 0, 0}
+			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, &mockLoginer{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
 			traderBytes := [20]byte{}
 			_, err := rand.Read(traderBytes[:])
@@ -219,7 +219,7 @@ var _ = Describe("Ingress Adapter", func() {
 	Context("when approving withdrawals", func() {
 
 		It("should forward data to the ingress if the signature and mapping are well formed", func() {
-			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, 0, 0}
+			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, &mockLoginer{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
 
 			traderBytes := [20]byte{}
@@ -233,7 +233,7 @@ var _ = Describe("Ingress Adapter", func() {
 		})
 
 		It("should not call ingress.ApproveWithdrawal if trader is invalid", func() {
-			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, 0, 0}
+			ingress := &mockIngress{&mockSwapper{}, &mockKYCer{}, &mockLoginer{}, 0, 0}
 			ingressAdapter := NewIngressAdapter(ingress)
 			traderBytes := []byte{}
 			copy(traderBytes[:], "incorrect trader")
@@ -259,12 +259,15 @@ func (swapper *mockSwapper) InsertAuthorizedAddress(kycAddress string, atomAddre
 func (swapper *mockSwapper) SelectAddress(orderID string) (string, error) {
 	return "", nil
 }
+
 func (swapper *mockSwapper) InsertAddress(orderID string, address string) error {
 	return nil
 }
+
 func (swapper *mockSwapper) SelectSwapDetails(orderID string) (string, error) {
 	return "", nil
 }
+
 func (swapper *mockSwapper) InsertSwapDetails(orderID string, swapDetails string) error {
 	return nil
 }
@@ -275,13 +278,30 @@ type mockKYCer struct {
 func (kycer *mockKYCer) SelectTrader(address string) (string, error) {
 	return "", nil
 }
+
 func (kycer *mockKYCer) InsertTrader(address string) error {
+	return nil
+}
+
+type mockLoginer struct {
+}
+
+func (loginer *mockLoginer) SelectLogin(address string) (string, error) {
+	return "", nil
+}
+
+func (loginer *mockLoginer) InsertLogin(address, referrer string) error {
+	return nil
+}
+
+func (loginer *mockLoginer) UpdateLogin(address, uID string, kycType int) error {
 	return nil
 }
 
 type mockIngress struct {
 	ingress.Swapper
 	ingress.KYCer
+	ingress.Loginer
 	numOpened    int64
 	numWithdrawn int64
 }

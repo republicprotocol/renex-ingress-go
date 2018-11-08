@@ -50,6 +50,10 @@ func (adapter *weakAdapter) PostSwap(PostSwapInfo, string) error {
 	return nil
 }
 
+func (adapter *weakAdapter) GetAuthorizedAddress(string) (string, error) {
+	return "", nil
+}
+
 func (adapter *weakAdapter) PostAuthorizedAddress(string, string) error {
 	return nil
 }
@@ -59,6 +63,18 @@ func (adapter *weakAdapter) GetTrader(string) (string, error) {
 }
 
 func (adapter *weakAdapter) PostTrader(string) error {
+	return nil
+}
+
+func (adapter *weakAdapter) GetLogin(string) (string, error) {
+	return "", nil
+}
+
+func (adapter *weakAdapter) PostLogin(string, string) error {
+	return nil
+}
+
+func (adapter *weakAdapter) PostVerification(string, string, int) error {
 	return nil
 }
 
@@ -78,31 +94,47 @@ func (adapter *errAdapter) ApproveWithdrawal(trader string, tokenID uint32) ([65
 }
 
 func (adapter *errAdapter) GetAddress(string) (string, error) {
-	return "", nil
+	return "", errors.New("cannot get address")
 }
 
 func (adapter *errAdapter) PostAddress(PostAddressInfo, string) error {
-	return nil
+	return errors.New("cannot post address")
 }
 
 func (adapter *errAdapter) GetSwap(string) (string, error) {
-	return "", nil
+	return "", errors.New("cannot get address")
 }
 
 func (adapter *errAdapter) PostSwap(PostSwapInfo, string) error {
-	return nil
+	return errors.New("cannot post swap")
+}
+
+func (adapter *errAdapter) GetAuthorizedAddress(string) (string, error) {
+	return "", errors.New("cannot get authorized address")
 }
 
 func (adapter *errAdapter) PostAuthorizedAddress(string, string) error {
-	return nil
+	return errors.New("cannot post authorized address")
 }
 
 func (adapter *errAdapter) GetTrader(string) (string, error) {
-	return "", nil
+	return "", errors.New("cannot get trader")
 }
 
 func (adapter *errAdapter) PostTrader(string) error {
-	return nil
+	return errors.New("cannot post trader")
+}
+
+func (adapter *errAdapter) GetLogin(string) (string, error) {
+	return "", errors.New("cannot get login")
+}
+
+func (adapter *errAdapter) PostLogin(string, string) error {
+	return errors.New("cannot post login")
+}
+
+func (adapter *errAdapter) PostVerification(string, string, int) error {
+	return errors.New("cannot post verification")
 }
 
 var _ = Describe("HTTP handlers", func() {

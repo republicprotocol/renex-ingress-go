@@ -7,6 +7,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/satori/go.uuid"
 )
 
 const (
@@ -47,9 +48,12 @@ func (loginer *loginer) SelectLogin(address string) (string, error) {
 }
 
 func (loginer *loginer) InsertLogin(address, referrer string) error {
-	referralCode := "generated_referral_code" // TODO: Generate referral code
+	referralCode, err := uuid.NewV4()
+	if err != nil {
+		return err
+	}
 	timestamp := time.Now().Unix()
-	_, err := loginer.Exec("INSERT INTO traders (address, referrer, referral_code, created_at, updated_at) VALUES ($1, $2, $3, $4, $4)", strings.ToLower(address), strings.ToLower(referrer), referralCode, timestamp)
+	_, err = loginer.Exec("INSERT INTO traders (address, referrer, referral_code, created_at, updated_at) VALUES ($1, $2, $3, $4, $4)", strings.ToLower(address), strings.ToLower(referrer), referralCode, timestamp)
 	return err
 }
 

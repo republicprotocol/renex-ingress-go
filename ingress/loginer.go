@@ -37,7 +37,7 @@ func NewLoginer(databaseURL string) (Loginer, error) {
 
 func (loginer *loginer) SelectLogin(address string) (string, error) {
 	var timestamp string
-	if err := loginer.QueryRow("SELECT created_at FROM traders WHERE address = $1", strings.ToLower(address)).Scan(&timestamp); err != nil {
+	if err := loginer.QueryRow("SELECT created_at FROM traders WHERE address=$1", strings.ToLower(address)).Scan(&timestamp); err != nil {
 		return timestamp, err
 	}
 	if timestamp == "" {
@@ -61,7 +61,19 @@ func (loginer *loginer) UpdateLogin(address, uID string, kycType int) error {
 		return err
 	case KYCKyber:
 		_, err := loginer.Exec("UPDATE traders SET kyc_kyber=$2, updated_at=$3 WHERE address=$1", strings.ToLower(address), strings.ToLower(uID), timestamp)
-		return err
+		if err != nil {
+			return err
+		}
+
+		// Use original referral code.
+		var referrer string
+		if err := loginer.QueryRow("SELECT referrer FROM traders WHERE kyc_kyber=$1 ORDER BY created_at LIMIT 1", strings.ToLower(uID)).Scan(&referrer); err != nil {
+			return err
+		}
+		_, err = loginer.Exec("UPDATE traders SET referrer=$2 WHERE kyc_kyber=$1", strings.ToLower(uID), referrer)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

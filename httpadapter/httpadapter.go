@@ -280,10 +280,11 @@ func LoginHandler(loginAdapter LoginAdapter) http.HandlerFunc {
 					w.Write([]byte(fmt.Sprintf("cannot store login address: %v", err)))
 					return
 				}
+			} else {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("cannot retrieve login information: %v", err)))
+				return
 			}
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("cannot retrieve login information: %v", err)))
-			return
 		}
 
 		w.WriteHeader(http.StatusOK)

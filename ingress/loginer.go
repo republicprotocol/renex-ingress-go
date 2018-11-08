@@ -48,12 +48,8 @@ func (loginer *loginer) SelectLogin(address string) (string, error) {
 }
 
 func (loginer *loginer) InsertLogin(address, referrer string) error {
-	referralCode, err := uuid.NewV4()
-	if err != nil {
-		return err
-	}
 	timestamp := time.Now().Unix()
-	_, err = loginer.Exec("INSERT INTO traders (address, referrer, referral_code, created_at, updated_at) VALUES ($1, $2, $3, $4, $4)", strings.ToLower(address), strings.ToLower(referrer), referralCode, timestamp)
+	_, err := loginer.Exec("INSERT INTO traders (address, referrer, referral_code, created_at, updated_at) VALUES ($1, $2, $3, $4, $4)", strings.ToLower(address), strings.ToLower(referrer), uuid.NewV4().String(), timestamp)
 	return err
 }
 

@@ -52,8 +52,6 @@ var ErrUnauthorized = errors.New("unauthorized address")
 // OrderFragmentMapping to the Darknodes in the network.
 type OpenOrderAdapter interface {
 	OpenOrder(traderIn string, orderFragmentMappings OrderFragmentMappings) ([65]byte, error)
-	WyreVerified(traderIn string) (bool, error)
-	GetTrader(address string) (string, error)
 }
 
 type ApproveWithdrawalAdapter interface {
@@ -94,6 +92,8 @@ type LoginAdapter interface {
 }
 
 type VerificationAdapter interface {
+	WyreVerified(traderIn string) (bool, error)
+	GetTrader(address string) (string, error)
 	PostVerification(address, uID string, kycType int) error
 }
 

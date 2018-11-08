@@ -84,7 +84,7 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 }
 
 // OpenOrderHandler handles all HTTP open order requests
-func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []string) http.HandlerFunc {
+func OpenOrderHandler(ingressAdapter IngressAdapter, approvedTraders []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		openOrderRequest := OpenOrderRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&openOrderRequest); err != nil {
@@ -94,7 +94,7 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 		}
 		// First check if trader has been manually approved (e.g. Lotan traders)
 		if !traderApproved(openOrderRequest.Address, approvedTraders) {
-			verified, err := traderVerified(openOrderAdapter, openOrderRequest.Address)
+			verified, err := traderVerified(ingressAdapter, openOrderRequest.Address)
 			if err != nil {
 				errString := fmt.Sprintf("cannot check trader verification: %v", err)
 				log.Println(errString)
@@ -106,17 +106,12 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 				return
 			}
 			if !verified {
-				errString := fmt.Sprintf("trader is not verified")
-				log.Println(errString)
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(errString))
-				raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
-					"trader": openOrderRequest.Address,
-				})
+				w.Write([]byte("trader is not verified"))
 				return
 			}
 		}
-		signature, err := openOrderAdapter.OpenOrder(openOrderRequest.Address, openOrderRequest.OrderFragmentMappings)
+		signature, err := ingressAdapter.OpenOrder(openOrderRequest.Address, openOrderRequest.OrderFragmentMappings)
 		if err != nil {
 			errString := fmt.Sprintf("cannot open order: %v", err)
 			log.Println(errString)
@@ -141,31 +136,6 @@ func OpenOrderHandler(openOrderAdapter OpenOrderAdapter, approvedTraders []strin
 		w.WriteHeader(http.StatusCreated)
 		w.Write(response)
 	}
-}
-
-func traderVerified(openOrderAdapter OpenOrderAdapter, address string) (bool, error) {
-	if !strings.HasPrefix(address, "0x") {
-		address = "0x" + address
-	}
-	verified, err := openOrderAdapter.WyreVerified(address)
-	if err != nil {
-		return false, err
-	}
-	if verified {
-		return true, nil
-	}
-
-	// If the Wyre verification is unsuccessful, check if the
-	// trader has verified using Kyber.
-	_, err = openOrderAdapter.GetTrader(address)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, nil
-		}
-		return false, err
-	}
-
-	return true, nil
 }
 
 // KyberKYCHandler handles all Kyber KYC verification requests
@@ -304,7 +274,24 @@ func VerificationHandler(verificationAdapter VerificationAdapter) http.HandlerFu
 			return
 		}
 
-		// Store address in database if it does not already exist
+		verified, err := traderVerified(verificationAdapter, data.Address)
+		if err != nil {
+			errString := fmt.Sprintf("cannot check trader verification: %v", err)
+			log.Println(errString)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(errString))
+			raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
+				"trader": data.Address,
+			})
+			return
+		}
+		if !verified {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("trader is not verified"))
+			return
+		}
+
+		// Store verification information in database
 		if err := verificationAdapter.PostVerification(data.Address, data.UID, data.KYCType); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("cannot store verification data: %v", err)))
@@ -475,6 +462,31 @@ func RecoveryHandler(h http.Handler) http.Handler {
 		}()
 		h.ServeHTTP(w, r)
 	})
+}
+
+func traderVerified(verificationAdapter VerificationAdapter, address string) (bool, error) {
+	if !strings.HasPrefix(address, "0x") {
+		address = "0x" + address
+	}
+	verified, err := verificationAdapter.WyreVerified(address)
+	if err != nil {
+		return false, err
+	}
+	if verified {
+		return true, nil
+	}
+
+	// If the Wyre verification is unsuccessful, check if the
+	// trader has verified using Kyber.
+	_, err = verificationAdapter.GetTrader(address)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
 }
 
 func traderApproved(address string, approvedTraders []string) bool {

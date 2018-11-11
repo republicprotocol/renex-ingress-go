@@ -54,7 +54,7 @@ func (loginer *loginer) UpdateLogin(address, kyberUID string, kycType int) error
 	timestamp := time.Now().Unix()
 	switch kycType {
 	case KYCWyre:
-		_, err := loginer.Exec("UPDATE traders SET kyc_wyre=$1, last_verified_at=$3 WHERE address=$1", strings.ToLower(address), timestamp)
+		_, err := loginer.Exec("UPDATE traders SET kyc_wyre=$1, last_verified_at=$2 WHERE address=$1", strings.ToLower(address), timestamp)
 		return err
 	case KYCKyber:
 		_, err := loginer.Exec("UPDATE traders SET kyc_kyber=$2, last_verified_at=$3 WHERE address=$1", strings.ToLower(address), strings.ToLower(kyberUID), timestamp)

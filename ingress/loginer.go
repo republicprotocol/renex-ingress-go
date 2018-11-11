@@ -35,7 +35,7 @@ func NewLoginer(databaseURL string) (Loginer, error) {
 func (loginer *loginer) SelectLogin(address string) (string, string, error) {
 	var kyberUID sql.NullString
 	var timestamp string
-	if err := loginer.QueryRow("SELECT kyc_kyber, updated_at FROM traders WHERE address=$1", strings.ToLower(address)).Scan(&kyberUID, &timestamp); err != nil {
+	if err := loginer.QueryRow("SELECT kyc_kyber, last_verified_at FROM traders WHERE address=$1", strings.ToLower(address)).Scan(&kyberUID, &timestamp); err != nil {
 		return "", "", err
 	}
 	if kyberUID.Valid {
@@ -46,7 +46,7 @@ func (loginer *loginer) SelectLogin(address string) (string, string, error) {
 
 func (loginer *loginer) InsertLogin(address, referrer string) error {
 	timestamp := time.Now().Unix()
-	_, err := loginer.Exec("INSERT INTO traders (address, referrer, referral_code, created_at, updated_at) VALUES ($1, $2, $3, $4, $4)", strings.ToLower(address), strings.ToLower(referrer), uuid.NewV4().String(), timestamp)
+	_, err := loginer.Exec("INSERT INTO traders (address, referrer, referral_code, created_at, last_verified_at) VALUES ($1, $2, $3, $4, $4)", strings.ToLower(address), strings.ToLower(referrer), uuid.NewV4().String(), timestamp)
 	return err
 }
 
@@ -54,10 +54,10 @@ func (loginer *loginer) UpdateLogin(address, uID string, kycType int) error {
 	timestamp := time.Now().Unix()
 	switch kycType {
 	case KYCWyre:
-		_, err := loginer.Exec("UPDATE traders SET kyc_wyre=$2, updated_at=$3 WHERE address=$1", strings.ToLower(address), strings.ToLower(uID), timestamp)
+		_, err := loginer.Exec("UPDATE traders SET kyc_wyre=$2, last_verified_at=$3 WHERE address=$1", strings.ToLower(address), strings.ToLower(uID), timestamp)
 		return err
 	case KYCKyber:
-		_, err := loginer.Exec("UPDATE traders SET kyc_kyber=$2, updated_at=$3 WHERE address=$1", strings.ToLower(address), strings.ToLower(uID), timestamp)
+		_, err := loginer.Exec("UPDATE traders SET kyc_kyber=$2, last_verified_at=$3 WHERE address=$1", strings.ToLower(address), strings.ToLower(uID), timestamp)
 		if err != nil {
 			return err
 		}

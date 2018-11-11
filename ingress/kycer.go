@@ -26,11 +26,8 @@ func NewKYCer(databaseURL string) (KYCer, error) {
 
 func (kycer *kycer) SelectTrader(address string) (string, error) {
 	var timestamp string
-	if err := kycer.QueryRow("SELECT created_at FROM kyber_traders WHERE address = $1", strings.ToLower(address)).Scan(&timestamp); err != nil {
-		return timestamp, err
-	}
-	if timestamp == "" {
-		return timestamp, ErrAddressNotFound
+	if err := kycer.QueryRow("SELECT updated_at FROM kyber_traders WHERE address = $1", strings.ToLower(address)).Scan(&timestamp); err != nil {
+		return "", err
 	}
 	return timestamp, nil
 }

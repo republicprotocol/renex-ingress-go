@@ -2,7 +2,6 @@ package ingress
 
 import (
 	"database/sql"
-	"errors"
 	"strings"
 	"time"
 
@@ -11,16 +10,13 @@ import (
 )
 
 const (
+	KYCNone  int = 0
 	KYCWyre  int = 1
 	KYCKyber int = 2
 )
 
-var (
-	ErrAddressNotFound = errors.New("requested address not found")
-)
-
 type Loginer interface {
-	SelectLogin(address string) (string, error)
+	SelectLogin(address string) (string, string, error)
 	InsertLogin(address, referrer string) error
 	UpdateLogin(address, uID string, kycType int) error
 }
@@ -36,15 +32,13 @@ func NewLoginer(databaseURL string) (Loginer, error) {
 	}, err
 }
 
-func (loginer *loginer) SelectLogin(address string) (string, error) {
+func (loginer *loginer) SelectLogin(address string) (string, string, error) {
+	var kyberUID string
 	var timestamp string
-	if err := loginer.QueryRow("SELECT created_at FROM traders WHERE address=$1", strings.ToLower(address)).Scan(&timestamp); err != nil {
-		return timestamp, err
+	if err := loginer.QueryRow("SELECT kyc_kyber, updated_at FROM traders WHERE address=$1", strings.ToLower(address)).Scan(&kyberUID, &timestamp); err != nil {
+		return "", "", err
 	}
-	if timestamp == "" {
-		return timestamp, ErrAddressNotFound
-	}
-	return timestamp, nil
+	return kyberUID, timestamp, nil
 }
 
 func (loginer *loginer) InsertLogin(address, referrer string) error {

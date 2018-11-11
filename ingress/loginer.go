@@ -33,12 +33,15 @@ func NewLoginer(databaseURL string) (Loginer, error) {
 }
 
 func (loginer *loginer) SelectLogin(address string) (string, string, error) {
-	var kyberUID string
+	var kyberUID sql.NullString
 	var timestamp string
 	if err := loginer.QueryRow("SELECT kyc_kyber, updated_at FROM traders WHERE address=$1", strings.ToLower(address)).Scan(&kyberUID, &timestamp); err != nil {
 		return "", "", err
 	}
-	return kyberUID, timestamp, nil
+	if kyberUID.Valid {
+		return kyberUID.String, timestamp, nil
+	}
+	return "", timestamp, nil
 }
 
 func (loginer *loginer) InsertLogin(address, referrer string) error {
@@ -60,13 +63,15 @@ func (loginer *loginer) UpdateLogin(address, uID string, kycType int) error {
 		}
 
 		// Use original referral code.
-		var referrer string
+		var referrer sql.NullString
 		if err := loginer.QueryRow("SELECT referrer FROM traders WHERE kyc_kyber=$1 ORDER BY created_at LIMIT 1", strings.ToLower(uID)).Scan(&referrer); err != nil {
 			return err
 		}
-		_, err = loginer.Exec("UPDATE traders SET referrer=$2 WHERE kyc_kyber=$1", strings.ToLower(uID), referrer)
-		if err != nil {
-			return err
+		if referrer.Valid {
+			_, err = loginer.Exec("UPDATE traders SET referrer=$2 WHERE kyc_kyber=$1", strings.ToLower(uID), referrer.String)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

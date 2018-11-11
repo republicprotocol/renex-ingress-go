@@ -525,7 +525,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, address, kyberUID string
 		return ingress.KYCNone, err
 	}
 	if verified {
-		if err := loginAdapter.PostVerification(address, kyberUID, ingress.KYCKyber); err != nil {
+		if err := loginAdapter.PostVerification(address, "", ingress.KYCWyre); err != nil {
 			return ingress.KYCNone, err
 		}
 		return ingress.KYCWyre, nil

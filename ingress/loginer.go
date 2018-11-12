@@ -16,9 +16,9 @@ const (
 )
 
 type Loginer interface {
-	SelectLogin(address string) (string, string, error)
+	SelectLogin(address string) (int64, string, error)
 	InsertLogin(address, referrer string) error
-	UpdateLogin(address, kyberUID string, kycType int) error
+	UpdateLogin(address string, kyberUID int64, kycType int) error
 }
 
 type loginer struct {
@@ -32,16 +32,16 @@ func NewLoginer(databaseURL string) (Loginer, error) {
 	}, err
 }
 
-func (loginer *loginer) SelectLogin(address string) (string, string, error) {
-	var sqlKyberUID sql.NullString
+func (loginer *loginer) SelectLogin(address string) (int64, string, error) {
+	var sqlKyberUID sql.NullInt64
 	var sqlTimestamp sql.NullString
 	if err := loginer.QueryRow("SELECT kyc_kyber, last_verified_at FROM traders WHERE address=$1", strings.ToLower(address)).Scan(&sqlKyberUID, &sqlTimestamp); err != nil {
-		return "", "", err
+		return 0, "", err
 	}
-	var kyberUID string
+	var kyberUID int64
 	var timestamp string
 	if sqlKyberUID.Valid {
-		kyberUID = sqlKyberUID.String
+		kyberUID = sqlKyberUID.Int64
 	}
 	if sqlTimestamp.Valid {
 		timestamp = sqlTimestamp.String
@@ -55,25 +55,25 @@ func (loginer *loginer) InsertLogin(address, referrer string) error {
 	return err
 }
 
-func (loginer *loginer) UpdateLogin(address, kyberUID string, kycType int) error {
+func (loginer *loginer) UpdateLogin(address string, kyberUID int64, kycType int) error {
 	timestamp := time.Now().Unix()
 	switch kycType {
 	case KYCWyre:
 		_, err := loginer.Exec("UPDATE traders SET kyc_wyre=$1, last_verified_at=$2 WHERE address=$1", strings.ToLower(address), timestamp)
 		return err
 	case KYCKyber:
-		_, err := loginer.Exec("UPDATE traders SET kyc_kyber=$2, last_verified_at=$3 WHERE address=$1", strings.ToLower(address), strings.ToLower(kyberUID), timestamp)
+		_, err := loginer.Exec("UPDATE traders SET kyc_kyber=$2, last_verified_at=$3 WHERE address=$1", strings.ToLower(address), kyberUID, timestamp)
 		if err != nil {
 			return err
 		}
 
 		// Use original referral code.
 		var referrer sql.NullString
-		if err := loginer.QueryRow("SELECT referrer FROM traders WHERE kyc_kyber=$1 ORDER BY created_at LIMIT 1", strings.ToLower(kyberUID)).Scan(&referrer); err != nil {
+		if err := loginer.QueryRow("SELECT referrer FROM traders WHERE kyc_kyber=$1 ORDER BY created_at LIMIT 1", kyberUID).Scan(&referrer); err != nil {
 			return err
 		}
 		if referrer.Valid {
-			_, err = loginer.Exec("UPDATE traders SET referrer=$2 WHERE kyc_kyber=$1", strings.ToLower(kyberUID), referrer.String)
+			_, err = loginer.Exec("UPDATE traders SET referrer=$2 WHERE kyc_kyber=$1", kyberUID, referrer.String)
 			if err != nil {
 				return err
 			}

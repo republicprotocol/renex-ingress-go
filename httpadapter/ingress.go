@@ -86,9 +86,9 @@ type KYCAdapter interface {
 }
 
 type LoginAdapter interface {
-	GetLogin(address string) (string, string, error)
+	GetLogin(address string) (int64, string, error)
 	PostLogin(address, referrer string) error
-	PostVerification(address, kyberUID string, kycType int) error
+	PostVerification(address string, kyberUID int64, kycType int) error
 	WyreVerified(traderIn string) (bool, error)
 }
 
@@ -245,7 +245,7 @@ func (adapter *ingressAdapter) GetAuthorizedAddress(addr string) (string, error)
 	return adapter.SelectAuthorizedAddress(addr)
 }
 
-func (adapter *ingressAdapter) GetLogin(address string) (string, string, error) {
+func (adapter *ingressAdapter) GetLogin(address string) (int64, string, error) {
 	return adapter.SelectLogin(address)
 }
 
@@ -253,7 +253,7 @@ func (adapter *ingressAdapter) PostLogin(address, referrer string) error {
 	return adapter.InsertLogin(address, referrer)
 }
 
-func (adapter *ingressAdapter) PostVerification(address, kyberUID string, kycType int) error {
+func (adapter *ingressAdapter) PostVerification(address string, kyberUID int64, kycType int) error {
 	return adapter.UpdateLogin(address, kyberUID, kycType)
 }
 

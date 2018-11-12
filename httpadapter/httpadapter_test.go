@@ -66,15 +66,15 @@ func (adapter *weakAdapter) PostTrader(string) error {
 	return nil
 }
 
-func (adapter *weakAdapter) GetLogin(string) (string, error) {
-	return "", nil
+func (adapter *weakAdapter) GetLogin(string) (int64, string, error) {
+	return 0, "", nil
 }
 
 func (adapter *weakAdapter) PostLogin(string, string) error {
 	return nil
 }
 
-func (adapter *weakAdapter) PostVerification(string, string, int) error {
+func (adapter *weakAdapter) PostVerification(string, int64, int) error {
 	return nil
 }
 
@@ -125,15 +125,15 @@ func (adapter *errAdapter) PostTrader(string) error {
 	return errors.New("cannot post trader")
 }
 
-func (adapter *errAdapter) GetLogin(string) (string, error) {
-	return "", errors.New("cannot get login")
+func (adapter *errAdapter) GetLogin(string) (int64, string, error) {
+	return 0, "", errors.New("cannot get login")
 }
 
 func (adapter *errAdapter) PostLogin(string, string) error {
 	return errors.New("cannot post login")
 }
 
-func (adapter *errAdapter) PostVerification(string, string, int) error {
+func (adapter *errAdapter) PostVerification(string, int64, int) error {
 	return errors.New("cannot post verification")
 }
 
@@ -152,7 +152,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/orders", body)
 
 			adapter := weakAdapter{}
-			server := NewIngressServer(&adapter, []string{}, "")
+			server := NewIngressServer(&adapter, []string{}, "", "")
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusCreated))
@@ -176,7 +176,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/orders", body)
 
 			adapter := weakAdapter{}
-			server := NewIngressServer(&adapter, []string{}, "")
+			server := NewIngressServer(&adapter, []string{}, "", "")
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusBadRequest))
@@ -194,7 +194,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/orders", body)
 
 			adapter := errAdapter{}
-			server := NewIngressServer(&adapter, []string{}, "")
+			server := NewIngressServer(&adapter, []string{}, "", "")
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusInternalServerError))
@@ -214,7 +214,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/withdrawals", body)
 
 			adapter := weakAdapter{}
-			server := NewIngressServer(&adapter, []string{}, "")
+			server := NewIngressServer(&adapter, []string{}, "", "")
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusCreated))
@@ -238,7 +238,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/withdrawals", body)
 
 			adapter := weakAdapter{}
-			server := NewIngressServer(&adapter, []string{}, "")
+			server := NewIngressServer(&adapter, []string{}, "", "")
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusBadRequest))
@@ -256,7 +256,7 @@ var _ = Describe("HTTP handlers", func() {
 			r := httptest.NewRequest("POST", "http://localhost/withdrawals", body)
 
 			adapter := errAdapter{}
-			server := NewIngressServer(&adapter, []string{}, "")
+			server := NewIngressServer(&adapter, []string{}, "", "")
 			server.ServeHTTP(w, r)
 
 			Expect(w.Code).To(Equal(http.StatusInternalServerError))

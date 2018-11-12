@@ -303,7 +303,7 @@ func KyberKYCHandler(loginAdapter LoginAdapter, kyberID, kyberSecret string) htt
 		}
 
 		// Update verification time in database
-		if err := loginAdapter.PostVerification(data.Address, string(userData.UID), ingress.KYCKyber); err != nil {
+		if err := loginAdapter.PostVerification(data.Address, int64(userData.UID), ingress.KYCKyber); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("failed to post verification: %v", err)))
 			return
@@ -485,7 +485,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 		return ingress.KYCNone, err
 	}
 	if verified {
-		if err := loginAdapter.PostVerification(address, "", ingress.KYCWyre); err != nil {
+		if err := loginAdapter.PostVerification(address, 0, ingress.KYCWyre); err != nil {
 			return ingress.KYCNone, err
 		}
 		return ingress.KYCWyre, nil
@@ -501,7 +501,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 		return ingress.KYCNone, err
 	}
 
-	if kyberUID == "" {
+	if kyberUID == 0 {
 		return ingress.KYCNone, err
 	}
 
@@ -538,7 +538,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 
 	// Retrieve information for trader with uID
 	urlString = "https://kyber.network/api/authorized_users"
-	resp, err = http.PostForm(urlString, url.Values{"access_token": {tokenResp.AccessToken}, "uid": {kyberUID}})
+	resp, err = http.PostForm(urlString, url.Values{"access_token": {tokenResp.AccessToken}, "uid": {fmt.Sprintf("%v", kyberUID)}})
 	if err != nil {
 		return ingress.KYCNone, err
 	}

@@ -63,7 +63,7 @@ type tokenResponse struct {
 }
 
 type userResponse struct {
-	UID       string   `json:"uid"`
+	UID       int      `json:"uid"`
 	Status    string   `json:"kyc_status"`
 	Addresses []string `json:"active_wallets"`
 }
@@ -286,7 +286,7 @@ func LoginHandler(loginAdapter LoginAdapter, kyberID string) http.HandlerFunc {
 		if err := loginAdapter.PostLogin(data.Address, data.Referrer); err != nil {
 			errString := fmt.Sprintf("cannot store login address: %v", err)
 			log.Println(errString)
-			w.WriteHeader(http.StatusInternalServerError)z
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(errString))
 			raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
 				"trader": data.Address,

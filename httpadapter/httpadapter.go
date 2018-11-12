@@ -253,10 +253,14 @@ func KyberKYCHandler(kycAdapter KYCAdapter, kyberSecret string) http.HandlerFunc
 		}
 
 		for i := 0; i < len(userData.Addresses); i++ {
-			err := kycAdapter.PostTrader(userData.Addresses[i])
-			if err != nil {
+			if err := kycAdapter.PostTrader(userData.Addresses[i]); err != nil {
+				errString := fmt.Sprintf("cannot store trader address: %v", err)
+				log.Println(errString)
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("cannot store trader address: %v", err)))
+				w.Write([]byte(errString))
+				raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
+					"trader": data.Address,
+				})
 				return
 			}
 		}
@@ -285,13 +289,23 @@ func LoginHandler(loginAdapter LoginAdapter, kyberID string) http.HandlerFunc {
 		if err != nil {
 			if err == sql.ErrNoRows {
 				if err := loginAdapter.PostLogin(data.Address, data.Referrer); err != nil {
+					errString := fmt.Sprintf("cannot store login address: %v", err)
+					log.Println(errString)
 					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(fmt.Sprintf("cannot store login address: %v", err)))
+					w.Write([]byte(errString))
+					raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
+						"trader": data.Address,
+					})
 					return
 				}
 			} else {
+				errString := fmt.Sprintf("cannot retrieve login information: %v", err)
+				log.Println(errString)
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("cannot retrieve login information: %v", err)))
+				w.Write([]byte(errString))
+				raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
+					"trader": data.Address,
+				})
 				return
 			}
 		}

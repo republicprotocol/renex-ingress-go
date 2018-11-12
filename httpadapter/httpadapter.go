@@ -118,7 +118,7 @@ func OpenOrderHandler(ingressAdapter IngressAdapter, approvedTraders []string, k
 		// If the trader has not been manually approved (e.g. Lotan traders),
 		// check their verification status.
 		if !traderApproved(openOrderRequest.Address, approvedTraders) {
-			verification, err := traderVerified(ingressAdapter, kyberID, kyberSecret, openOrderRequest.Address, "")
+			kycType, err := traderVerified(ingressAdapter, kyberID, kyberSecret, openOrderRequest.Address)
 			if err != nil {
 				errString := fmt.Sprintf("cannot check trader verification: %v", err)
 				log.Println(errString)
@@ -129,7 +129,7 @@ func OpenOrderHandler(ingressAdapter IngressAdapter, approvedTraders []string, k
 				})
 				return
 			}
-			if verification == ingress.KYCNone {
+			if kycType == ingress.KYCNone {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte("trader is not verified"))
 				return
@@ -189,7 +189,7 @@ func LoginHandler(loginAdapter LoginAdapter, kyberID, kyberSecret string) http.H
 		}
 
 		// Check if the trader is verified
-		verification, err := traderVerified(loginAdapter, kyberID, kyberSecret, data.Address, "")
+		kycType, err := traderVerified(loginAdapter, kyberID, kyberSecret, data.Address)
 		if err != nil {
 			errString := fmt.Sprintf("cannot check trader verification: %v", err)
 			log.Println(errString)
@@ -202,7 +202,7 @@ func LoginHandler(loginAdapter LoginAdapter, kyberID, kyberSecret string) http.H
 		}
 
 		response := loginResponse{
-			Verified: verification != ingress.KYCNone,
+			Verified: kycType != ingress.KYCNone,
 		}
 		respBytes, err := json.Marshal(response)
 		if err != nil {
@@ -302,15 +302,10 @@ func KyberKYCHandler(loginAdapter LoginAdapter, kyberID, kyberSecret string) htt
 			return
 		}
 
-		_, err = traderVerified(loginAdapter, kyberID, kyberSecret, data.Address, string(userData.UID))
-		if err != nil {
-			errString := fmt.Sprintf("cannot check trader verification: %v", err)
-			log.Println(errString)
+		// Update verification time in database
+		if err := loginAdapter.PostVerification(data.Address, string(userData.UID), ingress.KYCKyber); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(errString))
-			raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
-				"trader": data.Address,
-			})
+			w.Write([]byte(fmt.Sprintf("failed to post verification: %v", err)))
 			return
 		}
 
@@ -481,7 +476,7 @@ func RecoveryHandler(h http.Handler) http.Handler {
 	})
 }
 
-func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address, kyberUID string) (int, error) {
+func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address string) (int, error) {
 	if address[:2] != "0x" {
 		address = "0x" + address
 	}
@@ -498,30 +493,27 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address, ky
 
 	// If the Wyre verification is unsuccessful, check if the
 	// trader has verified using Kyber
+	kyberUID, timestamp, err := loginAdapter.GetLogin(address)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return ingress.KYCNone, nil
+		}
+		return ingress.KYCNone, err
+	}
+
 	if kyberUID == "" {
-		var timestamp string
-		kyberUID, timestamp, err = loginAdapter.GetLogin(address)
+		return ingress.KYCNone, err
+	}
+
+	// Check to see if the trader has verified using Kyber in the last 24
+	// hours
+	if timestamp != "" {
+		unix, err := strconv.ParseInt(timestamp, 10, 64)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				return ingress.KYCNone, nil
-			}
 			return ingress.KYCNone, err
 		}
-
-		if kyberUID == "" {
-			return ingress.KYCNone, err
-		}
-
-		// Check to see if the trader has verified using Kyber in the last 24
-		// hours
-		if timestamp != "" {
-			unix, err := strconv.ParseInt(timestamp, 10, 64)
-			if err != nil {
-				return ingress.KYCNone, err
-			}
-			if time.Unix(unix, 0).After(time.Now().AddDate(0, 0, -1)) {
-				return ingress.KYCKyber, nil
-			}
+		if time.Unix(unix, 0).After(time.Now().AddDate(0, 0, -1)) {
+			return ingress.KYCKyber, nil
 		}
 	}
 

@@ -32,14 +32,12 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	KYCType  int    `json:"kycType"`
-	KyberUID string `json:"kyberUID"`
+	Verified bool `json:"verified"`
 }
 
 type verificationRequest struct {
 	Address  string `json:"address"`
 	KyberUID string `json:"kyberUID"`
-	KYCType  int    `json:"kycType"`
 }
 
 // Kyber request and response types
@@ -285,31 +283,18 @@ func LoginHandler(loginAdapter LoginAdapter, kyberID string) http.HandlerFunc {
 		}
 
 		// Store address in database if it does not already exist
-		kyberUID, _, err := loginAdapter.GetLogin(data.Address)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				if err := loginAdapter.PostLogin(data.Address, data.Referrer); err != nil {
-					errString := fmt.Sprintf("cannot store login address: %v", err)
-					log.Println(errString)
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte(errString))
-					raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
-						"trader": data.Address,
-					})
-					return
-				}
-			} else {
-				errString := fmt.Sprintf("cannot retrieve login information: %v", err)
-				log.Println(errString)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(errString))
-				raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
-					"trader": data.Address,
-				})
-				return
-			}
+		if err := loginAdapter.PostLogin(data.Address, data.Referrer); err != nil {
+			errString := fmt.Sprintf("cannot store login address: %v", err)
+			log.Println(errString)
+			w.WriteHeader(http.StatusInternalServerError)z
+			w.Write([]byte(errString))
+			raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
+				"trader": data.Address,
+			})
+			return
 		}
 
+		// Check if the trader is verified
 		verification, err := traderVerified(loginAdapter, kyberID, data.Address, "")
 		if err != nil {
 			errString := fmt.Sprintf("cannot check trader verification: %v", err)
@@ -323,8 +308,7 @@ func LoginHandler(loginAdapter LoginAdapter, kyberID string) http.HandlerFunc {
 		}
 
 		response := loginResponse{
-			KYCType:  verification,
-			KyberUID: kyberUID,
+			Verified: verification != ingress.KYCNone,
 		}
 		respBytes, err := json.Marshal(response)
 		if err != nil {

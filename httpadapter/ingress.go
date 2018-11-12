@@ -83,8 +83,6 @@ type GetAuthorizeAdapter interface {
 }
 
 type KYCAdapter interface {
-	GetTrader(address string) (string, error)
-	PostTrader(string) error
 }
 
 type LoginAdapter interface {
@@ -245,14 +243,6 @@ func (adapter *ingressAdapter) PostAuthorizedAddress(addr, signature string) err
 
 func (adapter *ingressAdapter) GetAuthorizedAddress(addr string) (string, error) {
 	return adapter.SelectAuthorizedAddress(addr)
-}
-
-func (adapter *ingressAdapter) GetTrader(address string) (string, error) {
-	return adapter.SelectTrader(address)
-}
-
-func (adapter *ingressAdapter) PostTrader(address string) error {
-	return adapter.InsertTrader(address)
 }
 
 func (adapter *ingressAdapter) GetLogin(address string) (string, string, error) {

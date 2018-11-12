@@ -85,9 +85,8 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 	limiter := rate.NewLimiter(3, 20)
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter, approvedTraders, kyberID))).Methods("POST")
-	r.HandleFunc("/kyber", rateLimit(limiter, KyberKYCHandler(ingressAdapter, kyberSecret))).Methods("POST")
 	r.HandleFunc("/login", rateLimit(limiter, LoginHandler(ingressAdapter, kyberID))).Methods("POST")
-	r.HandleFunc("/verify", rateLimit(limiter, VerificationHandler(ingressAdapter, kyberID))).Methods("POST")
+	r.HandleFunc("/kyber", rateLimit(limiter, KyberKYCHandler(ingressAdapter, kyberID, kyberSecret))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
@@ -164,8 +163,62 @@ func OpenOrderHandler(ingressAdapter IngressAdapter, approvedTraders []string, k
 	}
 }
 
+// LoginHandler handles trader login requests (potentially prior to KYC
+// verification)
+func LoginHandler(loginAdapter LoginAdapter, kyberID string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Decode POST request data
+		decoder := json.NewDecoder(r.Body)
+		var data loginRequest
+		err := decoder.Decode(&data)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(fmt.Sprintf("cannot decode data: %v", err)))
+			return
+		}
+
+		// Store address in database if it does not already exist
+		if err := loginAdapter.PostLogin(data.Address, data.Referrer); err != nil {
+			errString := fmt.Sprintf("cannot store login address: %v", err)
+			log.Println(errString)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(errString))
+			raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
+				"trader": data.Address,
+			})
+			return
+		}
+
+		// Check if the trader is verified
+		verification, err := traderVerified(loginAdapter, kyberID, data.Address, "")
+		if err != nil {
+			errString := fmt.Sprintf("cannot check trader verification: %v", err)
+			log.Println(errString)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(errString))
+			raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
+				"trader": data.Address,
+			})
+			return
+		}
+
+		response := loginResponse{
+			Verified: verification != ingress.KYCNone,
+		}
+		respBytes, err := json.Marshal(response)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("cannot marshal login response: %v", err)))
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(respBytes)
+	}
+}
+
 // KyberKYCHandler handles all Kyber authorization requests
-func KyberKYCHandler(kycAdapter KYCAdapter, kyberSecret string) http.HandlerFunc {
+func KyberKYCHandler(loginAdapter LoginAdapter, kyberID, kyberSecret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Decode POST request data
 		decoder := json.NewDecoder(r.Body)
@@ -250,105 +303,20 @@ func KyberKYCHandler(kycAdapter KYCAdapter, kyberSecret string) http.HandlerFunc
 			return
 		}
 
-		for i := 0; i < len(userData.Addresses); i++ {
-			if err := kycAdapter.PostTrader(userData.Addresses[i]); err != nil {
-				errString := fmt.Sprintf("cannot store trader address: %v", err)
-				log.Println(errString)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(errString))
-				raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
-					"trader": data.Address,
-				})
-				return
-			}
+		_, err = traderVerified(loginAdapter, kyberID, data.Address, string(userData.UID))
+		if err != nil {
+			errString := fmt.Sprintf("cannot check trader verification: %v", err)
+			log.Println(errString)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(errString))
+			raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
+				"trader": data.Address,
+			})
+			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Write(userBytes)
-	}
-}
-
-// LoginHandler handles trader login requests (potentially prior to KYC
-// verification)
-func LoginHandler(loginAdapter LoginAdapter, kyberID string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Decode POST request data
-		decoder := json.NewDecoder(r.Body)
-		var data loginRequest
-		err := decoder.Decode(&data)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("cannot decode data: %v", err)))
-			return
-		}
-
-		// Store address in database if it does not already exist
-		if err := loginAdapter.PostLogin(data.Address, data.Referrer); err != nil {
-			errString := fmt.Sprintf("cannot store login address: %v", err)
-			log.Println(errString)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(errString))
-			raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
-				"trader": data.Address,
-			})
-			return
-		}
-
-		// Check if the trader is verified
-		verification, err := traderVerified(loginAdapter, kyberID, data.Address, "")
-		if err != nil {
-			errString := fmt.Sprintf("cannot check trader verification: %v", err)
-			log.Println(errString)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(errString))
-			raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
-				"trader": data.Address,
-			})
-			return
-		}
-
-		response := loginResponse{
-			Verified: verification != ingress.KYCNone,
-		}
-		respBytes, err := json.Marshal(response)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("cannot marshal login response: %v", err)))
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		w.Write(respBytes)
-	}
-}
-
-// VerificationHandler handles trader KYC verification requests (after KYC
-// verification)
-func VerificationHandler(loginAdapter LoginAdapter, kyberID string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Decode POST request data
-		decoder := json.NewDecoder(r.Body)
-		var data verificationRequest
-		err := decoder.Decode(&data)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("cannot decode data: %v", err)))
-			return
-		}
-
-		_, err = traderVerified(loginAdapter, kyberID, data.Address, data.KyberUID)
-		if err != nil {
-			errString := fmt.Sprintf("cannot check trader verification: %v", err)
-			log.Println(errString)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(errString))
-			raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
-				"trader": data.Address,
-			})
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
 	}
 }
 

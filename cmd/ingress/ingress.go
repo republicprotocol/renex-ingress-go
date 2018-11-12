@@ -99,10 +99,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot connect to the database: %v", err)
 	}
-	kycer, err := ingress.NewKYCer(dbParam)
-	if err != nil {
-		log.Fatalf("cannot connect to the database: %v", err)
-	}
 	loginer, err := ingress.NewLoginer(dbParam)
 	if err != nil {
 		log.Fatalf("cannot connect to the database: %v", err)
@@ -127,7 +123,7 @@ func main() {
 	swarmer := swarm.NewSwarmer(swarmClient, store.SwarmMultiAddressStore(), alphaNum, &crypter)
 
 	orderbookClient := grpc.NewOrderbookClient()
-	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &contractBinder, swarmer, orderbookClient, 4*time.Second, swapper, kycer, loginer)
+	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &contractBinder, swarmer, orderbookClient, 4*time.Second, swapper, loginer)
 	ingressAdapter := httpadapter.NewIngressAdapter(ingresser)
 
 	go func() {

@@ -84,8 +84,8 @@ const (
 func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, kyberID, kyberSecret string) http.Handler {
 	limiter := rate.NewLimiter(3, 20)
 	r := mux.NewRouter().StrictSlash(true)
-	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter, approvedTraders, kyberID))).Methods("POST")
-	r.HandleFunc("/login", rateLimit(limiter, LoginHandler(ingressAdapter, kyberID))).Methods("POST")
+	r.HandleFunc("/orders", rateLimit(limiter, OpenOrderHandler(ingressAdapter, approvedTraders, kyberID, kyberSecret))).Methods("POST")
+	r.HandleFunc("/login", rateLimit(limiter, LoginHandler(ingressAdapter, kyberID, kyberSecret))).Methods("POST")
 	r.HandleFunc("/kyber", rateLimit(limiter, KyberKYCHandler(ingressAdapter, kyberID, kyberSecret))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
@@ -106,7 +106,7 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 }
 
 // OpenOrderHandler handles all HTTP open order requests
-func OpenOrderHandler(ingressAdapter IngressAdapter, approvedTraders []string, kyberID string) http.HandlerFunc {
+func OpenOrderHandler(ingressAdapter IngressAdapter, approvedTraders []string, kyberID, kyberSecret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		openOrderRequest := OpenOrderRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&openOrderRequest); err != nil {
@@ -118,7 +118,7 @@ func OpenOrderHandler(ingressAdapter IngressAdapter, approvedTraders []string, k
 		// If the trader has not been manually approved (e.g. Lotan traders),
 		// check their verification status.
 		if !traderApproved(openOrderRequest.Address, approvedTraders) {
-			verification, err := traderVerified(ingressAdapter, kyberID, openOrderRequest.Address, "")
+			verification, err := traderVerified(ingressAdapter, kyberID, kyberSecret, openOrderRequest.Address, "")
 			if err != nil {
 				errString := fmt.Sprintf("cannot check trader verification: %v", err)
 				log.Println(errString)
@@ -163,9 +163,8 @@ func OpenOrderHandler(ingressAdapter IngressAdapter, approvedTraders []string, k
 	}
 }
 
-// LoginHandler handles trader login requests (potentially prior to KYC
-// verification)
-func LoginHandler(loginAdapter LoginAdapter, kyberID string) http.HandlerFunc {
+// LoginHandler handles trader login requests
+func LoginHandler(loginAdapter LoginAdapter, kyberID, kyberSecret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Decode POST request data
 		decoder := json.NewDecoder(r.Body)
@@ -190,7 +189,7 @@ func LoginHandler(loginAdapter LoginAdapter, kyberID string) http.HandlerFunc {
 		}
 
 		// Check if the trader is verified
-		verification, err := traderVerified(loginAdapter, kyberID, data.Address, "")
+		verification, err := traderVerified(loginAdapter, kyberID, kyberSecret, data.Address, "")
 		if err != nil {
 			errString := fmt.Sprintf("cannot check trader verification: %v", err)
 			log.Println(errString)
@@ -303,7 +302,7 @@ func KyberKYCHandler(loginAdapter LoginAdapter, kyberID, kyberSecret string) htt
 			return
 		}
 
-		_, err = traderVerified(loginAdapter, kyberID, data.Address, string(userData.UID))
+		_, err = traderVerified(loginAdapter, kyberID, kyberSecret, data.Address, string(userData.UID))
 		if err != nil {
 			errString := fmt.Sprintf("cannot check trader verification: %v", err)
 			log.Println(errString)
@@ -482,7 +481,7 @@ func RecoveryHandler(h http.Handler) http.Handler {
 	})
 }
 
-func traderVerified(loginAdapter LoginAdapter, kyberID, address, kyberUID string) (int, error) {
+func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address, kyberUID string) (int, error) {
 	if address[:2] != "0x" {
 		address = "0x" + address
 	}
@@ -529,7 +528,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, address, kyberUID string
 	// If user has not verified recently, retrieve access token for interacting
 	// with Kyber API
 	urlString := "https://kyber.network/oauth/token"
-	resp, err := http.PostForm(urlString, url.Values{"grant_type": {"client_credentials"}, "client_id": {kyberID}})
+	resp, err := http.PostForm(urlString, url.Values{"grant_type": {"client_credentials"}, "client_id": {kyberID}, "client_secret": {kyberSecret}})
 	if err != nil {
 		return ingress.KYCNone, err // TODO: Add context to these errors
 	}

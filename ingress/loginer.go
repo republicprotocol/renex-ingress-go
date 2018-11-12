@@ -33,20 +33,25 @@ func NewLoginer(databaseURL string) (Loginer, error) {
 }
 
 func (loginer *loginer) SelectLogin(address string) (string, string, error) {
-	var kyberUID sql.NullString
-	var timestamp string
-	if err := loginer.QueryRow("SELECT kyc_kyber, last_verified_at FROM traders WHERE address=$1", strings.ToLower(address)).Scan(&kyberUID, &timestamp); err != nil {
+	var sqlKyberUID sql.NullString
+	var sqlTimestamp sql.NullString
+	if err := loginer.QueryRow("SELECT kyc_kyber, last_verified_at FROM traders WHERE address=$1", strings.ToLower(address)).Scan(&sqlKyberUID, &sqlTimestamp); err != nil {
 		return "", "", err
 	}
-	if kyberUID.Valid {
-		return kyberUID.String, timestamp, nil
+	var kyberUID string
+	var timestamp string
+	if sqlKyberUID.Valid {
+		kyberUID = sqlKyberUID.String
 	}
-	return "", timestamp, nil
+	if sqlTimestamp.Valid {
+		timestamp = sqlTimestamp.String
+	}
+	return kyberUID, timestamp, nil
 }
 
 func (loginer *loginer) InsertLogin(address, referrer string) error {
 	timestamp := time.Now().Unix()
-	_, err := loginer.Exec("INSERT INTO traders (address, referrer, referral_code, created_at, last_verified_at) VALUES ($1, $2, $3, $4, $4)", strings.ToLower(address), strings.ToLower(referrer), uuid.NewV4().String(), timestamp)
+	_, err := loginer.Exec("INSERT INTO traders (address, referrer, referral_code, created_at) VALUES ($1, $2, $3, $4)", strings.ToLower(address), strings.ToLower(referrer), uuid.NewV4().String(), timestamp)
 	return err
 }
 

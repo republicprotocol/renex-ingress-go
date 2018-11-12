@@ -543,14 +543,20 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, address, kyberUID string
 			return ingress.KYCNone, err
 		}
 
-		// Check to see if the trader has verified using Kyber in the last 24
-		// hours
-		unix, err := strconv.ParseInt(timestamp, 10, 64)
-		if err != nil {
+		if kyberUID == "" {
 			return ingress.KYCNone, err
 		}
-		if time.Unix(unix, 0).After(time.Now().AddDate(0, 0, -1)) {
-			return ingress.KYCKyber, nil
+
+		// Check to see if the trader has verified using Kyber in the last 24
+		// hours
+		if timestamp != "" {
+			unix, err := strconv.ParseInt(timestamp, 10, 64)
+			if err != nil {
+				return ingress.KYCNone, err
+			}
+			if time.Unix(unix, 0).After(time.Now().AddDate(0, 0, -1)) {
+				return ingress.KYCKyber, nil
+			}
 		}
 	}
 

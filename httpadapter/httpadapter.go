@@ -237,6 +237,11 @@ func KyberKYCHandler(loginAdapter LoginAdapter, kyberID, kyberSecret string) htt
 		// Forward updated request data to Kyber
 		url := "https://kyber.network/oauth/token"
 		postRequest, err := http.NewRequest("POST", url, bytes.NewBuffer(byteArray))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("cannot construct new request: %v", err)))
+			return
+		}
 		postRequest.Header.Set("Content-Type", "application/json")
 
 		client := &http.Client{}
@@ -528,8 +533,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 	}
 
 	// Retrieve information for trader with uID
-	urlString = "https://kyber.network/api/authorized_users"
-	resp, err = http.PostForm(urlString, url.Values{"access_token": {tokenResp.AccessToken}, "uid": {fmt.Sprintf("%v", kyberUID)}})
+	resp, err = http.Get("https://kyber.network/api/authorized_users?access_token=" + tokenResp.AccessToken + "&uid=" + fmt.Sprintf("%v", kyberUID))
 	if err != nil {
 		return ingress.KYCNone, fmt.Errorf("cannot send user information to kyber: %v", err)
 	}

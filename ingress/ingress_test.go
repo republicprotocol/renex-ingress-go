@@ -502,14 +502,14 @@ func (swapper *mockSwapper) InsertSwapDetails(orderID string, swapDetails string
 type mockLoginer struct {
 }
 
-func (Loginer *mockLoginer) SelectLogin(address string) (string, string, error) {
-	return "", "", nil
+func (Loginer *mockLoginer) SelectLogin(address string) (int64, string, error) {
+	return 0, "", nil
 }
 
 func (Loginer *mockLoginer) InsertLogin(address, referrer string) error {
 	return nil
 }
 
-func (Loginer *mockLoginer) UpdateLogin(address, uID string, kycType int) error {
+func (Loginer *mockLoginer) UpdateLogin(address string, kyberUID int64, kycType int) error {
 	return nil
 }

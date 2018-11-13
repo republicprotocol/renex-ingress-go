@@ -21,11 +21,6 @@ import (
 	"golang.org/x/time/rate"
 )
 
-type kyberRequest struct {
-	Address string            `json:"address"`
-	Request clientAuthRequest `json:"request"`
-}
-
 type loginRequest struct {
 	Address  string `json:"address"`
 	Referrer string `json:"referrer"`
@@ -35,9 +30,9 @@ type loginResponse struct {
 	Verified bool `json:"verified"`
 }
 
-type verificationRequest struct {
-	Address  string `json:"address"`
-	KyberUID string `json:"kyberUID"`
+type kyberRequest struct {
+	Address string            `json:"address"`
+	Request clientAuthRequest `json:"request"`
 }
 
 // Kyber request and response types

@@ -477,11 +477,11 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 	}
 	verified, err := loginAdapter.WyreVerified(address)
 	if err != nil {
-		return ingress.KYCNone, err
+		return ingress.KYCNone, fmt.Errorf("cannot check wyre verification: %v", err)
 	}
 	if verified {
 		if err := loginAdapter.PostVerification(address, 0, ingress.KYCWyre); err != nil {
-			return ingress.KYCNone, err
+			return ingress.KYCNone, fmt.Errorf("cannot update wyre verification information in database: %v", err)
 		}
 		return ingress.KYCWyre, nil
 	}
@@ -493,11 +493,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 		if err == sql.ErrNoRows {
 			return ingress.KYCNone, nil
 		}
-		return ingress.KYCNone, err
-	}
-
-	if kyberUID == 0 {
-		return ingress.KYCNone, err
+		return ingress.KYCNone, fmt.Errorf("cannot get verification information from database: %v", err)
 	}
 
 	// Check to see if the trader has verified using Kyber in the last 24
@@ -505,7 +501,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 	if timestamp != "" {
 		unix, err := strconv.ParseInt(timestamp, 10, 64)
 		if err != nil {
-			return ingress.KYCNone, err
+			return ingress.KYCNone, fmt.Errorf("cannot parse timestamp: %v", err)
 		}
 		if time.Unix(unix, 0).After(time.Now().AddDate(0, 0, -1)) {
 			return ingress.KYCKyber, nil
@@ -517,36 +513,36 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 	urlString := "https://kyber.network/oauth/token"
 	resp, err := http.PostForm(urlString, url.Values{"grant_type": {"client_credentials"}, "client_id": {kyberID}, "client_secret": {kyberSecret}})
 	if err != nil {
-		return ingress.KYCNone, err // TODO: Add context to these errors
+		return ingress.KYCNone, fmt.Errorf("cannot send information to kyber: %v", err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return ingress.KYCNone, err
+		return ingress.KYCNone, fmt.Errorf("cannot read information from kyber: %v", err)
 	}
 
 	var tokenResp tokenResponse
 	if err := json.Unmarshal(bodyBytes, &tokenResp); err != nil {
-		return ingress.KYCNone, err
+		return ingress.KYCNone, fmt.Errorf("cannot unmarshal kyber access token data: %v", err)
 	}
 
 	// Retrieve information for trader with uID
 	urlString = "https://kyber.network/api/authorized_users"
 	resp, err = http.PostForm(urlString, url.Values{"access_token": {tokenResp.AccessToken}, "uid": {fmt.Sprintf("%v", kyberUID)}})
 	if err != nil {
-		return ingress.KYCNone, err
+		return ingress.KYCNone, fmt.Errorf("cannot send user information to kyber: %v", err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return ingress.KYCNone, err
+		return ingress.KYCNone, fmt.Errorf("cannot read user information from kyber: %v", err)
 	}
 
 	var usersResp usersResponse
 	if err := json.Unmarshal(bodyBytes, &usersResp); err != nil {
-		return ingress.KYCNone, err
+		return ingress.KYCNone, fmt.Errorf("cannot unmarshal authorized kyber users: %v", err)
 	}
 
 	// Submit verification if the selected address is still verified with the
@@ -555,7 +551,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 		for _, addr := range usersResp.Users[0].Addresses {
 			if addr == address {
 				if err := loginAdapter.PostVerification(address, kyberUID, ingress.KYCKyber); err != nil {
-					return ingress.KYCNone, err
+					return ingress.KYCNone, fmt.Errorf("cannot update kyber verification information in database: %v", err)
 				}
 				return ingress.KYCKyber, nil
 			}

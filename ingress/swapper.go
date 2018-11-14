@@ -75,7 +75,7 @@ func (swapper *swapper) InsertSwapDetails(orderID string, swapDetails string) er
 
 func (swapper *swapper) SelectAuthorizedAddress(kycAddress string) (string, error) {
 	var authorizedAddress string
-	if err := swapper.QueryRow("SELECT atom_address FROM auth_addresses WHERE address = $1", kycAddress).Scan(&authorizedAddress); err != nil {
+	if err := swapper.QueryRow("SELECT atom_address FROM auth_addresses WHERE address = $1", strings.ToLower(kycAddress)).Scan(&authorizedAddress); err != nil {
 		return "", err
 	}
 	if authorizedAddress == "" {

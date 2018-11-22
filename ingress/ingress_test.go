@@ -49,7 +49,7 @@ var _ = Describe("Ingress", func() {
 		swarmer := mockSwarmer{}
 		orderbookClient := mockOrderbookClient{}
 
-		ingress = NewIngress(ecdsaKey, contract, renExContract, &swarmer, &orderbookClient, time.Millisecond, &mockSwapper{}, &mockKYCer{})
+		ingress = NewIngress(ecdsaKey, contract, renExContract, &swarmer, &orderbookClient, time.Millisecond, &mockSwapper{}, &mockLoginer{})
 		errChSync = ingress.Sync(done)
 		errChProcess = ingress.ProcessRequests(done)
 
@@ -499,13 +499,17 @@ func (swapper *mockSwapper) InsertSwapDetails(orderID string, swapDetails string
 	return nil
 }
 
-type mockKYCer struct {
+type mockLoginer struct {
 }
 
-func (kycer *mockKYCer) SelectTrader(address string) (string, error) {
-	return "", nil
+func (Loginer *mockLoginer) SelectLogin(address string) (int64, string, error) {
+	return 0, "", nil
 }
 
-func (kycer *mockKYCer) InsertTrader(address string) error {
+func (Loginer *mockLoginer) InsertLogin(address, referrer string) error {
+	return nil
+}
+
+func (Loginer *mockLoginer) UpdateLogin(address string, kyberUID int64, kycType int) error {
 	return nil
 }

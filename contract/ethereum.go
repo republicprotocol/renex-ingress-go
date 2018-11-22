@@ -11,11 +11,11 @@ import (
 type Conn struct {
 	RawClient *ethrpc.Client
 	Client    *ethclient.Client
-	Config    Config
+	Config    RenExConfig
 }
 
 // Connect to a URI.
-func Connect(config Config) (Conn, error) {
+func Connect(config RenExConfig) (Conn, error) {
 	if config.URI == "" {
 		switch config.Network {
 		case NetworkMainnet:

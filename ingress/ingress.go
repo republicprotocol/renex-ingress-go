@@ -101,8 +101,8 @@ type Ingress interface {
 	// Swapper interface implements atomic swapper network functions.
 	Swapper
 
-	// KYCer interface implements KYC database interaction functions.
-	KYCer
+	// Loginer interface implements login database interaction functions.
+	Loginer
 }
 
 type ingress struct {
@@ -119,20 +119,20 @@ type ingress struct {
 
 	queueRequests chan Request
 	Swapper
-	KYCer
+	Loginer
 }
 
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper, kycer KYCer) Ingress {
+func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper, loginer Loginer) Ingress {
 	ingress := &ingress{
 		ecdsaKey:          ecdsaKey,
 		contract:          contract,
 		renExContract:     renExContract,
 		swarmer:           swarmer,
 		Swapper:           swapper,
-		KYCer:             kycer,
+		Loginer:           loginer,
 		orderbookClient:   orderbookClient,
 		epochPollInterval: epochPollInterval,
 
@@ -552,8 +552,8 @@ func (ingress *ingress) verifyOrderFragmentMapping(orderFragmentMapping OrderFra
 	}
 
 	if len(orderFragmentMapping) == 0 || len(orderFragmentMapping) > len(pods) {
-		for _, j  := range orderFragmentMapping{
-			for _, fragment := range j{
+		for _, j := range orderFragmentMapping {
+			for _, fragment := range j {
 				log.Println("epoch depth =", fragment.EpochDepth)
 			}
 		}

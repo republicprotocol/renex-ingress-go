@@ -52,8 +52,6 @@ var ErrUnauthorized = errors.New("unauthorized address")
 // OrderFragmentMapping to the Darknodes in the network.
 type OpenOrderAdapter interface {
 	OpenOrder(traderIn string, orderFragmentMappings OrderFragmentMappings) ([65]byte, error)
-	WyreVerified(traderIn string) (bool, error)
-	GetTrader(address string) (string, error)
 }
 
 type ApproveWithdrawalAdapter interface {
@@ -83,8 +81,15 @@ type PostAuthorizeAdapter interface {
 type GetAuthorizeAdapter interface {
 	GetAuthorizedAddress(string) (string, error)
 }
+
 type KYCAdapter interface {
-	PostTrader(string) error
+}
+
+type LoginAdapter interface {
+	GetLogin(address string) (int64, string, error)
+	PostLogin(address, referrer string) error
+	PostVerification(address string, kyberUID int64, kycType int) error
+	WyreVerified(traderIn string) (bool, error)
 }
 
 // An IngressAdapter implements the OpenOrderAdapter and the
@@ -99,6 +104,7 @@ type IngressAdapter interface {
 	PostAuthorizeAdapter
 	GetAuthorizeAdapter
 	KYCAdapter
+	LoginAdapter
 }
 type ingressAdapter struct {
 	ingress.Ingress
@@ -239,12 +245,16 @@ func (adapter *ingressAdapter) GetAuthorizedAddress(addr string) (string, error)
 	return adapter.SelectAuthorizedAddress(addr)
 }
 
-func (adapter *ingressAdapter) GetTrader(address string) (string, error) {
-	return adapter.SelectTrader(address)
+func (adapter *ingressAdapter) GetLogin(address string) (int64, string, error) {
+	return adapter.SelectLogin(address)
 }
 
-func (adapter *ingressAdapter) PostTrader(address string) error {
-	return adapter.InsertTrader(address)
+func (adapter *ingressAdapter) PostLogin(address, referrer string) error {
+	return adapter.InsertLogin(address, referrer)
+}
+
+func (adapter *ingressAdapter) PostVerification(address string, kyberUID int64, kycType int) error {
+	return adapter.UpdateLogin(address, kyberUID, kycType)
 }
 
 func (adapter *ingressAdapter) IsAuthorized(orderID string, address string) error {

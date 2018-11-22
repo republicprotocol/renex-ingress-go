@@ -28,24 +28,6 @@ import (
 	"github.com/republicprotocol/republic-go/swarm"
 )
 
-type config struct {
-	Ethereum                contract.Config         `json:"republic"`
-	RenExEthereum           renExContract.Config    `json:"renex"`
-	BootstrapMultiAddresses identity.MultiAddresses `json:"bootstrapMultiAddresses"`
-}
-
-// Manually approved traders (e.g. Lotan traders)
-// TODO: Use different list for each network to reduce list size
-var approvedTraders = []string{
-	"fe45ab17919759cfa2ce35215ead5ca4d1fc73c7",
-	"3a5E0B1158Ca9Ce861A80C3049D347a3f1825DB0",
-	"26215Cbd7eCd6c13e74b014Fe6acD95dbDA2422E",
-	"0da229B2C0F57a2cFC54DEf6fa3650A9c4d511ee",
-	"513167dd7C2B1110e4Ec212E79c430eE72efeCf2",
-	"117f2b4a0e602413b4dc7c1ec9643adb08bbabd8",
-	"6e7ac12794773bea133825fea7dc8d721f2834c5",
-}
-
 func init() {
 	sentryDSN := os.Getenv("SENTRY_DSN")
 	if sentryDSN == "" {
@@ -77,6 +59,7 @@ func main() {
 	keystoreParam := fmt.Sprintf("env/%v/%v.keystore.json", networkParam, os.Getenv("DYNO"))
 	keystorePassphraseParam := os.Getenv("KEYSTORE_PASSPHRASE")
 	dbParam := os.Getenv("DATABASE_URL")
+	kyberID := os.Getenv("KYBER_ID")
 	kyberSecret := os.Getenv("KYBER_SECRET")
 
 	config, err := loadConfig(configParam)
@@ -94,7 +77,7 @@ func main() {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
 
-	conn, err := contract.Connect(config.Ethereum)
+	conn, err := contract.Connect(config.RepublicEthereum)
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)
 	}
@@ -116,7 +99,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot connect to the database: %v", err)
 	}
-	kycer, err := ingress.NewKYCer(dbParam)
+	loginer, err := ingress.NewLoginer(dbParam)
 	if err != nil {
 		log.Fatalf("cannot connect to the database: %v", err)
 	}
@@ -140,7 +123,7 @@ func main() {
 	swarmer := swarm.NewSwarmer(swarmClient, store.SwarmMultiAddressStore(), alphaNum, &crypter)
 
 	orderbookClient := grpc.NewOrderbookClient()
-	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &contractBinder, swarmer, orderbookClient, 4*time.Second, swapper, kycer)
+	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &contractBinder, swarmer, orderbookClient, 4*time.Second, swapper, loginer)
 	ingressAdapter := httpadapter.NewIngressAdapter(ingresser)
 
 	go func() {
@@ -184,7 +167,7 @@ func main() {
 	log.Printf("address %v", multiAddr)
 	log.Printf("ethereum %v", auth.From.Hex())
 	log.Printf("listening at 0.0.0.0:%v...", os.Getenv("PORT"))
-	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), httpadapter.NewIngressServer(ingressAdapter, approvedTraders, kyberSecret)); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", os.Getenv("PORT")), httpadapter.NewIngressServer(ingressAdapter, config.ApprovedTraders, kyberID, kyberSecret)); err != nil {
 		log.Fatalf("error listening and serving: %v", err)
 	}
 }
@@ -206,15 +189,15 @@ func getMultiaddress(keystore crypto.Keystore, port string) (identity.MultiAddre
 	return ingressMultiaddress, nil
 }
 
-func loadConfig(configFile string) (config, error) {
+func loadConfig(configFile string) (renExContract.Config, error) {
 	file, err := os.Open(configFile)
 	if err != nil {
-		return config{}, err
+		return renExContract.Config{}, err
 	}
 	defer file.Close()
-	c := config{}
+	c := renExContract.Config{}
 	if err := json.NewDecoder(file).Decode(&c); err != nil {
-		return config{}, err
+		return renExContract.Config{}, err
 	}
 	return c, nil
 }

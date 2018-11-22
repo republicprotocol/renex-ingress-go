@@ -1,5 +1,10 @@
 package contract
 
+import (
+	republicContract "github.com/republicprotocol/republic-go/contract"
+	"github.com/republicprotocol/republic-go/identity"
+)
+
 // Network is used to represent a Republic Protocol network.
 type Network string
 
@@ -14,9 +19,16 @@ const (
 	NetworkLocal Network = "local"
 )
 
-// Config defines the different settings for connecting to Ethereum on
-// different Republic Protocol networks.
 type Config struct {
+	RepublicEthereum        republicContract.Config `json:"republic"`
+	RenExEthereum           RenExConfig             `json:"renex"`
+	BootstrapMultiAddresses identity.MultiAddresses `json:"bootstrapMultiAddresses"`
+	ApprovedTraders         []string                `json:"approvedTraders"`
+}
+
+// RenExConfig defines the different settings for connecting to Ethereum on
+// different Republic Protocol networks.
+type RenExConfig struct {
 	Network                    Network `json:"network"`
 	URI                        string  `json:"uri"`
 	RenExBrokerVerifierAddress string  `json:"renExBrokerVerifier"`

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -66,6 +67,10 @@ func (adapter *weakAdapter) PostTrader(string) error {
 	return nil
 }
 
+func (adapter *weakAdapter) GetRewards(address string) (map[string]*big.Int, error) {
+	return nil, nil
+}
+
 func (adapter *weakAdapter) GetLogin(string) (int64, string, error) {
 	return 0, "", nil
 }
@@ -123,6 +128,10 @@ func (adapter *errAdapter) GetTrader(string) (string, error) {
 
 func (adapter *errAdapter) PostTrader(string) error {
 	return errors.New("cannot post trader")
+}
+
+func (adapter *errAdapter) GetRewards(address string) (map[string]*big.Int, error) {
+	return nil, errors.New("cannot get rewards")
 }
 
 func (adapter *errAdapter) GetLogin(string) (int64, string, error) {

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/big"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -20,6 +21,10 @@ import (
 	"github.com/rs/cors"
 	"golang.org/x/time/rate"
 )
+
+type rewardsResponse struct {
+	Rewards map[string]*big.Int `json:"rewards"`
+}
 
 type loginRequest struct {
 	Address  string `json:"address"`
@@ -89,6 +94,7 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 	r.HandleFunc("/authorized/{address}", rateLimit(limiter, GetAuthorizedHandler(ingressAdapter))).Methods("GET")
 	r.HandleFunc("/address/{orderID}", rateLimit(limiter, GetAddressHandler(ingressAdapter))).Methods("GET")
 	r.HandleFunc("/swap/{orderID}", rateLimit(limiter, GetSwapHandler(ingressAdapter))).Methods("GET")
+	r.HandleFunc("/rewards/{address}", rateLimit(limiter, GetRewardsHandler(ingressAdapter))).Methods("GET")
 	r.Use(RecoveryHandler)
 
 	handler := cors.New(cors.Options{
@@ -460,6 +466,31 @@ func PostSwapHandler(postSwapAdapter PostSwapAdapter) http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
+	}
+}
+
+// GetRewardsHandler handles all HTTP get rewards requests
+func GetRewardsHandler(getRewardsAdapter GetRewardsAdapter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		address := params["address"]
+		rewards, err := getRewardsAdapter.GetRewards(address)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(fmt.Sprintf("failed to fetch rewards: %v", err)))
+			return
+		}
+		response := &rewardsResponse{
+			rewards,
+		}
+		responseBytes, err := json.Marshal(response)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("cannot marshal rewards response: %v", err)))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write(responseBytes)
 	}
 }
 

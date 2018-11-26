@@ -101,8 +101,11 @@ type Ingress interface {
 	// Swapper interface implements atomic swapper network functions.
 	Swapper
 
-	// Loginer interface implements login database interaction functions.
+	// Loginer interface implements traders database interaction functions.
 	Loginer
+
+	// Rewarder interface implements rewards database interaction functions.
+	Rewarder
 }
 
 type ingress struct {
@@ -120,12 +123,13 @@ type ingress struct {
 	queueRequests chan Request
 	Swapper
 	Loginer
+	Rewarder
 }
 
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper, loginer Loginer) Ingress {
+func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper, loginer Loginer, rewarder Rewarder) Ingress {
 	ingress := &ingress{
 		ecdsaKey:          ecdsaKey,
 		contract:          contract,

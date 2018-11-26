@@ -1,16 +1,22 @@
 package httpadapter
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
+	renex "github.com/republicprotocol/renex-sdk-go"
+	"github.com/republicprotocol/republic-go/order"
 )
 
 // ErrInvalidSignatureLength is returned when a signature does not have the
@@ -82,6 +88,10 @@ type GetAuthorizeAdapter interface {
 	GetAuthorizedAddress(string) (string, error)
 }
 
+type GetRewardsAdapter interface {
+	GetRewards(string) (map[string]*big.Int, error)
+}
+
 type KYCAdapter interface {
 }
 
@@ -103,6 +113,7 @@ type IngressAdapter interface {
 	PostSwapAdapter
 	PostAuthorizeAdapter
 	GetAuthorizeAdapter
+	GetRewardsAdapter
 	KYCAdapter
 	LoginAdapter
 }
@@ -243,6 +254,74 @@ func (adapter *ingressAdapter) PostAuthorizedAddress(addr, signature string) err
 
 func (adapter *ingressAdapter) GetAuthorizedAddress(addr string) (string, error) {
 	return adapter.SelectAuthorizedAddress(addr)
+}
+
+func (adapter *ingressAdapter) GetRewards(address string) (map[string]*big.Int, error) {
+	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+	ren, err := renex.NewRenExWithPrivKey("mainnet", privKey)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate amount trader should receive for orders they have opened
+	rewards, err := adapter.getRewards(ren, address, big.NewInt(20)) // TODO: Confirm divisor values
+	if err != nil {
+		return nil, err
+	}
+	// TODO: Only get rewards after timestamp?
+
+	// Calculate amount trader should receive for orders opened by referred
+	// traders
+	referrents, err := adapter.SelectReferrents(address)
+	if err != nil {
+		return nil, err
+	}
+	for _, referrent := range referrents {
+		referralRewards, err := adapter.getRewards(ren, referrent, big.NewInt(5))
+		if err != nil {
+			return nil, err
+		}
+		for key, value := range referralRewards {
+			rewards[key] = new(big.Int).Add(rewards[key], value)
+		}
+	}
+
+	return rewards, nil
+}
+
+func (adapter *ingressAdapter) getRewards(ren renex.RenEx, address string, divisor *big.Int) (map[string]*big.Int, error) {
+	rewards := make(map[string]*big.Int)
+	orders, err := ren.Orderbook.ListOrdersByTrader(address)
+	if err != nil {
+		return nil, err
+	}
+	for _, orderID := range orders {
+		settled, err := ren.Settled(orderID)
+		if err != nil {
+			return nil, err
+		}
+		if !settled {
+			continue
+		}
+		orderMatch, err := ren.MatchDetails(orderID)
+		if err != nil {
+			return nil, err
+		}
+		var token string
+		var newReward *big.Int
+		if orderMatch.OrderIsBuy {
+			token = order.Token(orderMatch.PriorityToken).String()
+			newReward = new(big.Int).Div(orderMatch.PriorityFee, divisor)
+		} else {
+			token = order.Token(orderMatch.SecondaryToken).String()
+			newReward = new(big.Int).Div(orderMatch.SecondaryFee, divisor)
+		}
+		rewards[token] = new(big.Int).Add(rewards[token], newReward)
+	}
+	return rewards, nil
 }
 
 func (adapter *ingressAdapter) GetLogin(address string) (int64, string, error) {

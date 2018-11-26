@@ -103,6 +103,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot connect to the database: %v", err)
 	}
+	rewarder, err := ingress.NewRewarder(dbParam)
+	if err != nil {
+		log.Fatalf("cannot connect to the database: %v", err)
+	}
 
 	// New database for persistent storage
 	store, err := leveldb.NewStore(path.Join(os.Getenv("HOME"), "data"), 72*time.Hour, 24*time.Hour)
@@ -123,7 +127,7 @@ func main() {
 	swarmer := swarm.NewSwarmer(swarmClient, store.SwarmMultiAddressStore(), alphaNum, &crypter)
 
 	orderbookClient := grpc.NewOrderbookClient()
-	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &contractBinder, swarmer, orderbookClient, 4*time.Second, swapper, loginer)
+	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &contractBinder, swarmer, orderbookClient, 4*time.Second, swapper, loginer, rewarder)
 	ingressAdapter := httpadapter.NewIngressAdapter(ingresser)
 
 	go func() {

@@ -295,6 +295,25 @@
 
 [[projects]]
   branch = "nightly"
+  digest = "1:78c25ce6307f12046f6e40fe0f9437e36c849e6becc42ad40ad5bda4da8cd463"
+  name = "github.com/republicprotocol/renex-sdk-go"
+  packages = [
+    ".",
+    "adapter/bindings",
+    "adapter/client",
+    "adapter/funds",
+    "adapter/leveldb",
+    "adapter/orderbook",
+    "adapter/store",
+    "adapter/trader",
+    "core/funds",
+    "core/orderbook",
+  ]
+  pruneopts = "T"
+  revision = "c25908fdac501fb53d936ac24f40bf6b6d3fffdc"
+
+[[projects]]
+  branch = "nightly"
   digest = "1:1d529724345100992b36828cb6b2b19a7d285e260cb45f13e3f6b4175308dc2d"
   name = "github.com/republicprotocol/republic-go"
   packages = [
@@ -555,6 +574,7 @@
     "github.com/lib/pq",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
+    "github.com/republicprotocol/renex-sdk-go",
     "github.com/republicprotocol/republic-go/contract",
     "github.com/republicprotocol/republic-go/crypto",
     "github.com/republicprotocol/republic-go/dispatch",

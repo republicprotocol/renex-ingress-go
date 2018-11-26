@@ -50,6 +50,12 @@ func (loginer *loginer) SelectLogin(address string) (int64, string, error) {
 }
 
 func (loginer *loginer) InsertLogin(address, referrer string) error {
+	if err := loginer.QueryRow("SELECT * FROM traders WHERE referrer=$1", strings.ToLower(referrer)).Scan(nil); err != nil {
+		if err != sql.ErrNoRows {
+			return err
+		}
+		referrer = "" // User has input a non-existent referral code so we do not store it
+	}
 	timestamp := time.Now().Unix()
 	_, err := loginer.Exec("INSERT INTO traders (address, referrer, referral_code, created_at) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING", strings.ToLower(address), strings.ToLower(referrer), uuid.NewV4().String(), timestamp)
 	return err

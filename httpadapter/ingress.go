@@ -284,8 +284,12 @@ func (adapter *ingressAdapter) GetRewards(address string) (map[string]*big.Int, 
 		if err != nil {
 			return nil, err
 		}
-		for key, value := range referralRewards {
-			rewards[key] = new(big.Int).Add(rewards[key], value)
+		for token, amount := range referralRewards {
+			if _, ok := rewards[token]; ok {
+				rewards[token] = new(big.Int).Add(rewards[token], amount)
+			} else {
+				rewards[token] = amount
+			}
 		}
 	}
 

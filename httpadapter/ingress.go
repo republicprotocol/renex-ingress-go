@@ -319,7 +319,11 @@ func (adapter *ingressAdapter) getRewards(ren renex.RenEx, address string, divis
 			token = order.Token(orderMatch.SecondaryToken).String()
 			newReward = new(big.Int).Div(orderMatch.SecondaryFee, divisor)
 		}
-		rewards[token] = new(big.Int).Add(rewards[token], newReward)
+		if _, ok := rewards[token]; ok {
+			rewards[token] = new(big.Int).Add(rewards[token], newReward)
+		} else {
+			rewards[token] = newReward
+		}
 	}
 	return rewards, nil
 }

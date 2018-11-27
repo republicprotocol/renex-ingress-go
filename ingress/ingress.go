@@ -137,6 +137,7 @@ func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract
 		swarmer:           swarmer,
 		Swapper:           swapper,
 		Loginer:           loginer,
+		Rewarder:          rewarder,
 		orderbookClient:   orderbookClient,
 		epochPollInterval: epochPollInterval,
 

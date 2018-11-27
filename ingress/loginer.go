@@ -50,7 +50,8 @@ func (loginer *loginer) SelectLogin(address string) (int64, string, error) {
 }
 
 func (loginer *loginer) InsertLogin(address, referrer string) error {
-	if err := loginer.QueryRow("SELECT * FROM traders WHERE referrer=$1", strings.ToLower(referrer)).Scan(nil); err != nil {
+	var tmp sql.NullString
+	if err := loginer.QueryRow("SELECT address FROM traders WHERE referrer=$1", strings.ToLower(referrer)).Scan(tmp); err != nil {
 		if err != sql.ErrNoRows {
 			return err
 		}

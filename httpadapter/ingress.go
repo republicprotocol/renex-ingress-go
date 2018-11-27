@@ -261,7 +261,7 @@ func (adapter *ingressAdapter) GetRewards(address string) (map[string]*big.Int, 
 	if err != nil {
 		return nil, err
 	}
-	ren, err := renex.NewRenExWithPrivKey("mainnet", privKey)
+	ren, err := renex.NewRenExWithPrivKey("testnet", privKey) // TODO: Use mainnet
 	if err != nil {
 		return nil, err
 	}

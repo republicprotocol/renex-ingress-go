@@ -1,9 +1,6 @@
 package httpadapter
 
 import (
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
@@ -13,9 +10,11 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
+	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
 	renex "github.com/republicprotocol/renex-sdk-go"
+	"github.com/republicprotocol/republic-go/contract"
+	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/order"
 )
 
@@ -52,7 +51,7 @@ var ErrInvalidPodHashLength = errors.New("invalid pod hash length")
 // not store any OrderFragments.
 var ErrEmptyOrderFragmentMapping = errors.New("empty order fragment mapping")
 
-var ErrUnauthorized = errors.New("unauthorized address")
+var ErrUnauthorizedAddress = errors.New("unauthorized address")
 
 // An OpenOrderAdapter can be used to open an order.Order by sending an
 // OrderFragmentMapping to the Darknodes in the network.
@@ -80,16 +79,17 @@ type PostSwapAdapter interface {
 	PostSwap(PostSwapInfo, string) error
 }
 
-type PostAuthorizeAdapter interface {
-	PostAuthorizedAddress(string, string) error
-}
-
 type GetAuthorizeAdapter interface {
 	GetAuthorizedAddress(string) (string, error)
 }
 
-type GetRewardsAdapter interface {
+type PostAuthorizeAdapter interface {
+	PostAuthorizedAddress(string, string) error
+}
+
+type RewardsAdapter interface {
 	GetRewards(string) (map[string]*big.Int, error)
+	PostRewards(map[string]*big.Int, PostRewardsInfo, string) error
 }
 
 type KYCAdapter interface {
@@ -113,19 +113,23 @@ type IngressAdapter interface {
 	PostSwapAdapter
 	PostAuthorizeAdapter
 	GetAuthorizeAdapter
-	GetRewardsAdapter
+	RewardsAdapter
 	KYCAdapter
 	LoginAdapter
 }
 type ingressAdapter struct {
 	ingress.Ingress
+	Network  contract.Network
+	Keystore crypto.Keystore
 }
 
 // NewIngressAdapter returns an IngressAdapter that marshals and unmarshals
 // requests before forwarding the request to an Ingress service.
-func NewIngressAdapter(ingress ingress.Ingress) IngressAdapter {
+func NewIngressAdapter(ingress ingress.Ingress, network contract.Network, keystore crypto.Keystore) IngressAdapter {
 	return &ingressAdapter{
-		Ingress: ingress,
+		Ingress:  ingress,
+		Network:  network,
+		Keystore: keystore,
 	}
 }
 
@@ -179,17 +183,17 @@ func (adapter *ingressAdapter) PostAddress(info PostAddressInfo, signature strin
 	if err != nil {
 		return err
 	}
-	hash := crypto.Keccak256(infoBytes)
+	hash := ethCrypto.Keccak256(infoBytes)
 	sigBytes, err := UnmarshalSignature(signature)
 	if err != nil {
 		return err
 	}
 
-	publicKey, err := crypto.SigToPub(hash, sigBytes[:])
+	publicKey, err := ethCrypto.SigToPub(hash, sigBytes[:])
 	if err != nil {
 		return err
 	}
-	address := crypto.PubkeyToAddress(*publicKey)
+	address := ethCrypto.PubkeyToAddress(*publicKey)
 	if err := adapter.IsAuthorized(info.OrderID, address.String()); err != nil {
 		return err
 	}
@@ -205,21 +209,25 @@ func (adapter *ingressAdapter) PostSwap(info PostSwapInfo, signature string) err
 	if err != nil {
 		return err
 	}
-	hash := crypto.Keccak256(swapBytes)
+	hash := ethCrypto.Keccak256(swapBytes)
 	sigBytes, err := UnmarshalSignature(signature)
 	if err != nil {
 		return err
 	}
 
-	publicKey, err := crypto.SigToPub(hash, sigBytes[:])
+	publicKey, err := ethCrypto.SigToPub(hash, sigBytes[:])
 	if err != nil {
 		return err
 	}
-	address := crypto.PubkeyToAddress(*publicKey)
+	address := ethCrypto.PubkeyToAddress(*publicKey)
 	if err := adapter.IsAuthorized(info.OrderID, address.String()); err != nil {
 		return err
 	}
 	return adapter.InsertSwapDetails(info.OrderID, info.Swap)
+}
+
+func (adapter *ingressAdapter) GetAuthorizedAddress(addr string) (string, error) {
+	return adapter.SelectAuthorizedAddress(addr)
 }
 
 func (adapter *ingressAdapter) PostAuthorizedAddress(addr, signature string) error {
@@ -228,18 +236,18 @@ func (adapter *ingressAdapter) PostAuthorizedAddress(addr, signature string) err
 	message := append([]byte("RenEx: authorize: "), address.Bytes()...)
 	signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
 
-	hash := crypto.Keccak256(signatureData)
+	hash := ethCrypto.Keccak256(signatureData)
 	sigBytes, err := UnmarshalSignature(signature)
 	if err != nil {
 		return err
 	}
 
-	publicKey, err := crypto.SigToPub(hash, sigBytes[:])
+	publicKey, err := ethCrypto.SigToPub(hash, sigBytes[:])
 	if err != nil {
 		return err
 	}
 
-	kycAddress := crypto.PubkeyToAddress(*publicKey)
+	kycAddress := ethCrypto.PubkeyToAddress(*publicKey)
 
 	// TODO: Removed for test purposes
 	// verified, err := traderVerified(adapter, kycAddress.String())
@@ -252,16 +260,8 @@ func (adapter *ingressAdapter) PostAuthorizedAddress(addr, signature string) err
 	return adapter.InsertAuthorizedAddress(kycAddress.String(), addr)
 }
 
-func (adapter *ingressAdapter) GetAuthorizedAddress(addr string) (string, error) {
-	return adapter.SelectAuthorizedAddress(addr)
-}
-
 func (adapter *ingressAdapter) GetRewards(address string) (map[string]*big.Int, error) {
-	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		return nil, err
-	}
-	ren, err := renex.NewRenExWithPrivKey("testnet", privKey) // TODO: Use mainnet
+	ren, err := renex.NewRenExWithPrivKey(string(adapter.Network), adapter.Keystore.EcdsaKey.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +271,6 @@ func (adapter *ingressAdapter) GetRewards(address string) (map[string]*big.Int, 
 	if err != nil {
 		return nil, err
 	}
-	// TODO: Only get rewards after timestamp?
 
 	// Calculate amount trader should receive for orders opened by referred
 	// traders
@@ -303,16 +302,12 @@ func (adapter *ingressAdapter) getRewards(ren renex.RenEx, address string, divis
 		return nil, err
 	}
 	for _, orderID := range orders {
-		settled, err := ren.Settled(orderID)
-		if err != nil {
-			return nil, err
-		}
-		if !settled {
-			continue
-		}
 		orderMatch, err := ren.MatchDetails(orderID)
 		if err != nil {
 			return nil, err
+		}
+		if !orderMatch.Settled {
+			continue
 		}
 		var token string
 		var newReward *big.Int
@@ -330,6 +325,44 @@ func (adapter *ingressAdapter) getRewards(ren renex.RenEx, address string, divis
 		}
 	}
 	return rewards, nil
+}
+
+func (adapter *ingressAdapter) PostRewards(rewards map[string]*big.Int, info PostRewardsInfo, signature string) error {
+	rewardsBytes, err := json.Marshal(info)
+	if err != nil {
+		return err
+	}
+	hash := ethCrypto.Keccak256(rewardsBytes)
+	sigBytes, err := UnmarshalSignature(signature)
+	if err != nil {
+		return err
+	}
+
+	publicKey, err := ethCrypto.SigToPub(hash, sigBytes[:])
+	if err != nil {
+		return err
+	}
+	address := ethCrypto.PubkeyToAddress(*publicKey)
+	if info.Address != address.String() {
+		return ErrUnauthorizedAddress
+	}
+
+	if err := adapter.InsertWithdrawalDetails(rewards, hash, info.Address, info.Token, info.Amount, info.Nonce); err != nil {
+		return err
+	}
+
+	// Process withdrawal
+	ren, err := renex.NewRenExWithPrivKey(string(adapter.Network), adapter.Keystore.EcdsaKey.PrivateKey)
+	if err != nil {
+		return err
+	}
+
+	if err := ren.Transfer(info.Address, info.Token, info.Amount); err != nil { // TODO: Subtract transaction fee from amount
+		// TODO: Remove from table
+		return err
+	}
+
+	return nil
 }
 
 func (adapter *ingressAdapter) GetLogin(address string) (int64, string, error) {
@@ -360,12 +393,12 @@ func (adapter *ingressAdapter) IsAuthorized(orderID string, address string) erro
 	atomAddr, err := adapter.GetAuthorizedAddress(addr.String())
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return ErrUnauthorized
+			return ErrUnauthorizedAddress
 		}
 		return err
 	}
 	if address != atomAddr {
-		return ErrUnauthorized
+		return ErrUnauthorizedAddress
 	}
 	return nil
 }

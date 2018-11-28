@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/republicprotocol/renex-ingress-go/ingress"
@@ -92,6 +93,18 @@ type PostAuthorizeRequest struct {
 type GetAuthorizeResponse struct {
 	AtomAddress string `json:"atomAddress"`
 	Status      bool   `json:"status"`
+}
+
+type PostRewardsInfo struct {
+	Address string      `json:"address"`
+	Token   order.Token `json:"token"`
+	Amount  *big.Int    `json:"amount"`
+	Nonce   int64       `json:"nonce"`
+}
+
+type PostRewardsRequest struct {
+	Info      PostRewardsInfo `json:"info"`
+	Signature string          `json:"signature"`
 }
 
 func MarshalSignature(signatureIn [65]byte) string {

@@ -91,6 +91,7 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/authorize", rateLimit(limiter, PostAuthorizeHandler(ingressAdapter))).Methods("POST")
+	r.HandleFunc("/rewards", rateLimit(limiter, PostRewardsHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/authorized/{address}", rateLimit(limiter, GetAuthorizedHandler(ingressAdapter))).Methods("GET")
 	r.HandleFunc("/address/{orderID}", rateLimit(limiter, GetAddressHandler(ingressAdapter))).Methods("GET")
 	r.HandleFunc("/swap/{orderID}", rateLimit(limiter, GetSwapHandler(ingressAdapter))).Methods("GET")
@@ -423,7 +424,7 @@ func PostAuthorizeHandler(postAuthorizeAdapter PostAuthorizeAdapter) http.Handle
 			return
 		}
 		if err := postAuthorizeAdapter.PostAuthorizedAddress(postAuthorizeRequest.AtomAddress, postAuthorizeRequest.Signature); err != nil {
-			if err == ErrUnauthorized {
+			if err == ErrUnauthorizedAddress {
 				w.WriteHeader(http.StatusUnauthorized)
 				w.Write([]byte(fmt.Sprintf("Signing address is not KYC'd: %v", err)))
 			}
@@ -470,11 +471,11 @@ func PostSwapHandler(postSwapAdapter PostSwapAdapter) http.HandlerFunc {
 }
 
 // GetRewardsHandler handles all HTTP get rewards requests
-func GetRewardsHandler(getRewardsAdapter GetRewardsAdapter) http.HandlerFunc {
+func GetRewardsHandler(rewardsAdapter RewardsAdapter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		address := params["address"]
-		rewards, err := getRewardsAdapter.GetRewards(address)
+		rewards, err := rewardsAdapter.GetRewards(address)
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(fmt.Sprintf("failed to fetch rewards: %v", err)))
@@ -491,6 +492,32 @@ func GetRewardsHandler(getRewardsAdapter GetRewardsAdapter) http.HandlerFunc {
 		}
 		w.WriteHeader(http.StatusOK)
 		w.Write(responseBytes)
+	}
+}
+
+// PostRewardsHandler handles all HTTP withdraw requests
+func PostRewardsHandler(rewardsAdapter RewardsAdapter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		postRewardsRequest := PostRewardsRequest{}
+		if err := json.NewDecoder(r.Body).Decode(&postRewardsRequest); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(fmt.Sprintf("cannot decode json into approve rewards withdrawal request: %v", err)))
+			return
+		}
+
+		rewards, err := rewardsAdapter.GetRewards(postRewardsRequest.Info.Address)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(fmt.Sprintf("failed to fetch rewards: %v", err)))
+			return
+		}
+
+		if err := rewardsAdapter.PostRewards(rewards, postRewardsRequest.Info, postRewardsRequest.Signature); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("failed to save the swap datails: %v", err)))
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
 	}
 }
 

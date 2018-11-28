@@ -2,13 +2,21 @@ package ingress
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
+	"math/big"
 	"strings"
+	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/republicprotocol/republic-go/order"
 )
+
+var ErrInsufficientFunds = errors.New("insufficient funds")
 
 type Rewarder interface {
 	SelectReferrents(address string) ([]string, error)
+	InsertWithdrawalDetails(rewards map[string]*big.Int, hash []byte, address string, token order.Token, amount *big.Int, nonce int64) error
 }
 
 type rewarder struct {
@@ -42,17 +50,57 @@ func (rewarder *rewarder) SelectReferrents(address string) ([]string, error) {
 	var referrents []string
 	for rows.Next() {
 		var sqlReferrent sql.NullString
-		err = rows.Scan(&sqlReferrent)
-		if err != nil {
+		if err := rows.Scan(&sqlReferrent); err != nil {
 			return nil, err
 		}
 		if sqlReferrent.Valid {
 			referrents = append(referrents, sqlReferrent.String)
 		}
 	}
-	err = rows.Err()
-	if err != nil {
+	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 	return referrents, nil
+}
+
+func (rewarder *rewarder) InsertWithdrawalDetails(rewards map[string]*big.Int, hash []byte, address string, token order.Token, amount *big.Int, nonce int64) error {
+	// Ensure user has sufficient rewards
+	tokenSymbol := token.String()
+	rows, err := rewarder.Query("SELECT amount FROM withdrawals WHERE address=$1 AND token=$2", address, token)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var sqlAmount *big.Int
+		if err := rows.Scan(&sqlAmount); err != nil {
+			return err
+		}
+		rewards[tokenSymbol] = new(big.Int).Add(rewards[tokenSymbol], sqlAmount)
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	if amount.Cmp(rewards[tokenSymbol]) != 1 {
+		return ErrInsufficientFunds
+	}
+
+	// Ensure nonce is valid
+	var sqlNonce sql.NullInt64
+	if err := rewarder.QueryRow("SELECT nonce FROM withdrawals ORDER BY nonce DESC WHERE address=$1", strings.ToLower(address)).Scan(&nonce); err != nil {
+		if err != sql.ErrNoRows {
+			return err
+		}
+	}
+	var previousNonce int64
+	if sqlNonce.Valid {
+		previousNonce = sqlNonce.Int64
+	}
+	if previousNonce >= nonce {
+		return fmt.Errorf("cannot insert reward details: outdated nonce %v", nonce)
+	}
+
+	timestamp := time.Now().Unix()
+	_, err = rewarder.Exec("INSERT INTO withdrawals (hash, address, token, amount, timestamp, nonce) VALUES ($1, $2, $3, $4, $5, $6)", hash, strings.ToLower(address), tokenSymbol, amount, timestamp, nonce)
+	return err
 }

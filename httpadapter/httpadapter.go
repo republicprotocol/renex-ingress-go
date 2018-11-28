@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -625,6 +626,10 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 }
 
 func traderApproved(address string, approvedTraders []string) bool {
+	disableKYC := os.Getenv("DISABLE_KYC") == "1"
+	if disableKYC {
+		return true
+	}
 	if address[:2] == "0x" {
 		address = address[2:]
 	}

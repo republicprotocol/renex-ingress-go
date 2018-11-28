@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethCrypto "github.com/ethereum/go-ethereum/crypto"
@@ -345,7 +346,7 @@ func (adapter *ingressAdapter) PostRewards(rewards map[string]*big.Int, info Pos
 		return err
 	}
 	address := ethCrypto.PubkeyToAddress(*publicKey)
-	if info.Address != address.String() {
+	if info.Address != strings.ToLower(address.String()) {
 		return ErrUnauthorizedAddress
 	}
 

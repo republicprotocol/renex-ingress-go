@@ -520,3 +520,7 @@ type mockRewarder struct {
 func (rewarder *mockRewarder) SelectReferrents(address string) ([]string, error) {
 	return nil, nil
 }
+
+func (rewarder *mockRewarder) InsertWithdrawalDetails(rewards map[string]*big.Int, hash []byte, address string, token order.Token, amount *big.Int, nonce int64) error {
+	return nil
+}

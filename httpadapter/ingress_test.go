@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"math/big"
 	mathRand "math/rand"
 	"sync/atomic"
 	"time"
@@ -12,8 +13,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/republicprotocol/renex-ingress-go/httpadapter"
-
 	"github.com/republicprotocol/renex-ingress-go/ingress"
+	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/order"
 )
@@ -164,7 +165,7 @@ var _ = Describe("Ingress Adapter", func() {
 
 		It("should forward data to the ingress if the signature and mapping are well formed", func() {
 			ingress := &mockIngress{&mockSwapper{}, &mockLoginer{}, &mockRewarder{}, 0, 0}
-			ingressAdapter := NewIngressAdapter(ingress)
+			ingressAdapter := NewIngressAdapter(ingress, contract.NetworkTestnet, crypto.Keystore{})
 
 			traderBytes := [20]byte{}
 			_, err := rand.Read(traderBytes[:])
@@ -183,7 +184,7 @@ var _ = Describe("Ingress Adapter", func() {
 
 		It("should not call ingress.OpenOrder if trader is invalid", func() {
 			ingress := &mockIngress{&mockSwapper{}, &mockLoginer{}, &mockRewarder{}, 0, 0}
-			ingressAdapter := NewIngressAdapter(ingress)
+			ingressAdapter := NewIngressAdapter(ingress, contract.NetworkTestnet, crypto.Keystore{})
 			traderBytes := []byte{}
 			copy(traderBytes[:], "incorrect trader")
 			orderFragmentMappingIn := OrderFragmentMapping{}
@@ -199,7 +200,7 @@ var _ = Describe("Ingress Adapter", func() {
 
 		It("should not call ingress.OpenOrder if pool hash is invalid", func() {
 			ingress := &mockIngress{&mockSwapper{}, &mockLoginer{}, &mockRewarder{}, 0, 0}
-			ingressAdapter := NewIngressAdapter(ingress)
+			ingressAdapter := NewIngressAdapter(ingress, contract.NetworkTestnet, crypto.Keystore{})
 			traderBytes := [20]byte{}
 			_, err := rand.Read(traderBytes[:])
 			Expect(err).ShouldNot(HaveOccurred())
@@ -220,7 +221,7 @@ var _ = Describe("Ingress Adapter", func() {
 
 		It("should forward data to the ingress if the signature and mapping are well formed", func() {
 			ingress := &mockIngress{&mockSwapper{}, &mockLoginer{}, &mockRewarder{}, 0, 0}
-			ingressAdapter := NewIngressAdapter(ingress)
+			ingressAdapter := NewIngressAdapter(ingress, contract.NetworkTestnet, crypto.Keystore{})
 
 			traderBytes := [20]byte{}
 			_, err := rand.Read(traderBytes[:])
@@ -234,7 +235,7 @@ var _ = Describe("Ingress Adapter", func() {
 
 		It("should not call ingress.ApproveWithdrawal if trader is invalid", func() {
 			ingress := &mockIngress{&mockSwapper{}, &mockLoginer{}, &mockRewarder{}, 0, 0}
-			ingressAdapter := NewIngressAdapter(ingress)
+			ingressAdapter := NewIngressAdapter(ingress, contract.NetworkTestnet, crypto.Keystore{})
 			traderBytes := []byte{}
 			copy(traderBytes[:], "incorrect trader")
 
@@ -292,6 +293,10 @@ type mockRewarder struct {
 
 func (ingress *mockRewarder) SelectReferrents(address string) ([]string, error) {
 	return nil, nil
+}
+
+func (ingress *mockRewarder) InsertWithdrawalDetails(rewards map[string]*big.Int, hash []byte, address string, token order.Token, amount *big.Int, nonce int64) error {
+	return nil
 }
 
 type mockIngress struct {

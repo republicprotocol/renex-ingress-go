@@ -67,8 +67,12 @@ func (adapter *weakAdapter) PostTrader(string) error {
 	return nil
 }
 
-func (adapter *weakAdapter) GetRewards(address string) (map[string]*big.Int, error) {
+func (adapter *weakAdapter) GetRewards(string) (map[string]*big.Int, error) {
 	return nil, nil
+}
+
+func (adapter *weakAdapter) PostRewards(map[string]*big.Int, PostRewardsInfo, string) error {
+	return nil
 }
 
 func (adapter *weakAdapter) GetLogin(string) (int64, string, error) {
@@ -132,6 +136,10 @@ func (adapter *errAdapter) PostTrader(string) error {
 
 func (adapter *errAdapter) GetRewards(address string) (map[string]*big.Int, error) {
 	return nil, errors.New("cannot get rewards")
+}
+
+func (adapter *errAdapter) PostRewards(map[string]*big.Int, PostRewardsInfo, string) error {
+	return errors.New("cannot post rewards")
 }
 
 func (adapter *errAdapter) GetLogin(string) (int64, string, error) {

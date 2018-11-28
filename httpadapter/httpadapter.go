@@ -536,6 +536,10 @@ func RecoveryHandler(h http.Handler) http.Handler {
 }
 
 func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address string) (int, error) {
+	disableKYC := os.Getenv("DISABLE_KYC") == "1"
+	if disableKYC {
+		return ingress.KYCWyre, nil
+	}
 	if address[:2] != "0x" {
 		address = "0x" + address
 	}
@@ -626,10 +630,6 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 }
 
 func traderApproved(address string, approvedTraders []string) bool {
-	disableKYC := os.Getenv("DISABLE_KYC") == "1"
-	if disableKYC {
-		return true
-	}
 	if address[:2] == "0x" {
 		address = address[2:]
 	}

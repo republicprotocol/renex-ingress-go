@@ -76,12 +76,12 @@ func (rewarder *rewarder) InsertWithdrawalDetails(rewards map[string]*big.Int, h
 		if err := rows.Scan(&sqlAmount); err != nil {
 			return err
 		}
-		rewards[tokenSymbol] = new(big.Int).Add(rewards[tokenSymbol], sqlAmount)
+		rewards[tokenSymbol] = new(big.Int).Sub(rewards[tokenSymbol], sqlAmount)
 	}
 	if err := rows.Err(); err != nil {
 		return err
 	}
-	if amount.Cmp(rewards[tokenSymbol]) != 1 {
+	if amount.Cmp(rewards[tokenSymbol]) == 1 {
 		return ErrInsufficientFunds
 	}
 

@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/republicprotocol/renex-ingress-go/ingress"
@@ -96,10 +95,10 @@ type GetAuthorizeResponse struct {
 }
 
 type PostRewardsInfo struct {
-	Address string   `json:"address"`
-	Token   string   `json:"token"`
-	Amount  *big.Int `json:"amount"`
-	Nonce   int64    `json:"nonce"`
+	Address string `json:"address"`
+	Token   string `json:"token"`
+	Amount  string `json:"amount"`
+	Nonce   int64  `json:"nonce"`
 }
 
 type PostRewardsRequest struct {

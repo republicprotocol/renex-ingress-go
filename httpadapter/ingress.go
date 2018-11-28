@@ -53,6 +53,8 @@ var ErrEmptyOrderFragmentMapping = errors.New("empty order fragment mapping")
 
 var ErrUnauthorizedAddress = errors.New("unauthorized address")
 
+var ErrInvalidAmount = errors.New("invalid amount")
+
 // An OpenOrderAdapter can be used to open an order.Order by sending an
 // OrderFragmentMapping to the Darknodes in the network.
 type OpenOrderAdapter interface {
@@ -364,7 +366,12 @@ func (adapter *ingressAdapter) PostRewards(rewards map[string]*big.Int, info Pos
 	case "OMG":
 		token = 65538
 	}
-	if err := adapter.InsertWithdrawalDetails(rewards, hash, info.Address, token, info.Amount, info.Nonce); err != nil {
+	amount := new(big.Int)
+	amount, ok := amount.SetString(info.Amount, 10)
+	if !ok {
+		return ErrInvalidAmount
+	}
+	if err := adapter.InsertWithdrawalDetails(rewards, hash, info.Address, token, amount, info.Nonce); err != nil {
 		return err
 	}
 
@@ -374,7 +381,7 @@ func (adapter *ingressAdapter) PostRewards(rewards map[string]*big.Int, info Pos
 		return err
 	}
 
-	if err := ren.Transfer(info.Address, token, info.Amount); err != nil { // TODO: Subtract transaction fee from amount
+	if err := ren.Transfer(info.Address, token, amount); err != nil { // TODO: Subtract transaction fee from amount
 		// TODO: Remove from table
 		return err
 	}

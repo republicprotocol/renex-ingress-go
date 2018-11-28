@@ -96,10 +96,10 @@ type GetAuthorizeResponse struct {
 }
 
 type PostRewardsInfo struct {
-	Address string      `json:"address"`
-	Token   order.Token `json:"token"`
-	Amount  *big.Int    `json:"amount"`
-	Nonce   int64       `json:"nonce"`
+	Address string   `json:"address"`
+	Token   string   `json:"token"`
+	Amount  *big.Int `json:"amount"`
+	Nonce   int64    `json:"nonce"`
 }
 
 type PostRewardsRequest struct {

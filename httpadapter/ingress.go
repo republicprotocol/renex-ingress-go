@@ -347,7 +347,24 @@ func (adapter *ingressAdapter) PostRewards(rewards map[string]*big.Int, info Pos
 		return ErrUnauthorizedAddress
 	}
 
-	if err := adapter.InsertWithdrawalDetails(rewards, hash, info.Address, info.Token, info.Amount, info.Nonce); err != nil {
+	var token order.Token
+	switch info.Token {
+	case "BTC":
+		token = 0
+	case "ETH":
+		token = 1
+	case "DGX":
+		token = 256
+	case "TUSD":
+		token = 257
+	case "REN":
+		token = 65536
+	case "ZRX":
+		token = 65537
+	case "OMG":
+		token = 65538
+	}
+	if err := adapter.InsertWithdrawalDetails(rewards, hash, info.Address, token, info.Amount, info.Nonce); err != nil {
 		return err
 	}
 
@@ -357,7 +374,7 @@ func (adapter *ingressAdapter) PostRewards(rewards map[string]*big.Int, info Pos
 		return err
 	}
 
-	if err := ren.Transfer(info.Address, info.Token, info.Amount); err != nil { // TODO: Subtract transaction fee from amount
+	if err := ren.Transfer(info.Address, token, info.Amount); err != nil { // TODO: Subtract transaction fee from amount
 		// TODO: Remove from table
 		return err
 	}

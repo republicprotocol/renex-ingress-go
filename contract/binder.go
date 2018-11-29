@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	beth "github.com/republicprotocol/beth-go"
 	"github.com/republicprotocol/renex-ingress-go/contract/bindings"
 	"github.com/republicprotocol/republic-go/order"
 )
@@ -35,7 +36,6 @@ type Binder struct {
 
 	renExBrokerVerifier *bindings.RenExBrokerVerifier
 	renExSettlement     *bindings.RenExSettlement
-	erc20               *bindings.ERC20
 	orderbook           *bindings.Orderbook
 	wyre                *bindings.Wyre
 }
@@ -116,6 +116,15 @@ func (binder *Binder) GetMatchDetails(orderID order.ID) (OrderMatch, error) {
 	return binder.renExSettlement.GetMatchDetails(&bind.CallOpts{}, orderID)
 }
 
-func (binder *Binder) Transfer(opts *bind.TransactOpts, to common.Address, value *big.Int) (*types.Transaction, error) {
-	return binder.erc20.Transfer(opts, to, value)
+func (binder *Binder) Transfer(opts *bind.TransactOpts, account beth.Account, to common.Address, tokenSymbol string, value *big.Int) (*types.Transaction, error) {
+	tokenAddress, err := account.ReadAddress(tokenSymbol)
+	if err != nil {
+		return nil, err
+	}
+	erc20, err := bindings.NewCompatibleERC20(tokenAddress, bind.ContractBackend(account.EthClient()))
+	if err != nil {
+		return nil, err
+	}
+
+	return erc20.Transfer(opts, to, value)
 }

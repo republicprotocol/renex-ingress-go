@@ -18,7 +18,6 @@ import (
 	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 	beth "github.com/republicprotocol/beth-go"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
-	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/order"
 )
 
@@ -127,21 +126,15 @@ type IngressAdapter interface {
 }
 type ingressAdapter struct {
 	ingress.Ingress
-	Account  beth.Account
-	Keystore crypto.Keystore
+	Account beth.Account
 }
 
 // NewIngressAdapter returns an IngressAdapter that marshals and unmarshals
 // requests before forwarding the request to an Ingress service.
-func NewIngressAdapter(ingress ingress.Ingress, uri string, keystore crypto.Keystore) (IngressAdapter, error) {
-	account, err := beth.NewAccount(uri, keystore.EcdsaKey.PrivateKey)
-	if err != nil {
-		return nil, err
-	}
+func NewIngressAdapter(ingress ingress.Ingress, account beth.Account) (IngressAdapter, error) {
 	return &ingressAdapter{
-		Ingress:  ingress,
-		Account:  account,
-		Keystore: keystore,
+		Ingress: ingress,
+		Account: account,
 	}, nil
 }
 
@@ -377,7 +370,7 @@ func (adapter *ingressAdapter) PostRewards(rewards map[string]*big.Int, info Pos
 		}
 	} else {
 		txFunc := func(transactOpts *bind.TransactOpts) (*types.Transaction, error) {
-			return adapter.Ingress.TransferERC20(transactOpts, common.HexToAddress(info.Address), amount)
+			return adapter.Ingress.TransferERC20(transactOpts, common.HexToAddress(info.Address), info.Token, amount)
 		}
 		if err := adapter.Account.Transact(ctx, nil, txFunc, nil, 1); err != nil {
 			// TODO: Remove from table

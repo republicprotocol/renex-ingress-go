@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	beth "github.com/republicprotocol/beth-go"
 	"github.com/republicprotocol/renex-ingress-go/contract"
 	"github.com/republicprotocol/republic-go/order"
 	"github.com/republicprotocol/republic-go/registry"
@@ -32,7 +33,7 @@ type ContractBinder interface {
 }
 
 type RenExContractBinder interface {
-	Transfer(opts *bind.TransactOpts, to common.Address, value *big.Int) (*types.Transaction, error)
+	Transfer(opts *bind.TransactOpts, account beth.Account, to common.Address, tokenSymbol string, value *big.Int) (*types.Transaction, error)
 
 	GetOrderTrader(orderID [32]byte) (common.Address, error)
 

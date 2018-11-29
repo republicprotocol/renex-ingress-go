@@ -20,6 +20,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/getsentry/raven-go"
+	beth "github.com/republicprotocol/beth-go"
 	"github.com/republicprotocol/renex-ingress-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/dispatch"
@@ -108,7 +109,7 @@ type Ingress interface {
 	ListOrdersByTrader(address string) ([]order.ID, error)
 
 	// TransferERC20 is a helper function for transferring ERC20s
-	TransferERC20(transactOpts *bind.TransactOpts, address common.Address, amount *big.Int) (*types.Transaction, error)
+	TransferERC20(transactOpts *bind.TransactOpts, address common.Address, tokenSymbol string, amount *big.Int) (*types.Transaction, error)
 
 	// Swapper interface implements atomic swapper network functions.
 	Swapper
@@ -121,7 +122,8 @@ type Ingress interface {
 }
 
 type ingress struct {
-	ecdsaKey          crypto.EcdsaKey
+	Account beth.Account
+
 	contract          ContractBinder
 	renExContract     RenExContractBinder
 	swarmer           swarm.Swarmer
@@ -141,9 +143,10 @@ type ingress struct {
 // NewIngress returns an Ingress. The background services of the Ingress must
 // be started separately by calling Ingress.OpenOrderProcess and
 // Ingress.OpenOrderFragmentsProcess.
-func NewIngress(ecdsaKey crypto.EcdsaKey, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper, loginer Loginer, rewarder Rewarder) Ingress {
+func NewIngress(account beth.Account, contract ContractBinder, renExContract RenExContractBinder, swarmer swarm.Swarmer, orderbookClient orderbook.Client, epochPollInterval time.Duration, swapper Swapper, loginer Loginer, rewarder Rewarder) Ingress {
 	ingress := &ingress{
-		ecdsaKey:          ecdsaKey,
+		Account: account,
+
 		contract:          contract,
 		renExContract:     renExContract,
 		swarmer:           swarmer,
@@ -297,7 +300,7 @@ func (ingress *ingress) OpenOrder(trader [20]byte, orderID order.ID, orderFragme
 	fmt.Println("Signature data:", hex.EncodeToString(signatureData))
 	hashedSignatureData := crypto.Keccak256(signatureData)
 	fmt.Println("Hashed signature data:", hex.EncodeToString(hashedSignatureData))
-	signature, err := ingress.ecdsaKey.Sign(hashedSignatureData)
+	signature, err := ingress.Account.Sign(hashedSignatureData)
 	if err != nil {
 		return [65]byte{}, err
 	}
@@ -373,7 +376,7 @@ func (ingress *ingress) ApproveWithdrawal(trader [20]byte, tokenID uint32) ([65]
 
 	signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
 	hashedSignatureData := crypto.Keccak256(signatureData)
-	signature, err := ingress.ecdsaKey.Sign(hashedSignatureData)
+	signature, err := ingress.Account.Sign(hashedSignatureData)
 	if err != nil {
 		return [65]byte{}, err
 	}
@@ -667,6 +670,6 @@ func (ingress *ingress) ListOrdersByTrader(traderAddress string) ([]order.ID, er
 	return orderList, nil
 }
 
-func (ingress *ingress) TransferERC20(transactOpts *bind.TransactOpts, address common.Address, amount *big.Int) (*types.Transaction, error) {
-	return ingress.renExContract.Transfer(transactOpts, address, amount)
+func (ingress *ingress) TransferERC20(transactOpts *bind.TransactOpts, address common.Address, tokenSymbol string, amount *big.Int) (*types.Transaction, error) {
+	return ingress.renExContract.Transfer(transactOpts, ingress.Account, address, tokenSymbol, amount)
 }

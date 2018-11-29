@@ -15,6 +15,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/getsentry/raven-go"
+	beth "github.com/republicprotocol/beth-go"
 	renExContract "github.com/republicprotocol/renex-ingress-go/contract"
 	"github.com/republicprotocol/renex-ingress-go/httpadapter"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
@@ -126,9 +127,13 @@ func main() {
 	swarmClient := grpc.NewSwarmClient(store.SwarmMultiAddressStore(), multiAddr.Address())
 	swarmer := swarm.NewSwarmer(swarmClient, store.SwarmMultiAddressStore(), alphaNum, &crypter)
 
+	account, err := beth.NewAccount(contractConn.Config.URI, keystore.EcdsaKey.PrivateKey)
+	if err != nil {
+		log.Fatalf("cannot create beth account: %v", err)
+	}
 	orderbookClient := grpc.NewOrderbookClient()
-	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &contractBinder, swarmer, orderbookClient, 4*time.Second, swapper, loginer, rewarder)
-	ingressAdapter, err := httpadapter.NewIngressAdapter(ingresser, contractConn.Config.URI, keystore)
+	ingresser := ingress.NewIngress(account, &binder, &contractBinder, swarmer, orderbookClient, 4*time.Second, swapper, loginer, rewarder)
+	ingressAdapter, err := httpadapter.NewIngressAdapter(ingresser, account)
 	if err != nil {
 		log.Fatalf("cannot create ingress adapter: %v", err)
 	}

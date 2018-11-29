@@ -106,6 +106,6 @@ func (rewarder *rewarder) InsertWithdrawalDetails(rewards map[string]*big.Int, h
 	}
 
 	timestamp := time.Now().Unix()
-	_, err = rewarder.Exec("INSERT INTO withdrawals (hash, address, token, amount, timestamp, nonce) VALUES ($1, $2, $3, $4, $5, $6)", hash, strings.ToLower(address), tokenSymbol, amount.String(), timestamp, nonce)
+	_, err = rewarder.Exec("INSERT INTO withdrawals (hash, address, token, amount, timestamp, nonce) VALUES ($1, $2, $3, $4, $5, $6)", hash, strings.ToLower(address), token, amount.String(), timestamp, nonce)
 	return err
 }

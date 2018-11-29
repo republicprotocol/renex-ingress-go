@@ -116,10 +116,10 @@ func main() {
 	defer store.Release()
 	multiAddr.Signature, err = keystore.EcdsaKey.Sign(multiAddr.Hash())
 	if err != nil {
-		log.Fatal("cannot sign own multiAddress")
+		log.Fatalf("cannot sign own multiAddress: %v", err)
 	}
 	if err := store.SwarmMultiAddressStore().InsertMultiAddress(multiAddr); err != nil {
-		log.Fatal("cannot store own multiAddress")
+		log.Fatalf("cannot store own multiAddress: %v", err)
 	}
 
 	crypter := registry.NewCrypter(keystore, &binder, 256, time.Minute)
@@ -130,7 +130,7 @@ func main() {
 	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &contractBinder, swarmer, orderbookClient, 4*time.Second, swapper, loginer, rewarder)
 	ingressAdapter, err := httpadapter.NewIngressAdapter(ingresser, config.RenExEthereum.URI, keystore)
 	if err != nil {
-		log.Fatal("cannot create ingress adapter")
+		log.Fatalf("cannot create ingress adapter: %v", err)
 	}
 
 	go func() {

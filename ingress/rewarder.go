@@ -87,7 +87,7 @@ func (rewarder *rewarder) InsertWithdrawalDetails(rewards map[string]*big.Int, h
 
 	// Ensure nonce is valid
 	var sqlNonce sql.NullInt64
-	if err := rewarder.QueryRow("SELECT nonce FROM withdrawals ORDER BY nonce DESC WHERE address=$1", strings.ToLower(address)).Scan(&nonce); err != nil {
+	if err := rewarder.QueryRow("SELECT nonce FROM withdrawals WHERE address=$1 ORDER BY nonce DESC", strings.ToLower(address)).Scan(&nonce); err != nil {
 		if err != sql.ErrNoRows {
 			return err
 		}

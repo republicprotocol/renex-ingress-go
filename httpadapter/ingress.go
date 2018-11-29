@@ -56,6 +56,8 @@ var ErrUnauthorizedAddress = errors.New("unauthorized address")
 
 var ErrInvalidAmount = errors.New("invalid amount")
 
+var ErrUnsupportedToken = errors.New("unsupported token")
+
 // An OpenOrderAdapter can be used to open an order.Order by sending an
 // OrderFragmentMapping to the Darknodes in the network.
 type OpenOrderAdapter interface {
@@ -350,22 +352,9 @@ func (adapter *ingressAdapter) PostRewards(rewards map[string]*big.Int, info Pos
 		return ErrUnauthorizedAddress
 	}
 
-	var token order.Token
-	switch info.Token {
-	case "BTC":
-		token = 0
-	case "ETH":
-		token = 1
-	case "DGX":
-		token = 256
-	case "TUSD":
-		token = 257
-	case "REN":
-		token = 65536
-	case "ZRX":
-		token = 65537
-	case "OMG":
-		token = 65538
+	token, err := getTokenCode(info.Token)
+	if err != nil {
+		return err
 	}
 	amount := new(big.Int)
 	amount, ok := amount.SetString(info.Amount, 10)
@@ -388,6 +377,29 @@ func (adapter *ingressAdapter) PostRewards(rewards map[string]*big.Int, info Pos
 	}
 
 	return nil
+}
+
+func getTokenCode(token string) (order.Token, error) {
+	var tokenCode order.Token
+	switch token {
+	case "BTC":
+		tokenCode = order.TokenBTC
+	case "ETH":
+		tokenCode = order.TokenETH
+	case "DGX":
+		tokenCode = order.TokenDGX
+	case "TUSD":
+		tokenCode = order.TokenTUSD
+	case "REN":
+		tokenCode = order.TokenREN
+	case "ZRX":
+		tokenCode = order.TokenZRX
+	case "OMG":
+		tokenCode = order.TokenOMG
+	default:
+		return 0, ErrUnsupportedToken
+	}
+	return tokenCode, nil
 }
 
 func (adapter *ingressAdapter) GetLogin(address string) (int64, string, error) {

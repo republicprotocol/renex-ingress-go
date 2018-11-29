@@ -2,6 +2,17 @@
 
 
 [[projects]]
+  digest = "1:777f1f0fc92c6fb838ff214ef3b05160b513c262beb88fa342d7a50e797b9539"
+  name = "github.com/allegro/bigcache"
+  packages = [
+    ".",
+    "queue",
+  ]
+  pruneopts = "T"
+  revision = "f31987a23e44c5121ef8c8b2f2ea2e8ffa37b068"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   digest = "1:c1a6eac1aa52b62daff552d5bd043453a8675b7f9eee0ea924ed7b00a5a56264"
   name = "github.com/aristanetworks/goarista"
@@ -34,7 +45,7 @@
   version = "v1.7.1"
 
 [[projects]]
-  digest = "1:f08158538fb9b5acf86edbf06d0eafd13aafa3277abe534a01f0e99d394e4637"
+  digest = "1:8bf83050739ffd7f13bdc7dd281fccc40718d52eb2ce23fe7d980a3ac1f0a8b0"
   name = "github.com/ethereum/go-ethereum"
   packages = [
     ".",
@@ -72,16 +83,16 @@
     "trie",
   ]
   pruneopts = "T"
-  revision = "58632d44021bf095b43a1bb2443e6e3690a94739"
-  version = "v1.8.18"
+  revision = "dae82f098570e15d44584f0d7f350713f4774727"
+  version = "v1.8.19"
 
 [[projects]]
-  digest = "1:20e98cc6b7562b472ad307523dd105a0324793a7de09abe9453acefd51821f11"
+  digest = "1:4c183be9fd1680d917006bb4884c1ac3d00a6bd33b0d36c8439c8cbd011e5aac"
   name = "github.com/getsentry/raven-go"
   packages = ["."]
   pruneopts = "T"
-  revision = "3033899c76deb3fb6570d9c4074d00443aeab88f"
-  version = "v0.1.0"
+  revision = "f04e7487e9a6b9d9837d52743fb5f40576c56411"
+  version = "v0.1.1"
 
 [[projects]]
   digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
@@ -294,23 +305,20 @@
   version = "v0.8.0"
 
 [[projects]]
-  branch = "nightly"
-  digest = "1:d4f50500629c3ffcc0e12ff8868e3e32ac80a49e3f00a808840befcf98dbb5ab"
-  name = "github.com/republicprotocol/renex-sdk-go"
-  packages = [
-    ".",
-    "adapter/bindings",
-    "adapter/client",
-    "adapter/funds",
-    "adapter/leveldb",
-    "adapter/orderbook",
-    "adapter/store",
-    "adapter/trader",
-    "core/funds",
-    "core/orderbook",
-  ]
+  branch = "master"
+  digest = "1:2bb44ad552934f1b356396b41030db8e14369a07f326a542512c2a67a423279a"
+  name = "github.com/republicprotocol/beth-go"
+  packages = ["."]
   pruneopts = "T"
-  revision = "6967df2f9740af2bcdbe7311ff61489423a1b51f"
+  revision = "c6cabe0b3e3f9dd71eba66bc90ddb9e535d50324"
+
+[[projects]]
+  branch = "master"
+  digest = "1:9b6c22fe6fba7b56fa465cab0f33a396330421a324c6c48e405ba0885e5275e1"
+  name = "github.com/republicprotocol/renex-swapper-go"
+  packages = ["utils"]
+  pruneopts = "T"
+  revision = "a5eb9459bd40b5c8b5cd59e943239d7b66f7796d"
 
 [[projects]]
   branch = "nightly"
@@ -373,7 +381,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9afe5fafd769ebbc8ee7e6cea4606bf2fb2d2841d0571b23d23c77ab57ab96a0"
+  digest = "1:7b17050757aaa2f52fcc582125d7abaf5fc2ff273bf023da0c4f98e6f2ebed5f"
   name = "github.com/syndtr/goleveldb"
   packages = [
     "leveldb",
@@ -390,7 +398,7 @@
     "leveldb/util",
   ]
   pruneopts = "T"
-  revision = "353a9fca669c44dedb58d5a074f6d052fb0f58e0"
+  revision = "b001fa50d6b27f3f0bb175a87d0cb55426d0a0ae"
 
 [[projects]]
   branch = "master"
@@ -404,7 +412,7 @@
     "sha3",
   ]
   pruneopts = "T"
-  revision = "e657309f52e71501f9934566ac06dc5c2f7f11a1"
+  revision = "eb0de9b17e854e9b1ccd9963efafc79862359959"
 
 [[projects]]
   branch = "master"
@@ -428,14 +436,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:aa255b0a0a884e6927587009224910e4758ae91510c03a6bb06bceacc9868c69"
+  digest = "1:a41815681b9cb9d91eb5bd22009d99af713567bb20f14b2ff13765d8fd8de808"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "T"
-  revision = "62eef0e2fa9b2c385f7b2778e763486da6880d37"
+  revision = "4ed8d59d0b35e1e29334a206d1b3f38b1e5dfb31"
 
 [[projects]]
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
@@ -486,7 +494,7 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "T"
-  revision = "b5d43981345bdb2c233eb4bf3277847b48c6fdc6"
+  revision = "31ac5d88444a9e7ad18077db9a165d793ad06a2e"
 
 [[projects]]
   digest = "1:ef437b2116089e1355b910bcbfb66c90d5164c6623f37deb5b94a6973a1ddf16"
@@ -574,7 +582,8 @@
     "github.com/lib/pq",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
-    "github.com/republicprotocol/renex-sdk-go",
+    "github.com/republicprotocol/beth-go",
+    "github.com/republicprotocol/renex-swapper-go/utils",
     "github.com/republicprotocol/republic-go/contract",
     "github.com/republicprotocol/republic-go/crypto",
     "github.com/republicprotocol/republic-go/dispatch",

@@ -11,13 +11,16 @@ import (
 	"log"
 	"math/big"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/getsentry/raven-go"
-
+	"github.com/republicprotocol/renex-ingress-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/dispatch"
 	"github.com/republicprotocol/republic-go/logger"
@@ -95,8 +98,17 @@ type Ingress interface {
 
 	WyreVerified(trader [20]byte) (bool, error)
 
-	// GetOrderTrader of the given order id
-	GetOrderTrader(orderID [32]byte) (common.Address, error)
+	// OrderTrader of the given order ID
+	OrderTrader(orderID [32]byte) (common.Address, error)
+
+	// MatchDetails returns the OrderMatch for a given order ID
+	MatchDetails(orderID order.ID) (contract.OrderMatch, error)
+
+	// ListOrdersByTrader lists orders opened by the given address
+	ListOrdersByTrader(address string) ([]order.ID, error)
+
+	// TransferERC20 is a helper function for transferring ERC20s
+	TransferERC20(transactOpts *bind.TransactOpts, address common.Address, amount *big.Int) (*types.Transaction, error)
 
 	// Swapper interface implements atomic swapper network functions.
 	Swapper
@@ -601,6 +613,60 @@ func (ingress *ingress) orderParityFromOrderFragmentMappings(orderFragmentMappin
 	return order.ParityBuy
 }
 
-func (ingress *ingress) GetOrderTrader(orderID [32]byte) (common.Address, error) {
-	return ingress.renExContract.GetOrderTrader(orderID)
+func (ingress *ingress) OrderTrader(orderID [32]byte) (common.Address, error) {
+	return ingress.contract.GetOrderTrader(orderID)
+}
+
+func (ingress *ingress) MatchDetails(orderID order.ID) (contract.OrderMatch, error) {
+	return ingress.contract.GetMatchDetails(orderID)
+}
+
+func (ingress *ingress) ListOrders() ([]order.ID, []order.Status, []string, error) {
+	numOrders, err := ingress.contract.OrderCounts()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	orderCount := int(numOrders)
+	orderIDs := make([]order.ID, 0, orderCount)
+	addresses := make([]string, 0, orderCount)
+	statuses := make([]order.Status, 0, orderCount)
+
+	start := 0
+	limit := 500
+	if orderCount < limit {
+		return ingress.contract.Orders(0, orderCount)
+	}
+
+	for {
+		if orderCount-start < 0 {
+			return orderIDs, statuses, addresses, nil
+		}
+		orderIDValues, statusValues, addressValues, err := ingress.contract.Orders(start, limit)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		orderIDs = append(orderIDs, orderIDValues...)
+		addresses = append(addresses, addressValues...)
+		statuses = append(statuses, statusValues...)
+		start += limit
+	}
+}
+
+func (ingress *ingress) ListOrdersByTrader(traderAddress string) ([]order.ID, error) {
+	traderAddress = strings.ToLower(traderAddress)
+	orderIds, _, addresses, err := ingress.ListOrders()
+	if err != nil {
+		return nil, err
+	}
+	orderList := []order.ID{}
+	for i, id := range orderIds {
+		if traderAddress == strings.ToLower(addresses[i]) {
+			orderList = append(orderList, id)
+		}
+	}
+	return orderList, nil
+}
+
+func (ingress *ingress) TransferERC20(transactOpts *bind.TransactOpts, address common.Address, amount *big.Int) (*types.Transaction, error) {
+	return ingress.contract.Transfer(transactOpts, address, amount)
 }

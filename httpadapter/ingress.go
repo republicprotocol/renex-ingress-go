@@ -1,6 +1,7 @@
 package httpadapter
 
 import (
+	"context"
 	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
@@ -9,12 +10,14 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	ethCrypto "github.com/ethereum/go-ethereum/crypto"
+	beth "github.com/republicprotocol/beth-go"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
-	renex "github.com/republicprotocol/renex-sdk-go"
-	"github.com/republicprotocol/republic-go/contract"
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/order"
 )
@@ -124,18 +127,22 @@ type IngressAdapter interface {
 }
 type ingressAdapter struct {
 	ingress.Ingress
-	Network  contract.Network
+	Account  beth.Account
 	Keystore crypto.Keystore
 }
 
 // NewIngressAdapter returns an IngressAdapter that marshals and unmarshals
 // requests before forwarding the request to an Ingress service.
-func NewIngressAdapter(ingress ingress.Ingress, network contract.Network, keystore crypto.Keystore) IngressAdapter {
+func NewIngressAdapter(ingress ingress.Ingress, uri string, keystore crypto.Keystore) (IngressAdapter, error) {
+	account, err := beth.NewAccount(uri, keystore.EcdsaKey.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
 	return &ingressAdapter{
 		Ingress:  ingress,
-		Network:  network,
+		Account:  account,
 		Keystore: keystore,
-	}
+	}, nil
 }
 
 // OpenOrder implements the OpenOrderAdapter interface.
@@ -266,13 +273,8 @@ func (adapter *ingressAdapter) PostAuthorizedAddress(addr, signature string) err
 }
 
 func (adapter *ingressAdapter) GetRewards(address string) (map[string]*big.Int, error) {
-	ren, err := renex.NewRenExWithPrivKey(string(adapter.Network), adapter.Keystore.EcdsaKey.PrivateKey)
-	if err != nil {
-		return nil, err
-	}
-
 	// Calculate amount trader should receive for orders they have opened
-	rewards, err := adapter.getRewards(ren, address, big.NewInt(20)) // TODO: Confirm divisor values
+	rewards, err := adapter.getRewards(address, big.NewInt(20)) // TODO: Confirm divisor values
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +286,7 @@ func (adapter *ingressAdapter) GetRewards(address string) (map[string]*big.Int, 
 		return nil, err
 	}
 	for _, referrent := range referrents {
-		referralRewards, err := adapter.getRewards(ren, referrent, big.NewInt(5))
+		referralRewards, err := adapter.getRewards(referrent, big.NewInt(5))
 		if err != nil {
 			return nil, err
 		}
@@ -300,14 +302,14 @@ func (adapter *ingressAdapter) GetRewards(address string) (map[string]*big.Int, 
 	return rewards, nil
 }
 
-func (adapter *ingressAdapter) getRewards(ren renex.RenEx, address string, divisor *big.Int) (map[string]*big.Int, error) {
+func (adapter *ingressAdapter) getRewards(address string, divisor *big.Int) (map[string]*big.Int, error) {
 	rewards := make(map[string]*big.Int)
-	orders, err := ren.Orderbook.ListOrdersByTrader(address)
+	orders, err := adapter.ListOrdersByTrader(address)
 	if err != nil {
 		return nil, err
 	}
 	for _, orderID := range orders {
-		orderMatch, err := ren.MatchDetails(orderID)
+		orderMatch, err := adapter.MatchDetails(orderID)
 		if err != nil {
 			return nil, err
 		}
@@ -366,14 +368,21 @@ func (adapter *ingressAdapter) PostRewards(rewards map[string]*big.Int, info Pos
 	}
 
 	// Process withdrawal
-	ren, err := renex.NewRenExWithPrivKey(string(adapter.Network), adapter.Keystore.EcdsaKey.PrivateKey)
-	if err != nil {
-		return err
-	}
-
-	if err := ren.Transfer(info.Address, token, amount); err != nil { // TODO: Subtract transaction fee from amount
-		// TODO: Remove from table
-		return err
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if token == order.TokenETH {
+		if err := adapter.Account.Transfer(ctx, common.HexToAddress(info.Address), amount, 1); err != nil { // TODO: Subtract transaction fee from amount
+			// TODO: Remove from table
+			return err
+		}
+	} else {
+		txFunc := func(transactOpts *bind.TransactOpts) (*types.Transaction, error) {
+			return adapter.Ingress.TransferERC20(transactOpts, common.HexToAddress(info.Address), amount)
+		}
+		if err := adapter.Account.Transact(ctx, nil, txFunc, nil, 1); err != nil {
+			// TODO: Remove from table
+			return err
+		}
 	}
 
 	return nil
@@ -423,7 +432,7 @@ func (adapter *ingressAdapter) IsAuthorized(orderID string, address string) erro
 	if err != nil {
 		return err
 	}
-	addr, err := adapter.Ingress.GetOrderTrader(id)
+	addr, err := adapter.Ingress.OrderTrader(id)
 	if err != nil {
 		return err
 	}

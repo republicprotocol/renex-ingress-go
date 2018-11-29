@@ -128,7 +128,7 @@ func main() {
 
 	orderbookClient := grpc.NewOrderbookClient()
 	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &contractBinder, swarmer, orderbookClient, 4*time.Second, swapper, loginer, rewarder)
-	ingressAdapter := httpadapter.NewIngressAdapter(ingresser, config.RepublicEthereum.Network, keystore)
+	ingressAdapter := httpadapter.NewIngressAdapter(ingresser, config.RenExEthereum.URI, keystore)
 
 	go func() {
 		// Add bootstrap nodes in the store or load from the file.

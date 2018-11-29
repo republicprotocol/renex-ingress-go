@@ -8,8 +8,22 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/republicprotocol/renex-ingress-go/contract/bindings"
+	"github.com/republicprotocol/republic-go/order"
 )
+
+type OrderMatch struct {
+	Settled         bool
+	OrderIsBuy      bool
+	MatchedID       [32]byte
+	PriorityVolume  *big.Int
+	SecondaryVolume *big.Int
+	PriorityFee     *big.Int
+	SecondaryFee    *big.Int
+	PriorityToken   uint32
+	SecondaryToken  uint32
+}
 
 // Binder implements all methods that will communicate with the smart contracts
 type Binder struct {
@@ -20,6 +34,8 @@ type Binder struct {
 	callOpts     *bind.CallOpts
 
 	renExBrokerVerifier *bindings.RenExBrokerVerifier
+	renExSettlement     *bindings.RenExSettlement
+	erc20               *bindings.ERC20
 	orderbook           *bindings.Orderbook
 	wyre                *bindings.Wyre
 }
@@ -93,4 +109,13 @@ func (binder *Binder) balanceOf(trader common.Address) (*big.Int, error) {
 // GetOrderTrader of the given order id.
 func (binder *Binder) GetOrderTrader(orderID [32]byte) (common.Address, error) {
 	return binder.orderbook.OrderTrader(&bind.CallOpts{}, orderID)
+}
+
+// GetOrderTrader of the given order id.
+func (binder *Binder) GetMatchDetails(orderID order.ID) (OrderMatch, error) {
+	return binder.renExSettlement.GetMatchDetails(&bind.CallOpts{}, orderID)
+}
+
+func (binder *Binder) Transfer(opts *bind.TransactOpts, to common.Address, value *big.Int) (*types.Transaction, error) {
+	return binder.erc20.Transfer(opts, to, value)
 }

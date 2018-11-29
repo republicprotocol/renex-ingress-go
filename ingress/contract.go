@@ -3,7 +3,11 @@ package ingress
 import (
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/republicprotocol/renex-ingress-go/contract"
+	"github.com/republicprotocol/republic-go/order"
 	"github.com/republicprotocol/republic-go/registry"
 )
 
@@ -21,6 +25,16 @@ type ContractBinder interface {
 	Pods() ([]registry.Pod, error)
 
 	PreviousPods() ([]registry.Pod, error)
+
+	GetOrderTrader(orderID [32]byte) (common.Address, error)
+
+	GetMatchDetails(orderID order.ID) (contract.OrderMatch, error)
+
+	Orders(offset, limit int) ([]order.ID, []order.Status, []string, error)
+
+	OrderCounts() (uint64, error)
+
+	Transfer(opts *bind.TransactOpts, to common.Address, value *big.Int) (*types.Transaction, error)
 }
 
 type RenExContractBinder interface {
@@ -28,6 +42,4 @@ type RenExContractBinder interface {
 
 	// Wyre KYC
 	BalanceOf(common.Address) (*big.Int, error)
-
-	GetOrderTrader(orderID [32]byte) (common.Address, error)
 }

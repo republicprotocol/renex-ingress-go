@@ -515,7 +515,7 @@ func PostRewardsHandler(rewardsAdapter RewardsAdapter) http.HandlerFunc {
 
 		if err := rewardsAdapter.PostRewards(rewards, postRewardsRequest.Info, postRewardsRequest.Signature); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("failed to save the swap datails: %v", err)))
+			w.Write([]byte(fmt.Sprintf("failed to send rewards: %v", err)))
 			return
 		}
 		w.WriteHeader(http.StatusCreated)

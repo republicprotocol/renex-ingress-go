@@ -56,7 +56,11 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		fmt.Println(fmt.Errorf("cannot bind to RenExBrokerVerifier: %v", err))
 		return Binder{}, err
 	}
-
+	renExSettlement, err := bindings.NewRenExSettlement(common.HexToAddress(conn.Config.RenExSettlementAddress), bind.ContractBackend(conn.Client))
+	if err != nil {
+		fmt.Println(fmt.Errorf("cannot bind to RenExSettlement: %v", err))
+		return Binder{}, err
+	}
 	orderbook, err := bindings.NewOrderbook(common.HexToAddress(conn.Config.OrderbookAddress), bind.ContractBackend(conn.Client))
 	if err != nil {
 		fmt.Println(fmt.Errorf("cannot bind to Orderbook: %v", err))
@@ -76,6 +80,7 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		callOpts:     &bind.CallOpts{},
 
 		renExBrokerVerifier: renExBrokerVerifier,
+		renExSettlement:     renExSettlement,
 		orderbook:           orderbook,
 		wyre:                wyre,
 	}, nil

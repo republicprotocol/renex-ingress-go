@@ -32,6 +32,7 @@ type RenExConfig struct {
 	Network                    Network `json:"network"`
 	URI                        string  `json:"uri"`
 	RenExBrokerVerifierAddress string  `json:"renExBrokerVerifier"`
+	RenExSettlementAddress     string  `json:"renExSettlement"`
 	OrderbookAddress           string  `json:"orderbook"`
 	WyreAddress                string  `json:"wyre"`
 }

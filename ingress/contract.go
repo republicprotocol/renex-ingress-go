@@ -26,18 +26,18 @@ type ContractBinder interface {
 
 	PreviousPods() ([]registry.Pod, error)
 
+	Orders(offset, limit int) ([]order.ID, []order.Status, []string, error)
+
+	OrderCounts() (uint64, error)
+}
+
+type RenExContractBinder interface {
+	Transfer(opts *bind.TransactOpts, to common.Address, value *big.Int) (*types.Transaction, error)
+
 	GetOrderTrader(orderID [32]byte) (common.Address, error)
 
 	GetMatchDetails(orderID order.ID) (contract.OrderMatch, error)
 
-	Orders(offset, limit int) ([]order.ID, []order.Status, []string, error)
-
-	OrderCounts() (uint64, error)
-
-	Transfer(opts *bind.TransactOpts, to common.Address, value *big.Int) (*types.Transaction, error)
-}
-
-type RenExContractBinder interface {
 	GetTraderWithdrawalNonce(trader common.Address) (*big.Int, error)
 
 	// Wyre KYC

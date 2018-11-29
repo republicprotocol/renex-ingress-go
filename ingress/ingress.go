@@ -614,11 +614,11 @@ func (ingress *ingress) orderParityFromOrderFragmentMappings(orderFragmentMappin
 }
 
 func (ingress *ingress) OrderTrader(orderID [32]byte) (common.Address, error) {
-	return ingress.contract.GetOrderTrader(orderID)
+	return ingress.renExContract.GetOrderTrader(orderID)
 }
 
 func (ingress *ingress) MatchDetails(orderID order.ID) (contract.OrderMatch, error) {
-	return ingress.contract.GetMatchDetails(orderID)
+	return ingress.renExContract.GetMatchDetails(orderID)
 }
 
 func (ingress *ingress) ListOrders() ([]order.ID, []order.Status, []string, error) {
@@ -668,5 +668,5 @@ func (ingress *ingress) ListOrdersByTrader(traderAddress string) ([]order.ID, er
 }
 
 func (ingress *ingress) TransferERC20(transactOpts *bind.TransactOpts, address common.Address, amount *big.Int) (*types.Transaction, error) {
-	return ingress.contract.Transfer(transactOpts, address, amount)
+	return ingress.renExContract.Transfer(transactOpts, address, amount)
 }

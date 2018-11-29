@@ -8,6 +8,10 @@
   version = "1.8.17"
 
 [[constraint]]
+  name = "github.com/republicprotocol/beth-go"
+  branch = "master"
+
+[[constraint]]
   name = "github.com/republicprotocol/republic-go"
   branch = "nightly"
 

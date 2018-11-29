@@ -22,11 +22,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:05e21a7d7c3058ac655d1fadd968cc1268ef8c77782415227df1f3a1118a2868"
+  digest = "1:6249a43b8aca2813f1717fc170ca13fe57ac963b3493593360afa850feb612f9"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   pruneopts = "T"
-  revision = "3dcf298fed2d5fd65918dc560b3942b2aa0629e8"
+  revision = "b6c71b40a82170695049917527b460e796d33ed7"
 
 [[projects]]
   digest = "1:fed1f537c2f1269fe475a8556c393fe466641682d73ef8fd0491cd3aa1e47bad"
@@ -92,7 +92,7 @@
   packages = ["."]
   pruneopts = "T"
   revision = "f04e7487e9a6b9d9837d52743fb5f40576c56411"
-  version = "v0.1.1"
+  version = "v0.2.0"
 
 [[projects]]
   digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
@@ -306,11 +306,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2bb44ad552934f1b356396b41030db8e14369a07f326a542512c2a67a423279a"
+  digest = "1:8dfea5038a19f107c1c63edc494e01265de6933f98ffa35efe2fa4eb58d06ce6"
   name = "github.com/republicprotocol/beth-go"
   packages = ["."]
   pruneopts = "T"
-  revision = "c6cabe0b3e3f9dd71eba66bc90ddb9e535d50324"
+  revision = "46378ac3c8faa4a36850e6ee999353bd1ed1ea26"
 
 [[projects]]
   branch = "master"
@@ -432,7 +432,7 @@
     "websocket",
   ]
   pruneopts = "T"
-  revision = "adae6a3d119ae4890b46832a2e88a95adc62b8e7"
+  revision = "fae4c4e3ad76c295c3d6d259f898136b4bf833a8"
 
 [[projects]]
   branch = "master"
@@ -557,12 +557,12 @@
   revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
 
 [[projects]]
-  digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
+  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "T"
-  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
-  version = "v2.2.1"
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
+  version = "v2.2.2"
 
 [solve-meta]
   analyzer-name = "dep"

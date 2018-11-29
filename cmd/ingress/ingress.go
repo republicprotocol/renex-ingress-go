@@ -128,7 +128,7 @@ func main() {
 
 	orderbookClient := grpc.NewOrderbookClient()
 	ingresser := ingress.NewIngress(keystore.EcdsaKey, &binder, &contractBinder, swarmer, orderbookClient, 4*time.Second, swapper, loginer, rewarder)
-	ingressAdapter, err := httpadapter.NewIngressAdapter(ingresser, config.RenExEthereum.URI, keystore)
+	ingressAdapter, err := httpadapter.NewIngressAdapter(ingresser, contractConn.Config.URI, keystore)
 	if err != nil {
 		log.Fatalf("cannot create ingress adapter: %v", err)
 	}

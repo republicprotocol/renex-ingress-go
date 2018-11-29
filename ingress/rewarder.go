@@ -72,11 +72,16 @@ func (rewarder *rewarder) InsertWithdrawalDetails(rewards map[string]*big.Int, h
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var sqlAmount *big.Int
+		var sqlAmount sql.NullString
 		if err := rows.Scan(&sqlAmount); err != nil {
 			return err
 		}
-		rewards[tokenSymbol] = new(big.Int).Sub(rewards[tokenSymbol], sqlAmount)
+		if sqlAmount.Valid {
+			rowAmount, ok := new(big.Int).SetString(sqlAmount.String, 10)
+			if ok {
+				rewards[tokenSymbol] = new(big.Int).Sub(rewards[tokenSymbol], rowAmount)
+			}
+		}
 	}
 	if err := rows.Err(); err != nil {
 		return err
@@ -101,6 +106,6 @@ func (rewarder *rewarder) InsertWithdrawalDetails(rewards map[string]*big.Int, h
 	}
 
 	timestamp := time.Now().Unix()
-	_, err = rewarder.Exec("INSERT INTO withdrawals (hash, address, token, amount, timestamp, nonce) VALUES ($1, $2, $3, $4, $5, $6)", hash, strings.ToLower(address), tokenSymbol, amount, timestamp, nonce)
+	_, err = rewarder.Exec("INSERT INTO withdrawals (hash, address, token, amount, timestamp, nonce) VALUES ($1, $2, $3, $4, $5, $6)", hash, strings.ToLower(address), tokenSymbol, amount.String(), timestamp, nonce)
 	return err
 }

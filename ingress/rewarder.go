@@ -17,6 +17,7 @@ var ErrInsufficientFunds = errors.New("insufficient funds")
 type Rewarder interface {
 	SelectReferrents(address string) ([]string, error)
 	InsertWithdrawalDetails(rewards map[string]*big.Int, hash []byte, address string, token order.Token, amount *big.Int, nonce int64) error
+	DeleteWithdrawalDetails(hash []byte) error
 }
 
 type rewarder struct {
@@ -107,5 +108,10 @@ func (rewarder *rewarder) InsertWithdrawalDetails(rewards map[string]*big.Int, h
 
 	timestamp := time.Now().Unix()
 	_, err = rewarder.Exec("INSERT INTO withdrawals (hash, address, token, amount, timestamp, nonce) VALUES ($1, $2, $3, $4, $5, $6)", hash, strings.ToLower(address), token, amount.String(), timestamp, nonce)
+	return err
+}
+
+func (rewarder *rewarder) DeleteWithdrawalDetails(hash []byte) error {
+	_, err := rewarder.Exec("DELETE FROM withdrawals WHERE hash=$1", hash)
 	return err
 }

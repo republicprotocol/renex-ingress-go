@@ -365,7 +365,9 @@ func (adapter *ingressAdapter) PostRewards(rewards map[string]*big.Int, info Pos
 	defer cancel()
 	if token == order.TokenETH {
 		if err := adapter.Account.Transfer(ctx, common.HexToAddress(info.Address), amount, 1); err != nil { // TODO: Subtract transaction fee from amount
-			// TODO: Remove from table
+			if err := adapter.DeleteWithdrawalDetails(hash); err != nil {
+				return err
+			}
 			return err
 		}
 	} else {
@@ -373,7 +375,9 @@ func (adapter *ingressAdapter) PostRewards(rewards map[string]*big.Int, info Pos
 			return adapter.Ingress.TransferERC20(transactOpts, common.HexToAddress(info.Address), info.Token, amount)
 		}
 		if err := adapter.Account.Transact(ctx, nil, txFunc, nil, 1); err != nil {
-			// TODO: Remove from table
+			if err := adapter.DeleteWithdrawalDetails(hash); err != nil {
+				return err
+			}
 			return err
 		}
 	}

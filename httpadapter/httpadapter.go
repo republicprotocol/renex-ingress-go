@@ -87,6 +87,7 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/authorize", rateLimit(limiter, PostAuthorizeHandler(ingressAdapter))).Methods("POST")
+	r.HandleFunc("/kyc/{address}", rateLimit(limiter, GetKYCHandler(ingressAdapter, kyberID, kyberSecret))).Methods("GET")
 	r.HandleFunc("/authorized/{address}", rateLimit(limiter, GetAuthorizedHandler(ingressAdapter))).Methods("GET")
 	r.HandleFunc("/address/{orderID}", rateLimit(limiter, GetAddressHandler(ingressAdapter))).Methods("GET")
 	r.HandleFunc("/swap/{orderID}", rateLimit(limiter, GetSwapHandler(ingressAdapter))).Methods("GET")
@@ -461,6 +462,30 @@ func PostSwapHandler(postSwapAdapter PostSwapAdapter) http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
+	}
+}
+
+func GetKYCHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		address := params["address"]
+		kycType, err := traderVerified(ingressAdapter, kyberID, kyberSecret, address)
+		if err != nil {
+			errString := fmt.Sprintf("cannot check trader verification: %v", err)
+			log.Println(errString)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(errString))
+			raven.CaptureErrorAndWait(errors.New(errString), map[string]string{
+				"trader": address,
+			})
+			return
+		}
+		if kycType == ingress.KYCNone {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("trader is not verified"))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	}
 }
 

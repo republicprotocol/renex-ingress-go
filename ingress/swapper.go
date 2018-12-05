@@ -2,8 +2,11 @@ package ingress
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"fmt"
-	"github.com/republicprotocol/republic-go/contract"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/republicprotocol/renex-ingress-go/contract"
+	"log"
 	"strings"
 
 	_ "github.com/lib/pq"
@@ -12,13 +15,13 @@ import (
 // TABLES
 //
 // CREATE TABLE swaps (
-//     order_id         varchar NOT NULL,
+//     order_id        varchar NOT NULL,
 //     address         varchar,
-//     swap_details varchar
+//     swap_details    varchar
 // );
 
 // CREATE TABLE auth_addresses (
-//     address           varchar(42) NOT NULL,
+//     address      varchar(42) NOT NULL,
 //     atom_address varchar
 // );
 
@@ -33,12 +36,12 @@ type Swapper interface {
 
 type swapper struct {
 	*sql.DB
-	binder contract.Binder
+	settlement contract.RenExSettlement
 }
 
-func NewSwapper(databaseURL string, binder contract.Binder) (Swapper, error) {
+func NewSwapper(databaseURL string, settlement contract.RenExSettlement) (Swapper, error) {
 	db, err := sql.Open("postgres", databaseURL)
-	return &swapper{db, binder}, err
+	return &swapper{db, settlement}, err
 }
 
 func (swapper *swapper) SelectAddress(orderID string) (string, error) {
@@ -54,6 +57,12 @@ func (swapper *swapper) SelectAddress(orderID string) (string, error) {
 
 func (swapper *swapper) InsertAddress(orderID string, address string) error {
 	_, err := swapper.Exec("INSERT INTO swaps (order_id, address) VALUES ($1,$2)", orderID, address)
+	if err != nil {
+		return err
+	}
+	go func() {
+
+	}()
 	return err
 }
 
@@ -89,6 +98,29 @@ func (swapper *swapper) InsertAuthorizedAddress(kycAddress, authorizedAddress st
 	return err
 }
 
-func sync(binder contract.Binder) {
-	binder.
+func (swapper *swapper) syncSwap(id string) {
+	idBytes, err := base64.StdEncoding.DecodeString(id)
+	if err != nil {
+		log.Println("cannot decode id to bytes")
+		return
+	}
+	var id32Bytes [32]byte
+	copy(id32Bytes[:], idBytes)
+	iter, err := swapper.settlement.FilterLogOrderSettled(&bind.FilterOpts{}, [][32]byte{id32Bytes})
+	if iter.Next(){
+
+	}
+	iter.
 }
+
+// // Filter contract's event log
+// previousOwners, newOwners := make([]common.Address, 0), make([]common.Address, 0)
+// // newOwners = append(newOwners, common.HexToAddress("0xFd974e09363F7F823Ce360d2a2006733AEb3e297"))
+// iter, err := orderbook.FilterOwnershipTransferred(&bind.FilterOpts{}, previousOwners, newOwners)
+// if err != nil {
+// 	log.Fatal(err)
+// }
+//
+// for iter.Next() {
+// 	log.Println("previous owner: ", iter.Event.PreviousOwner.Hex(), ", new owner: ", iter.Event.NewOwner.Hex())
+// }

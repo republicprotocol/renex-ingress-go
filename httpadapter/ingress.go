@@ -106,6 +106,7 @@ type IngressAdapter interface {
 	KYCAdapter
 	LoginAdapter
 }
+
 type ingressAdapter struct {
 	ingress.Ingress
 }

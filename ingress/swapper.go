@@ -3,6 +3,7 @@ package ingress
 import (
 	"database/sql"
 	"fmt"
+	"github.com/republicprotocol/republic-go/contract"
 	"strings"
 
 	_ "github.com/lib/pq"
@@ -32,13 +33,12 @@ type Swapper interface {
 
 type swapper struct {
 	*sql.DB
+	binder contract.Binder
 }
 
-func NewSwapper(databaseURL string) (Swapper, error) {
+func NewSwapper(databaseURL string, binder contract.Binder) (Swapper, error) {
 	db, err := sql.Open("postgres", databaseURL)
-	return &swapper{
-		db,
-	}, err
+	return &swapper{db, binder}, err
 }
 
 func (swapper *swapper) SelectAddress(orderID string) (string, error) {
@@ -87,4 +87,8 @@ func (swapper *swapper) SelectAuthorizedAddress(kycAddress string) (string, erro
 func (swapper *swapper) InsertAuthorizedAddress(kycAddress, authorizedAddress string) error {
 	_, err := swapper.Exec("INSERT INTO auth_addresses (address, atom_address) VALUES ($1,$2) ON CONFLICT (address) DO UPDATE SET atom_address = EXCLUDED.atom_address;", strings.ToLower(kycAddress), strings.ToLower(authorizedAddress))
 	return err
+}
+
+func sync(binder contract.Binder) {
+	binder.
 }

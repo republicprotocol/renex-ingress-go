@@ -9,5 +9,5 @@ import (
 
 func TestAdapter(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Adapter Suite")
+	RunSpecs(t, "HttpAdapter Suite")
 }

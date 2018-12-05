@@ -11,13 +11,11 @@ import (
 	"log"
 	"math/big"
 	"runtime"
-	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/getsentry/raven-go"
-
 	"github.com/republicprotocol/republic-go/crypto"
 	"github.com/republicprotocol/republic-go/dispatch"
 	"github.com/republicprotocol/republic-go/logger"
@@ -26,33 +24,6 @@ import (
 	"github.com/republicprotocol/republic-go/registry"
 	"github.com/republicprotocol/republic-go/swarm"
 )
-
-// ErrUnknownPod is returned when an unknown pod is mapped.
-var ErrUnknownPod = errors.New("unknown pod id")
-
-// ErrUnsupportedEpochDepth is returned when an unsupported epoch depth is
-// received in an OrderFragmentMapping.
-var ErrUnsupportedEpochDepth = errors.New("unsupported epoch depth")
-
-// ErrInvalidNumberOfPods is returned when an insufficient number of pods are
-// mapped.
-var ErrInvalidNumberOfPods = errors.New("invalid number of pods")
-
-// ErrInvalidNumberOfOrderFragments is returned when a pod is mapped to an
-// insufficient number of order fragments, or too many order fragments.
-var ErrInvalidNumberOfOrderFragments = errors.New("invalid number of order fragments")
-
-// ErrInvalidOrderFragmentMapping is returned when an order fragment mapping is
-// of an invalid length.
-var ErrInvalidOrderFragmentMapping = errors.New("invalid order fragment mappings")
-
-// ErrInvalidEpochDepth is returned when an invalid epoch depth is provided
-// upon verification.
-var ErrInvalidEpochDepth = errors.New("invalid epoch depth")
-
-// ErrCannotOpenOrderFragments is returned when none of the pods were available
-// to receive order fragments
-var ErrCannotOpenOrderFragments = errors.New("cannot open order fragments: no pod received an order fragment")
 
 // NumBackgroundWorkers is the number of background workers that the Ingress
 // will use.

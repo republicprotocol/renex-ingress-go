@@ -15,9 +15,10 @@ import (
 	"strings"
 	"time"
 
-	raven "github.com/getsentry/raven-go"
+	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
+	"github.com/republicprotocol/swapperd/foundation"
 	"github.com/rs/cors"
 	"golang.org/x/time/rate"
 )
@@ -36,7 +37,6 @@ type kyberRequest struct {
 	Request clientAuthRequest `json:"request"`
 }
 
-// Kyber request and response types
 type appAuthRequest struct {
 	Type         string `json:"grant_type"`
 	ClientID     string `json:"client_id"`
@@ -76,7 +76,6 @@ const (
 
 // NewIngressServer returns an http server that forwards requests to an
 // IngressAdapter.
-
 func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, kyberID, kyberSecret string) http.Handler {
 	limiter := rate.NewLimiter(3, 20)
 	r := mux.NewRouter().StrictSlash(true)
@@ -91,6 +90,7 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 	r.HandleFunc("/authorized/{address}", rateLimit(limiter, GetAuthorizedHandler(ingressAdapter))).Methods("GET")
 	r.HandleFunc("/address/{orderID}", rateLimit(limiter, GetAddressHandler(ingressAdapter))).Methods("GET")
 	r.HandleFunc("/swap/{orderID}", rateLimit(limiter, GetSwapHandler(ingressAdapter))).Methods("GET")
+	r.HandleFunc("/swapperd/cb", rateLimit(limiter, PostSwapCallbackHandler(ingressAdapter))).Methods("POST")
 	r.Use(RecoveryHandler)
 
 	handler := cors.New(cors.Options{
@@ -489,6 +489,35 @@ func GetKYCHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret string) h
 	}
 }
 
+func PostSwapCallbackHandler(ingressAdapter ingressAdapter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var swap foundation.SwapBlob
+		if err := json.NewDecoder(r.Body).Decode(&swap); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		details, err := ingressAdapter.GetSwap(swap.ID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		swap.Delay = false
+		if err := swap.DelayInfo.UnmarshalJSON([]byte(details)); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		data, err := json.Marshal(swap)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
+	}
+}
+
 // RecoveryHandler handles errors while processing the requests and populates the errors in the response
 func RecoveryHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -621,13 +650,4 @@ func rateLimit(limiter *rate.Limiter, next http.HandlerFunc) http.HandlerFunc {
 		w.WriteHeader(http.StatusTooManyRequests)
 		w.Write([]byte("too many request"))
 	}
-}
-
-func toBytes32(b []byte) ([32]byte, error) {
-	bytes32 := [32]byte{}
-	if len(b) != 32 {
-		return bytes32, errors.New("Length mismatch")
-	}
-	copy(bytes32[:], b[:32])
-	return bytes32, nil
 }

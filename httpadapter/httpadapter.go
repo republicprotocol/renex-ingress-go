@@ -68,6 +68,11 @@ type usersResponse struct {
 	Users []userResponse `json:"authorized_users"`
 }
 
+type delayInfo struct {
+	OrderID string
+	UserID  string
+}
+
 const (
 	statusApproved string = "approved"
 	statusPending  string = "pending"
@@ -489,24 +494,34 @@ func GetKYCHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret string) h
 	}
 }
 
-func PostSwapCallbackHandler(ingressAdapter ingressAdapter) http.HandlerFunc {
+func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var swap foundation.SwapBlob
 		if err := json.NewDecoder(r.Body).Decode(&swap); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		details, err := ingressAdapter.GetSwap(swap.ID)
+		var info delayInfo
+		if err := json.Unmarshal(swap.DelayInfo, &info); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		details, err := ingressAdapter.GetSwap(info.OrderID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		swap.Delay = false
-		if err := swap.DelayInfo.UnmarshalJSON([]byte(details)); err != nil {
+
+		var pswap ingress.PartialSwap
+		if err := json.Unmarshal([]byte(details), &pswap) ; err!= nil{
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
+		swap.Delay = false
+		swap.SendTo = pswap.SendTo
+		swap.ReceiveFrom = pswap.ReceiveFrom
+		swap.SendAmount = pswap.SendAmount
+		swap.ReceiveAmount = pswap.ReceiveAmount
 		data, err := json.Marshal(swap)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

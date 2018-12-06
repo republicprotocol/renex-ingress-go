@@ -21,6 +21,7 @@ type Binder struct {
 
 	renExBrokerVerifier *bindings.RenExBrokerVerifier
 	orderbook           *bindings.Orderbook
+	settlement          *bindings.RenExSettlement
 	wyre                *bindings.Wyre
 }
 

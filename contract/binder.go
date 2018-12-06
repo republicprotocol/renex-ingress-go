@@ -20,8 +20,8 @@ type Binder struct {
 	callOpts     *bind.CallOpts
 
 	renExBrokerVerifier *bindings.RenExBrokerVerifier
+	renExSettlement     *bindings.RenExSettlement
 	orderbook           *bindings.Orderbook
-	settlement          *bindings.RenExSettlement
 	wyre                *bindings.Wyre
 }
 
@@ -47,6 +47,11 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		fmt.Println(fmt.Errorf("cannot bind to Orderbook: %v", err))
 		return Binder{}, err
 	}
+	settlement, err := bindings.NewRenExSettlement(common.HexToAddress(conn.Config.RenExSettlementAddress), bind.ContractBackend(conn.Client))
+	if err != nil {
+		fmt.Println(fmt.Errorf("cannot bind to Settlement: %v", err))
+		return Binder{}, err
+	}
 	wyre, err := bindings.NewWyre(common.HexToAddress(conn.Config.WyreAddress), bind.ContractBackend(conn.Client))
 	if err != nil {
 		fmt.Println(fmt.Errorf("cannot bind to Wyre: %v", err))
@@ -61,6 +66,7 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		callOpts:     &bind.CallOpts{},
 
 		renExBrokerVerifier: renExBrokerVerifier,
+		renExSettlement:     settlement,
 		orderbook:           orderbook,
 		wyre:                wyre,
 	}, nil
@@ -94,4 +100,33 @@ func (binder *Binder) balanceOf(trader common.Address) (*big.Int, error) {
 // GetOrderTrader of the given order id.
 func (binder *Binder) GetOrderTrader(orderID [32]byte) (common.Address, error) {
 	return binder.orderbook.OrderTrader(&bind.CallOpts{}, orderID)
+}
+
+func (binder *Binder) WatchLogOrderSettled(ids [][32]byte) (chan *bindings.RenExSettlementLogOrderSettled, error) {
+	orderSettled := make(chan *bindings.RenExSettlementLogOrderSettled)
+	_, err := binder.renExSettlement.WatchLogOrderSettled(&bind.WatchOpts{}, orderSettled, ids)
+	return orderSettled, err
+}
+
+func (binder *Binder) GetMatchDetails(id [32]byte) (struct {
+	Settled         bool
+	OrderIsBuy      bool
+	MatchedID       [32]byte
+	PriorityVolume  *big.Int
+	SecondaryVolume *big.Int
+	PriorityFee     *big.Int
+	SecondaryFee    *big.Int
+	PriorityToken   uint32
+	SecondaryToken  uint32
+}, error) {
+	return binder.renExSettlement.GetMatchDetails(&bind.CallOpts{}, id)
+}
+
+func (binder *Binder) OrderTrader(id [32]byte) (string, error) {
+	trader, err := binder.orderbook.OrderTrader(&bind.CallOpts{}, id)
+	if err != nil {
+		return "", err
+	}
+
+	return trader.Hex(), nil
 }

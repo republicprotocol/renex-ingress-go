@@ -513,7 +513,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		}
 
 		var pswap ingress.PartialSwap
-		if err := json.Unmarshal([]byte(details), &pswap) ; err!= nil{
+		if err := json.Unmarshal([]byte(details), &pswap); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

@@ -95,7 +95,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot create contract binder: %v", err)
 	}
-	swapper, err := ingress.NewSwapper(dbParam,)
+	swapper, err := ingress.NewSwapper(dbParam, contractBinder)
 	if err != nil {
 		log.Fatalf("cannot connect to the database: %v", err)
 	}

@@ -4,11 +4,9 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/republicprotocol/renex-ingress-go/contract/bindings"
 	"log"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	_ "github.com/lib/pq"
 	"github.com/republicprotocol/renex-ingress-go/contract"
 )
@@ -27,9 +25,9 @@ import (
 // );
 
 type PartialSwap struct {
-	SendTo         string `json:"send_to"`
-	ReceiveFrom  string `json:"receive_from"`
-	SendAmount string `json:"send_amount"`
+	SendTo        string `json:"send_to"`
+	ReceiveFrom   string `json:"receive_from"`
+	SendAmount    string `json:"send_amount"`
 	ReceiveAmount string `json:"receive_amount"`
 }
 
@@ -44,16 +42,15 @@ type Swapper interface {
 
 type swapper struct {
 	*sql.DB
-	settlement contract.RenExSettlement
-	orderbook  bindings.Orderbook
+	binder contract.Binder
 }
 
-func NewSwapper(databaseURL string, settlement contract.RenExSettlement, orderbook bindings.Orderbook) (Swapper, error) {
+func NewSwapper(databaseURL string, binder contract.Binder) (Swapper, error) {
 	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
-		return nil ,err
+		return nil, err
 	}
-	swapper := &swapper{db, settlement, orderbook}
+	swapper := &swapper{db, binder}
 	go swapper.syncSettlement()
 	return swapper, nil
 }
@@ -96,48 +93,46 @@ func (swapper *swapper) InsertAuthorizedAddress(kycAddress, authorizedAddress st
 // needed for the swap and store them in the database.
 func (swapper *swapper) syncSettlement() {
 	orderIDs := make([][32]byte, 0)
-	orderSettled := make(chan *contract.RenExSettlementLogOrderSettled)
-	sub, err := swapper.settlement.WatchLogOrderSettled(&bind.WatchOpts{}, orderSettled, orderIDs)
+	orderSettled, err := swapper.binder.WatchLogOrderSettled(orderIDs)
 	if err != nil {
-		log.Println("cannot subscribe to the contract", err )
+		log.Println("cannot subscribe to the contract", err)
 		return
 	}
-	defer sub.Unsubscribe()
 	for notification := range orderSettled {
 		var buyID, sellID [32]byte
-		details, err  := swapper.settlement.GetMatchDetails(&bind.CallOpts{}, notification.OrderID)
+		details, err := swapper.binder.GetMatchDetails(notification.OrderID)
 		if err != nil {
 			log.Printf("cannot get match details for order=%v, err=%v", hex.EncodeToString(notification.OrderID[:]), err)
 			continue
 		}
-		if details.PriorityToken != 0{
+		if details.PriorityToken != 0 {
 			continue
 		}
 
-		if details.OrderIsBuy{
+		if details.OrderIsBuy {
 			buyID, sellID = notification.OrderID, details.MatchedID
 		} else {
 			buyID, sellID = details.MatchedID, notification.OrderID
 		}
 
-		buyer, err := swapper.orderbook.OrderTrader(&bind.CallOpts{}, buyID )
+		buyer, err := swapper.binder.OrderTrader(buyID)
 		if err != nil {
 			log.Printf("cannot get buyer address for order=%v, err=%v", buyID, err)
 			continue
 		}
-		seller, err := swapper.orderbook.OrderTrader(&bind.CallOpts{}, sellID )
+		seller, err := swapper.binder.OrderTrader(sellID)
 		if err != nil {
 			log.Printf("cannot get seller address for order=%v, err=%v", sellID, err)
 			continue
 		}
-		buyerAtomicAddr, err  := swapper.SelectAuthorizedAddress(buyer.Hex())
+		buyerAtomicAddr, err := swapper.SelectAuthorizedAddress(buyer)
 		if err != nil {
-			log.Printf("cannot get atomic address for trader=%v, err=%v", buyer.Hex(), err)
+			log.Printf("cannot get atomic address for trader=%v, err=%v", buyer, err)
 			continue
 		}
-		sellerAtomicAddr, err  := swapper.SelectAuthorizedAddress(seller.Hex())
+		sellerAtomicAddr, err := swapper.SelectAuthorizedAddress(seller)
 		if err != nil {
-			log.Printf("cannot get atomic address for trader=%v, err=%v", seller.Hex(), err)
+			log.Printf("cannot get atomic address for trader=%v, err=%v", seller, err)
 			continue
 		}
 
@@ -145,22 +140,22 @@ func (swapper *swapper) syncSettlement() {
 		if details.OrderIsBuy {
 			pswap.ReceiveAmount = details.PriorityVolume.String()
 			pswap.SendAmount = details.SecondaryVolume.String()
-			pswap.SendTo = seller.Hex()
+			pswap.SendTo = seller
 			pswap.ReceiveFrom = sellerAtomicAddr
 		} else {
 			pswap.ReceiveAmount = details.SecondaryVolume.String()
 			pswap.SendAmount = details.PriorityVolume.String()
 			pswap.SendTo = buyerAtomicAddr
-			pswap.ReceiveFrom = buyer.Hex()
+			pswap.ReceiveFrom = buyer
 		}
 
 		data, err := json.Marshal(pswap)
-		if err != nil{
+		if err != nil {
 			log.Printf("cannot marshal the swap detail, %v", err)
 			continue
 		}
 		if err := swapper.InsertSwapDetails(hex.EncodeToString(notification.OrderID[:]), string(data)); err != nil {
-			log.Printf("cannot insert swap details for order=%v, err=%v",hex.EncodeToString(notification.OrderID[:]),  err)
+			log.Printf("cannot insert swap details for order=%v, err=%v", hex.EncodeToString(notification.OrderID[:]), err)
 			continue
 		}
 	}

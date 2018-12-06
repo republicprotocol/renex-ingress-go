@@ -21,12 +21,13 @@ type Binder struct {
 
 	renExBrokerVerifier *bindings.RenExBrokerVerifier
 	renExSettlement     *bindings.RenExSettlement
+	renExSettlementWs   *bindings.RenExSettlement
 	orderbook           *bindings.Orderbook
 	wyre                *bindings.Wyre
 }
 
 // NewBinder returns a Binder to communicate with contracts
-func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
+func NewBinder(auth *bind.TransactOpts, conn, wsconn Conn) (Binder, error) {
 	transactOpts := *auth
 	transactOpts.GasPrice = big.NewInt(5000000000)
 
@@ -52,6 +53,12 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 		fmt.Println(fmt.Errorf("cannot bind to Settlement: %v", err))
 		return Binder{}, err
 	}
+	settlementWs, err := bindings.NewRenExSettlement(common.HexToAddress(conn.Config.RenExSettlementAddress), bind.ContractBackend(wsconn.Client))
+	if err != nil {
+		fmt.Println(fmt.Errorf("cannot bind to Settlement: %v", err))
+		return Binder{}, err
+	}
+
 	wyre, err := bindings.NewWyre(common.HexToAddress(conn.Config.WyreAddress), bind.ContractBackend(conn.Client))
 	if err != nil {
 		fmt.Println(fmt.Errorf("cannot bind to Wyre: %v", err))
@@ -67,6 +74,7 @@ func NewBinder(auth *bind.TransactOpts, conn Conn) (Binder, error) {
 
 		renExBrokerVerifier: renExBrokerVerifier,
 		renExSettlement:     settlement,
+		renExSettlementWs:   settlementWs,
 		orderbook:           orderbook,
 		wyre:                wyre,
 	}, nil
@@ -104,7 +112,7 @@ func (binder *Binder) GetOrderTrader(orderID [32]byte) (common.Address, error) {
 
 func (binder *Binder) WatchLogOrderSettled(ids [][32]byte) (chan *bindings.RenExSettlementLogOrderSettled, error) {
 	orderSettled := make(chan *bindings.RenExSettlementLogOrderSettled)
-	_, err := binder.renExSettlement.WatchLogOrderSettled(&bind.WatchOpts{}, orderSettled, ids)
+	_, err := binder.renExSettlementWs.WatchLogOrderSettled(&bind.WatchOpts{}, orderSettled, ids)
 	return orderSettled, err
 }
 

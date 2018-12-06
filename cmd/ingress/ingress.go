@@ -76,7 +76,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
-	log.Println(config)
 	conn, err := contract.Connect(config.RepublicEthereum)
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)
@@ -91,7 +90,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)
 	}
-	contractBinder, err := renExContract.NewBinder(auth, contractConn)
+	wsConn, err := renExContract.ConnectWs(config.RenExEthereum)
+	if err != nil {
+		log.Fatalf("cannot connect to ethereum vis websocket: %v", err)
+	}
+	contractBinder, err := renExContract.NewBinder(auth, contractConn, wsConn)
 	if err != nil {
 		log.Fatalf("cannot create contract binder: %v", err)
 	}

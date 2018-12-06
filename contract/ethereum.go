@@ -2,6 +2,7 @@ package contract
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
@@ -16,6 +17,7 @@ type Conn struct {
 
 // Connect to a URI.
 func Connect(config RenExConfig) (Conn, error) {
+	log.Println(config)
 	if config.URI == "" {
 		switch config.Network {
 		case NetworkMainnet:

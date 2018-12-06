@@ -1,6 +1,6 @@
 {
   "republic": {
-    "network": "test",
+    "network": "testnet",
     "uri": "https://kovan.infura.io",
     "republicTokenAddress": "0x6ae318A9a6b4b71EcAdB9C7510D9870757BEA1F7",
     "darknodeRegistryAddress": "0xC2B60ee21bD0270Be7E467CB09AA43D51ae1089e",
@@ -10,12 +10,12 @@
     "settlementRegistryAddress": "0xeE79f7d1D48cf6EC83f9A4639aeDe54B60e5A761"
   },
   "renex": {
-    "network": "test",
+    "network": "testnet",
     "uri": "https://kovan.infura.io",
     "renExBrokerVerifier": "0x57cbea66d02ed770718b4d4D2a030e0CB99EFc0b",
     "orderbook": "0xe1C215e135b08cF6B633F3c88c5f9d7a092f5568",
     "wyre": "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f",
-    "renExSettlement" : "0x908262dE0366E42d029B0518D5276762c92B21e1"
+    "renExSettlement" : "0x8EB372d0bEE7635B9DC355f2cF19E28F3BBECA53"
   },
   "bootstrapMultiAddresses": [
     {
@@ -33,3 +33,7 @@
     "0x0164D4B13c9A14204C1D87064986181E7B4e5770"
   ]
 }
+
+//"2", "0xA9b453FC64b4766Aab8a867801d0a4eA7b1474E0", "0x481b39E2000a117CBA417473DC1E7cdAf4EAd98F", "0xb0E21B869D6f741a8A8F5075BA59E496593B881A", "0x1a3AbB4FfDa92894a5f1637913c031A4621aF9C0", 100
+
+

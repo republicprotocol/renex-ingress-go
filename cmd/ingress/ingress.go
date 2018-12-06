@@ -76,7 +76,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
-
+	log.Println(config)
 	conn, err := contract.Connect(config.RepublicEthereum)
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)

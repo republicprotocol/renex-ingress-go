@@ -61,7 +61,6 @@ func Connect(config RenExConfig) (Conn, error) {
 	}, nil
 }
 
-
 // Connect to a URI.
 func ConnectWs(config RenExConfig) (Conn, error) {
 	switch config.Network {

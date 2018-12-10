@@ -69,8 +69,8 @@ type usersResponse struct {
 }
 
 type delayInfo struct {
-	OrderID string `json:"orderId"`
-	KycAddr string `json:"kycAddr"`
+	OrderID string `json:"order_id"`
+	KycAddr string `json:"kyc_addr"`
 }
 
 const (

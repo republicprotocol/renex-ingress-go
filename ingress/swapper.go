@@ -18,10 +18,10 @@ import (
 //     kyc_addr        varchar,
 //     send_to         varchar,
 //     receive_from    varchar,
-//     timelock        int,
-//     secret_hash     varchar,
+//     time_lock       int,
+//     secret_hash     varchar
 // );
-
+//
 // CREATE TABLE finalized_swap (
 //     order_id        	     varchar NOT NULL,
 //     send_to               varchar,
@@ -93,7 +93,7 @@ func (swapper *swapper) PartialSwap(id string) (PartialSwap, error) {
 func (swapper *swapper) FinalizedSwap(id string) (FinalizedSwap, error) {
 	var swap FinalizedSwap
 	swap.OrderID = id
-	err := swapper.QueryRow("SELECT send_to, receive_from, send_amount, receive_amount,secret_hash, should_initiate_first, time_lock FROM finalized_swap WHERE order_id = $1", id).
+	err := swapper.QueryRow("SELECT send_to, receive_from, send_amount, receive_amount, secret_hash, should_initiate_first, time_lock FROM finalized_swap WHERE order_id = $1", id).
 		Scan(&swap.SendTo, &swap.ReceiveFrom, &swap.SendAmount, &swap.ReceiveAmount, &swap.SecretHash, &swap.ShouldInitiateFirst, &swap.TimeLock)
 	return swap, err
 }

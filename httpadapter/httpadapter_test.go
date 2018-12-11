@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"sync/atomic"
 
+	"github.com/republicprotocol/renex-ingress-go/ingress"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/republicprotocol/renex-ingress-go/httpadapter"
@@ -34,38 +36,6 @@ func (adapter *weakAdapter) ApproveWithdrawal(trader string, tokenID uint32) ([6
 	return WEAK_SIGNATURE, nil
 }
 
-func (adapter *weakAdapter) GetAddress(string) (string, error) {
-	return "", nil
-}
-
-func (adapter *weakAdapter) PostAddress(PostAddressInfo, string) error {
-	return nil
-}
-
-func (adapter *weakAdapter) GetSwap(string) (string, error) {
-	return "", nil
-}
-
-func (adapter *weakAdapter) PostSwap(PostSwapInfo, string) error {
-	return nil
-}
-
-func (adapter *weakAdapter) GetAuthorizedAddress(string) (string, error) {
-	return "", nil
-}
-
-func (adapter *weakAdapter) PostAuthorizedAddress(string, string) error {
-	return nil
-}
-
-func (adapter *weakAdapter) GetTrader(string) (string, error) {
-	return "", nil
-}
-
-func (adapter *weakAdapter) PostTrader(string) error {
-	return nil
-}
-
 func (adapter *weakAdapter) GetLogin(string) (int64, string, error) {
 	return 0, "", nil
 }
@@ -76,6 +46,18 @@ func (adapter *weakAdapter) PostLogin(string, string) error {
 
 func (adapter *weakAdapter) PostVerification(string, int64, int) error {
 	return nil
+}
+
+func (adapter *weakAdapter) InsertPartialSwap(swap ingress.PartialSwap) error {
+	return nil
+}
+
+func (adapter *weakAdapter) PartialSwap(id string) (ingress.PartialSwap, error) {
+	return ingress.PartialSwap{}, nil
+}
+
+func (adapter *weakAdapter) FinalizedSwap(id string) (ingress.FinalizedSwap, error) {
+	return ingress.FinalizedSwap{}, nil
 }
 
 type errAdapter struct {
@@ -93,38 +75,6 @@ func (adapter *errAdapter) ApproveWithdrawal(trader string, tokenID uint32) ([65
 	return [65]byte{}, errors.New("cannot approve withdrawal")
 }
 
-func (adapter *errAdapter) GetAddress(string) (string, error) {
-	return "", errors.New("cannot get address")
-}
-
-func (adapter *errAdapter) PostAddress(PostAddressInfo, string) error {
-	return errors.New("cannot post address")
-}
-
-func (adapter *errAdapter) GetSwap(string) (string, error) {
-	return "", errors.New("cannot get address")
-}
-
-func (adapter *errAdapter) PostSwap(PostSwapInfo, string) error {
-	return errors.New("cannot post swap")
-}
-
-func (adapter *errAdapter) GetAuthorizedAddress(string) (string, error) {
-	return "", errors.New("cannot get authorized address")
-}
-
-func (adapter *errAdapter) PostAuthorizedAddress(string, string) error {
-	return errors.New("cannot post authorized address")
-}
-
-func (adapter *errAdapter) GetTrader(string) (string, error) {
-	return "", errors.New("cannot get trader")
-}
-
-func (adapter *errAdapter) PostTrader(string) error {
-	return errors.New("cannot post trader")
-}
-
 func (adapter *errAdapter) GetLogin(string) (int64, string, error) {
 	return 0, "", errors.New("cannot get login")
 }
@@ -135,6 +85,18 @@ func (adapter *errAdapter) PostLogin(string, string) error {
 
 func (adapter *errAdapter) PostVerification(string, int64, int) error {
 	return errors.New("cannot post verification")
+}
+
+func (adapter *errAdapter) InsertPartialSwap(swap ingress.PartialSwap) error {
+	return nil
+}
+
+func (adapter *errAdapter) PartialSwap(id string) (ingress.PartialSwap, error) {
+	return ingress.PartialSwap{}, nil
+}
+
+func (adapter *errAdapter) FinalizedSwap(id string) (ingress.FinalizedSwap, error) {
+	return ingress.FinalizedSwap{}, nil
 }
 
 var _ = Describe("HTTP handlers", func() {

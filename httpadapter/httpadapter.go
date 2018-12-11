@@ -37,12 +37,6 @@ type kyberRequest struct {
 	Request clientAuthRequest `json:"request"`
 }
 
-type appAuthRequest struct {
-	Type         string `json:"grant_type"`
-	ClientID     string `json:"client_id"`
-	ClientSecret string `json:"client_secret"`
-}
-
 type clientAuthRequest struct {
 	Type   string `json:"grant_type"`
 	Code   string `json:"code"`
@@ -68,9 +62,16 @@ type usersResponse struct {
 	Users []userResponse `json:"authorized_users"`
 }
 
+type Message struct {
+	OrderID          string `json:"order_id"`
+	KycAddr          string `json:"kyc_addr"`
+	SendTokenAddr    string `json:"send_token_addr"`
+	ReceiveTokenAddr string `json:"receive_token_addr"`
+}
+
 type delayInfo struct {
-	OrderID string `json:"order_id"`
-	KycAddr string `json:"kyc_addr"`
+	Message   Message `json:"message"`
+	Signature string  `json:"signature"`
 }
 
 const (
@@ -88,13 +89,7 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 	r.HandleFunc("/login", rateLimit(limiter, LoginHandler(ingressAdapter, kyberID, kyberSecret))).Methods("POST")
 	r.HandleFunc("/kyber", rateLimit(limiter, KyberKYCHandler(ingressAdapter, kyberID, kyberSecret))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
-	r.HandleFunc("/address", rateLimit(limiter, PostAddressHandler(ingressAdapter))).Methods("POST")
-	r.HandleFunc("/swap", rateLimit(limiter, PostSwapHandler(ingressAdapter))).Methods("POST")
-	r.HandleFunc("/authorize", rateLimit(limiter, PostAuthorizeHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/kyc/{address}", rateLimit(limiter, GetKYCHandler(ingressAdapter, kyberID, kyberSecret))).Methods("GET")
-	r.HandleFunc("/authorized/{address}", rateLimit(limiter, GetAuthorizedHandler(ingressAdapter))).Methods("GET")
-	r.HandleFunc("/address/{orderID}", rateLimit(limiter, GetAddressHandler(ingressAdapter))).Methods("GET")
-	r.HandleFunc("/swap/{orderID}", rateLimit(limiter, GetSwapHandler(ingressAdapter))).Methods("GET")
 	r.HandleFunc("/swapperd/cb", rateLimit(limiter, PostSwapCallbackHandler(ingressAdapter))).Methods("POST")
 	r.Use(RecoveryHandler)
 
@@ -351,125 +346,6 @@ func ApproveWithdrawalHandler(approveWithdrawalAdapter ApproveWithdrawalAdapter)
 	}
 }
 
-// GetAddressHandler handles all HTTP get address requests
-func GetAddressHandler(getAddressAdapter GetAddressAdapter) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		params := mux.Vars(r)
-		addr, err := getAddressAdapter.GetAddress(params["orderID"])
-		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(fmt.Sprintf("failed to find the required address: %v", err)))
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(addr))
-	}
-}
-
-// PostAddressHandler handles all HTTP post address requests
-func PostAddressHandler(postAddressAdapter PostAddressAdapter) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		postAddressRequest := PostAddressRequest{}
-		if err := json.NewDecoder(r.Body).Decode(&postAddressRequest); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("cannot decode json into post address request: %v", err)))
-			return
-		}
-
-		if err := postAddressAdapter.PostAddress(postAddressRequest.Info, postAddressRequest.Signature); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("failed to post address: %v", err)))
-			return
-		}
-		w.WriteHeader(http.StatusCreated)
-	}
-}
-
-// GetAuthorizedHandler handles all HTTP get authorized requests
-func GetAuthorizedHandler(getAuthorizeAdapter GetAuthorizeAdapter) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		params := mux.Vars(r)
-		res := GetAuthorizeResponse{}
-		addr, err := getAuthorizeAdapter.GetAuthorizedAddress(params["address"])
-		if err != nil {
-			if err == sql.ErrNoRows {
-				res.Status = false
-			} else {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(fmt.Sprintf("cannot get authorization status: %v", err)))
-				return
-			}
-		} else {
-			res.AtomAddress = addr
-			res.Status = true
-		}
-		respBytes, err := json.Marshal(res)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("cannot encode json into the expected response format: %v", err)))
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write(respBytes)
-	}
-}
-
-// PostAuthorizeHandler handles all HTTP post authorize requests
-func PostAuthorizeHandler(postAuthorizeAdapter PostAuthorizeAdapter) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		postAuthorizeRequest := PostAuthorizeRequest{}
-		if err := json.NewDecoder(r.Body).Decode(&postAuthorizeRequest); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("cannot decode json into address and atom address: %v", err)))
-			return
-		}
-		if err := postAuthorizeAdapter.PostAuthorizedAddress(postAuthorizeRequest.AtomAddress, postAuthorizeRequest.Signature); err != nil {
-			if err == ErrUnauthorized {
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(fmt.Sprintf("Signing address is not KYC'd: %v", err)))
-			}
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Failed to authorize: %v", err)))
-			return
-		}
-		w.WriteHeader(http.StatusCreated)
-	}
-}
-
-// GetSwapHandler handles all HTTP get swap details requests
-func GetSwapHandler(getSwapAdapter GetSwapAdapter) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		params := mux.Vars(r)
-		swap, err := getSwapAdapter.GetSwap(params["orderID"])
-		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(fmt.Sprintf("required swap details not found: %v", err)))
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(swap))
-	}
-}
-
-// PostSwapHandler handles all HTTP get swap details requests
-func PostSwapHandler(postSwapAdapter PostSwapAdapter) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		postSwapRequest := PostSwapRequest{}
-		if err := json.NewDecoder(r.Body).Decode(&postSwapRequest); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("cannot decode json into post swap request: %v", err)))
-			return
-		}
-
-		if err := postSwapAdapter.PostSwap(postSwapRequest.Info, postSwapRequest.Signature); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("failed to save the swap datails: %v", err)))
-			return
-		}
-		w.WriteHeader(http.StatusCreated)
-	}
-}
-
 func GetKYCHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
@@ -506,22 +382,38 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		details, err := ingressAdapter.GetSwap(info.OrderID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
 
-		var pswap ingress.PartialSwap
-		if err := json.Unmarshal([]byte(details), &pswap); err != nil {
+		// todo: verify the delay info
+
+		// return the finalized swap if we have the finalized swap
+		pSwap := ingress.PartialSwap{
+			OrderID:     info.Message.OrderID,
+			KycAddr:     info.Message.KycAddr,
+			SendTo:      swap.SendTo,
+			ReceiveFrom: swap.ReceiveFrom,
+			SecretHash:  swap.SecretHash,
+			TimeLock:    swap.TimeLock,
+		}
+		defer ingressAdapter.InsertPartialSwap(pSwap)
+
+		// Check if we have the finalized swap info.
+		finalizedSwap, err := ingressAdapter.FinalizedSwap(pSwap.OrderID)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		// Fill missing fields in the swap and return
+
 		swap.Delay = false
-		swap.SendTo = pswap.SendTo
-		swap.ReceiveFrom = pswap.ReceiveFrom
-		swap.SendAmount = pswap.SendAmount
-		swap.ReceiveAmount = pswap.ReceiveAmount
+		swap.SendTo = finalizedSwap.SendTo
+		swap.ReceiveFrom = finalizedSwap.ReceiveFrom
+		swap.SendAmount = finalizedSwap.SendAmount
+		swap.ReceiveAmount = finalizedSwap.ReceiveAmount
+		swap.ShouldInitiateFirst = finalizedSwap.ShouldInitiateFirst
+		swap.TimeLock = finalizedSwap.TimeLock
+		swap.SecretHash = finalizedSwap.SecretHash
+
 		data, err := json.Marshal(swap)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -1,15 +1,8 @@
 package httpadapter
 
 import (
-	"database/sql"
-	"encoding/base64"
-	"encoding/hex"
-	"encoding/json"
 	"errors"
-	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
 )
 
@@ -58,33 +51,6 @@ type ApproveWithdrawalAdapter interface {
 	ApproveWithdrawal(traderIn string, tokenID uint32) ([65]byte, error)
 }
 
-type GetAddressAdapter interface {
-	GetAddress(string) (string, error)
-}
-
-type PostAddressAdapter interface {
-	PostAddress(PostAddressInfo, string) error
-}
-
-type GetSwapAdapter interface {
-	GetSwap(string) (string, error)
-}
-
-type PostSwapAdapter interface {
-	PostSwap(PostSwapInfo, string) error
-}
-
-type PostAuthorizeAdapter interface {
-	PostAuthorizedAddress(string, string) error
-}
-
-type GetAuthorizeAdapter interface {
-	GetAuthorizedAddress(string) (string, error)
-}
-
-type KYCAdapter interface {
-}
-
 type LoginAdapter interface {
 	GetLogin(address string) (int64, string, error)
 	PostLogin(address, referrer string) error
@@ -92,19 +58,19 @@ type LoginAdapter interface {
 	WyreVerified(traderIn string) (bool, error)
 }
 
+type OrderAdapter interface {
+	InsertPartialSwap(swap ingress.PartialSwap) error
+	PartialSwap(id string) (ingress.PartialSwap, error)
+	FinalizedSwap(id string) (ingress.FinalizedSwap, error)
+}
+
 // An IngressAdapter implements the OpenOrderAdapter and the
 // ApproveWithdrawalAdapter.
 type IngressAdapter interface {
 	OpenOrderAdapter
 	ApproveWithdrawalAdapter
-	GetAddressAdapter
-	PostAddressAdapter
-	GetSwapAdapter
-	PostSwapAdapter
-	PostAuthorizeAdapter
-	GetAuthorizeAdapter
-	KYCAdapter
 	LoginAdapter
+	OrderAdapter
 }
 
 type ingressAdapter struct {
@@ -160,92 +126,6 @@ func (adapter *ingressAdapter) ApproveWithdrawal(traderIn string, tokenIDIn uint
 	)
 }
 
-func (adapter *ingressAdapter) GetAddress(orderID string) (string, error) {
-	return adapter.SelectAddress(orderID)
-}
-
-func (adapter *ingressAdapter) PostAddress(info PostAddressInfo, signature string) error {
-	infoBytes, err := json.Marshal(info)
-	if err != nil {
-		return err
-	}
-	hash := crypto.Keccak256(infoBytes)
-	sigBytes, err := UnmarshalSignature(signature)
-	if err != nil {
-		return err
-	}
-
-	publicKey, err := crypto.SigToPub(hash, sigBytes[:])
-	if err != nil {
-		return err
-	}
-	address := crypto.PubkeyToAddress(*publicKey)
-	if err := adapter.IsAuthorized(info.OrderID, address.String()); err != nil {
-		return err
-	}
-	return adapter.InsertAddress(info.OrderID, info.Address)
-}
-
-func (adapter *ingressAdapter) GetSwap(orderID string) (string, error) {
-	return adapter.SelectSwapDetails(orderID)
-}
-
-func (adapter *ingressAdapter) PostSwap(info PostSwapInfo, signature string) error {
-	swapBytes, err := json.Marshal(info)
-	if err != nil {
-		return err
-	}
-	hash := crypto.Keccak256(swapBytes)
-	sigBytes, err := UnmarshalSignature(signature)
-	if err != nil {
-		return err
-	}
-
-	publicKey, err := crypto.SigToPub(hash, sigBytes[:])
-	if err != nil {
-		return err
-	}
-	address := crypto.PubkeyToAddress(*publicKey)
-	if err := adapter.IsAuthorized(info.OrderID, address.String()); err != nil {
-		return err
-	}
-	return adapter.InsertSwapDetails(info.OrderID, info.Swap)
-}
-
-func (adapter *ingressAdapter) PostAuthorizedAddress(addr, signature string) error {
-	address := common.HexToAddress(addr)
-
-	message := append([]byte("RenEx: authorize: "), address.Bytes()...)
-	signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
-
-	hash := crypto.Keccak256(signatureData)
-	sigBytes, err := UnmarshalSignature(signature)
-	if err != nil {
-		return err
-	}
-
-	publicKey, err := crypto.SigToPub(hash, sigBytes[:])
-	if err != nil {
-		return err
-	}
-
-	kycAddress := crypto.PubkeyToAddress(*publicKey)
-
-	// TODO: Removed for test purposes
-	// verified, err := traderVerified(adapter, kycAddress.String())
-	// if err != nil {
-	// 	return err
-	// }
-	// if !verified {
-	// 	return errors.New("address not verified")
-	// }
-	return adapter.InsertAuthorizedAddress(kycAddress.String(), addr)
-}
-
-func (adapter *ingressAdapter) GetAuthorizedAddress(addr string) (string, error) {
-	return adapter.SelectAuthorizedAddress(addr)
-}
-
 func (adapter *ingressAdapter) GetLogin(address string) (int64, string, error) {
 	return adapter.SelectLogin(address)
 }
@@ -258,28 +138,14 @@ func (adapter *ingressAdapter) PostVerification(address string, kyberUID int64, 
 	return adapter.UpdateLogin(address, kyberUID, kycType)
 }
 
-func (adapter *ingressAdapter) IsAuthorized(orderID string, address string) error {
-	hexBytes, err := hex.DecodeString(orderID)
-	if err != nil {
-		return err
-	}
-	id, err := UnmarshalOrderID(base64.StdEncoding.EncodeToString(hexBytes))
-	if err != nil {
-		return err
-	}
-	addr, err := adapter.Ingress.GetOrderTrader(id)
-	if err != nil {
-		return err
-	}
-	atomAddr, err := adapter.GetAuthorizedAddress(addr.String())
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return ErrUnauthorized
-		}
-		return err
-	}
-	if address != atomAddr {
-		return ErrUnauthorized
-	}
-	return nil
+func (adapter *ingressAdapter) InsertPartialSwap(swap ingress.PartialSwap) error {
+	return adapter.Ingress.InsertPartialSwap(swap)
+}
+
+func (adapter *ingressAdapter) PartialSwap(id string) (ingress.PartialSwap, error) {
+	return adapter.Ingress.PartialSwap(id)
+}
+
+func (adapter *ingressAdapter) FinalizedSwap(id string) (ingress.FinalizedSwap, error) {
+	return adapter.Ingress.FinalizedSwap(id)
 }

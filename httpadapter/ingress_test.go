@@ -248,28 +248,16 @@ var _ = Describe("Ingress Adapter", func() {
 type mockSwapper struct {
 }
 
-func (swapper *mockSwapper) SelectAuthorizedAddress(kycAddress string) (string, error) {
-	return "", nil
-}
-
-func (swapper *mockSwapper) InsertAuthorizedAddress(kycAddress string, atomAddress string) error {
+func (swapper *mockSwapper) InsertPartialSwap(swap ingress.PartialSwap) error {
 	return nil
 }
 
-func (swapper *mockSwapper) SelectAddress(orderID string) (string, error) {
-	return "", nil
+func (swapper *mockSwapper) PartialSwap(id string) (ingress.PartialSwap, error) {
+	return ingress.PartialSwap{}, nil
 }
 
-func (swapper *mockSwapper) InsertAddress(orderID string, address string) error {
-	return nil
-}
-
-func (swapper *mockSwapper) SelectSwapDetails(orderID string) (string, error) {
-	return "", nil
-}
-
-func (swapper *mockSwapper) InsertSwapDetails(orderID string, swapDetails string) error {
-	return nil
+func (swapper *mockSwapper) FinalizedSwap(id string) (ingress.FinalizedSwap, error) {
+	return ingress.FinalizedSwap{}, nil
 }
 
 type mockLoginer struct {

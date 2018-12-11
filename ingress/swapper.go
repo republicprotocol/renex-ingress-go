@@ -3,41 +3,62 @@ package ingress
 import (
 	"database/sql"
 	"encoding/hex"
-	"encoding/json"
 	"log"
-	"strings"
+	"time"
 
 	_ "github.com/lib/pq"
+
 	"github.com/republicprotocol/renex-ingress-go/contract"
 )
 
 // TABLES
 //
-// CREATE TABLE swaps (
+// CREATE TABLE partial_swap (
 //     order_id        varchar NOT NULL,
-//     address         varchar,
-//     swap_details    varchar
+//     kyc_addr        varchar,
+//     send_to         varchar,
+//     receive_from    varchar,
+//     timelock        int,
+//     secret_hash     varchar,
 // );
 
-// CREATE TABLE auth_addresses (
-//     address      varchar(42) NOT NULL,
-//     atom_address varchar
+// CREATE TABLE finalized_swap (
+//     order_id        	     varchar NOT NULL,
+//     send_to               varchar,
+//     receive_from          varchar,
+//     send_amount           varchar,
+//     receive_amount        varchar,
+//     secret_hash           varchar,
+//     should_initiate_first boolean,
+//     time_lock             int
 // );
 
 type PartialSwap struct {
-	SendTo        string `json:"send_to"`
-	ReceiveFrom   string `json:"receive_from"`
-	SendAmount    string `json:"send_amount"`
-	ReceiveAmount string `json:"receive_amount"`
+	OrderID     string `json:"order_id"`
+	KycAddr     string `json:"kyc_addr"`
+	SendTo      string `json:"send_to"`
+	ReceiveFrom string `json:"receive_from"`
+	SecretHash  string `json:"secret_hash"`
+	TimeLock    int64  `json:"time_lock"`
+}
+
+type FinalizedSwap struct {
+	OrderID             string `json:"order_id"`
+	SendTo              string `json:"send_to"`
+	ReceiveFrom         string `json:"receive_from"`
+	SendAmount          string `json:"send_amount"`
+	ReceiveAmount       string `json:"receive_amount"`
+	SecretHash          string `json:"secret_hash"`
+	ShouldInitiateFirst bool   `json:"should_initiate_first"`
+	TimeLock            int64  `json:"time_lock"`
 }
 
 type Swapper interface {
-	SelectAuthorizedAddress(kycAddress string) (string, error)
-	InsertAuthorizedAddress(kycAddress string, atomAddress string) error
-	SelectAddress(orderID string) (string, error)
-	InsertAddress(orderID string, address string) error
-	SelectSwapDetails(orderID string) (string, error)
-	InsertSwapDetails(orderID string, swapDetails string) error
+	InsertPartialSwap(swap PartialSwap) error
+
+	PartialSwap(id string) (PartialSwap, error)
+
+	FinalizedSwap(id string) (FinalizedSwap, error)
 }
 
 type swapper struct {
@@ -55,36 +76,31 @@ func NewSwapper(databaseURL string, binder contract.Binder) (Swapper, error) {
 	return swapper, nil
 }
 
-func (swapper *swapper) SelectAddress(orderID string) (string, error) {
-	var address string
-	err := swapper.QueryRow("SELECT address FROM swaps WHERE order_id = $1", orderID).Scan(&address)
-	return address, err
-}
-
-func (swapper *swapper) InsertAddress(orderID string, address string) error {
-	_, err := swapper.Exec("INSERT INTO swaps (order_id, address) VALUES ($1,$2)", orderID, address)
+func (swapper *swapper) InsertPartialSwap(swap PartialSwap) error {
+	_, err := swapper.Exec("INSERT INTO partial_swap (order_id, kyc_addr, send_to, receive_from ,secret_hash, time_lock) VALUES ($1,$2,$3,$4,$5,$6)",
+		swap.OrderID, swap.KycAddr, swap.SendTo, swap.ReceiveFrom, swap.SecretHash, swap.TimeLock)
 	return err
 }
 
-func (swapper *swapper) SelectSwapDetails(orderID string) (string, error) {
-	var swapDetails string
-	err := swapper.QueryRow("SELECT swap_details FROM swaps WHERE order_id = $1", orderID).Scan(&swapDetails)
-	return swapDetails, err
+func (swapper *swapper) PartialSwap(id string) (PartialSwap, error) {
+	var swap PartialSwap
+	swap.OrderID = id
+	err := swapper.QueryRow("SELECT kyc_addr, send_to, receive_from, secret_hash, time_lock FROM partial_swap WHERE order_id = $1", id).
+		Scan(&swap.KycAddr, &swap.SendTo, &swap.ReceiveFrom, &swap.SecretHash, &swap.TimeLock)
+	return swap, err
 }
 
-func (swapper *swapper) InsertSwapDetails(orderID string, swapDetails string) error {
-	_, err := swapper.Exec("INSERT INTO swaps (order_id, swap_details) VALUES ($1,$2)", orderID, swapDetails)
-	return err
+func (swapper *swapper) FinalizedSwap(id string) (FinalizedSwap, error) {
+	var swap FinalizedSwap
+	swap.OrderID = id
+	err := swapper.QueryRow("SELECT send_to, receive_from, send_amount, receive_amount,secret_hash, should_initiate_first, time_lock FROM finalized_swap WHERE order_id = $1", id).
+		Scan(&swap.SendTo, &swap.ReceiveFrom, &swap.SendAmount, &swap.ReceiveAmount, &swap.SecretHash, &swap.ShouldInitiateFirst, &swap.TimeLock)
+	return swap, err
 }
 
-func (swapper *swapper) SelectAuthorizedAddress(kycAddress string) (string, error) {
-	var authorizedAddress string
-	err := swapper.QueryRow("SELECT atom_address FROM auth_addresses WHERE address = $1", strings.ToLower(kycAddress)).Scan(&authorizedAddress)
-	return authorizedAddress, err
-}
-
-func (swapper *swapper) InsertAuthorizedAddress(kycAddress, authorizedAddress string) error {
-	_, err := swapper.Exec("INSERT INTO auth_addresses (address, atom_address) VALUES ($1,$2) ON CONFLICT (address) DO UPDATE SET atom_address = EXCLUDED.atom_address;", strings.ToLower(kycAddress), strings.ToLower(authorizedAddress))
+func (swapper *swapper) insertFinalizedSwap(swap FinalizedSwap) error {
+	_, err := swapper.Exec("INSERT INTO partial_swap (order_id, send_to, receive_from, send_amount, receive_amount,secret_hash, should_initiate_first, time_lock) VALUES ($1,$2,$3,$4,$5,$6,$7,&8)",
+		swap.OrderID, swap.SendTo, swap.ReceiveFrom, swap.SendAmount, swap.ReceiveAmount, swap.SecretHash, swap.ShouldInitiateFirst, swap.TimeLock)
 	return err
 }
 
@@ -100,65 +116,49 @@ func (swapper *swapper) syncSettlement() {
 	}
 	for notification := range orderSettled {
 		log.Println("have new notification", hex.EncodeToString(notification.OrderID[:]))
-		var buyID, sellID [32]byte
 		details, err := swapper.binder.GetMatchDetails(notification.OrderID)
 		if err != nil {
 			log.Printf("cannot get match details for order=%v, err=%v", hex.EncodeToString(notification.OrderID[:]), err)
 			continue
 		}
-		if details.PriorityToken != 0 {
+		if details.PriorityToken != 0 || !details.Settled {
 			continue
 		}
 
+		var swap FinalizedSwap
+		swap.OrderID = hex.EncodeToString(notification.OrderID[:])
+		pSwap, err := swapper.PartialSwap(swap.OrderID)
+		if err != nil {
+			log.Printf("cannot get partial swap for order=%v, err=%v", swap.OrderID, err)
+			continue
+		}
+		matchedID := hex.EncodeToString(details.MatchedID[:])
+		matchedPartialSwap, err := swapper.PartialSwap(matchedID)
+		if err != nil {
+			log.Printf("cannot get matched partial swap for order=%v, err=%v", matchedID, err)
+			continue
+		}
+		timelock := time.Now().Add(48 * time.Hour)
+		swap.SendTo = matchedPartialSwap.ReceiveFrom
+		swap.ReceiveFrom = matchedPartialSwap.SendTo
+		swap.TimeLock = timelock.Unix()
+
+		priorityAmount := details.PriorityVolume.String()
+		secondaryAmount := details.SecondaryVolume.String()
 		if details.OrderIsBuy {
-			buyID, sellID = notification.OrderID, details.MatchedID
+			swap.SendAmount = secondaryAmount
+			swap.ReceiveAmount = priorityAmount
+			swap.ShouldInitiateFirst = false
+			swap.SecretHash = matchedPartialSwap.SecretHash
 		} else {
-			buyID, sellID = details.MatchedID, notification.OrderID
+			swap.SendAmount = priorityAmount
+			swap.ReceiveAmount = secondaryAmount
+			swap.ShouldInitiateFirst = true
+			swap.SecretHash = pSwap.SecretHash
 		}
 
-		buyer, err := swapper.binder.OrderTrader(buyID)
-		if err != nil {
-			log.Printf("cannot get buyer address for order=%v, err=%v", buyID, err)
-			continue
+		if err := swapper.insertFinalizedSwap(swap); err != nil {
+			log.Printf("cannot get insert finalized swap into database, order=%v, err=%v", swap.OrderID, err)
 		}
-		seller, err := swapper.binder.OrderTrader(sellID)
-		if err != nil {
-			log.Printf("cannot get seller address for order=%v, err=%v", sellID, err)
-			continue
-		}
-		buyerAtomicAddr, err := swapper.SelectAuthorizedAddress(buyer)
-		if err != nil {
-			log.Printf("cannot get atomic address for trader=%v, err=%v", buyer, err)
-			continue
-		}
-		sellerAtomicAddr, err := swapper.SelectAuthorizedAddress(seller)
-		if err != nil {
-			log.Printf("cannot get atomic address for trader=%v, err=%v", seller, err)
-			continue
-		}
-
-		var pswap PartialSwap
-		if details.OrderIsBuy {
-			pswap.ReceiveAmount = details.PriorityVolume.String()
-			pswap.SendAmount = details.SecondaryVolume.String()
-			pswap.SendTo = seller
-			pswap.ReceiveFrom = sellerAtomicAddr
-		} else {
-			pswap.ReceiveAmount = details.SecondaryVolume.String()
-			pswap.SendAmount = details.PriorityVolume.String()
-			pswap.SendTo = buyerAtomicAddr
-			pswap.ReceiveFrom = buyer
-		}
-
-		data, err := json.Marshal(pswap)
-		if err != nil {
-			log.Printf("cannot marshal the swap detail, %v", err)
-			continue
-		}
-		if err := swapper.InsertSwapDetails(hex.EncodeToString(notification.OrderID[:]), string(data)); err != nil {
-			log.Printf("cannot insert swap details for order=%v, err=%v", hex.EncodeToString(notification.OrderID[:]), err)
-			continue
-		}
-		log.Println("inserted into the db")
 	}
 }

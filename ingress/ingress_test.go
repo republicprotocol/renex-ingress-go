@@ -480,23 +480,16 @@ func captureErrorsFromErrorChannel(errs <-chan error) {
 type mockSwapper struct {
 }
 
-func (swapper *mockSwapper) SelectAuthorizedAddress(kycAddress string) (string, error) {
-	return "", nil
-}
-func (swapper *mockSwapper) InsertAuthorizedAddress(kycAddress string, atomAddress string) error {
+func (swapper *mockSwapper) InsertPartialSwap(swap PartialSwap) error {
 	return nil
 }
-func (swapper *mockSwapper) SelectAddress(orderID string) (string, error) {
-	return "", nil
+
+func (swapper *mockSwapper) PartialSwap(id string) (PartialSwap, error) {
+	return PartialSwap{}, nil
 }
-func (swapper *mockSwapper) InsertAddress(orderID string, address string) error {
-	return nil
-}
-func (swapper *mockSwapper) SelectSwapDetails(orderID string) (string, error) {
-	return "", nil
-}
-func (swapper *mockSwapper) InsertSwapDetails(orderID string, swapDetails string) error {
-	return nil
+
+func (swapper *mockSwapper) FinalizedSwap(id string) (FinalizedSwap, error) {
+	return FinalizedSwap{}, nil
 }
 
 type mockLoginer struct {

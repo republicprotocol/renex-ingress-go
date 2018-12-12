@@ -2,6 +2,7 @@ package ingress
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"encoding/hex"
 	"log"
 	"time"
@@ -127,13 +128,13 @@ func (swapper *swapper) syncSettlement() {
 		}
 
 		var swap FinalizedSwap
-		swap.OrderID = hex.EncodeToString(notification.OrderID[:])
+		swap.OrderID = base64.StdEncoding.EncodeToString(notification.OrderID[:])
 		pSwap, err := swapper.PartialSwap(swap.OrderID)
 		if err != nil {
 			log.Printf("cannot get partial swap for order=%v, err=%v", swap.OrderID, err)
 			continue
 		}
-		matchedID := hex.EncodeToString(details.MatchedID[:])
+		matchedID := base64.StdEncoding.EncodeToString(details.MatchedID[:])
 		matchedPartialSwap, err := swapper.PartialSwap(matchedID)
 		if err != nil {
 			log.Printf("cannot get matched partial swap for order=%v, err=%v", matchedID, err)

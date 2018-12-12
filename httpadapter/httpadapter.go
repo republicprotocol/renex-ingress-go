@@ -389,8 +389,8 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		pSwap := ingress.PartialSwap{
 			OrderID:     info.Message.OrderID,
 			KycAddr:     info.Message.KycAddr,
-			SendTo:      swap.SendTo,
-			ReceiveFrom: swap.ReceiveFrom,
+			SendTo:      info.Message.SendTokenAddr,
+			ReceiveFrom: info.Message.ReceiveTokenAddr,
 			SecretHash:  swap.SecretHash,
 			TimeLock:    swap.TimeLock,
 		}

@@ -14,7 +14,7 @@ import (
 // TABLES
 //
 // CREATE TABLE partial_swap (
-//     order_id        varchar NOT NULL,
+//     order_id        varchar PRIMARY KEY,
 //     kyc_addr        varchar,
 //     send_to         varchar,
 //     receive_from    varchar,
@@ -23,7 +23,7 @@ import (
 // );
 //
 // CREATE TABLE finalized_swap (
-//     order_id        	     varchar NOT NULL,
+//     order_id        	  varchar PRIMARY KEY,
 //     send_to               varchar,
 //     receive_from          varchar,
 //     send_amount           varchar,
@@ -114,6 +114,7 @@ func (swapper *swapper) syncSettlement() {
 		log.Println("cannot subscribe to the contract", err)
 		return
 	}
+	log.Println("startt syncing notification from settlement...")
 	for notification := range orderSettled {
 		log.Println("have new notification", hex.EncodeToString(notification.OrderID[:]))
 		details, err := swapper.binder.GetMatchDetails(notification.OrderID)

@@ -399,7 +399,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		// Check if we have the finalized swap info.
 		finalizedSwap, err := ingressAdapter.FinalizedSwap(pSwap.OrderID)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			http.Error(w, err.Error(), http.StatusNoContent)
 			return
 		}
 

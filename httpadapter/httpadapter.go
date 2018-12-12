@@ -391,7 +391,6 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
 		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(messageBytes))), messageBytes...)
 		hash := crypto.Keccak256(signatureData)
 		sigBytes, err := UnmarshalSignature(info.Signature)
@@ -399,7 +398,6 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
 		publicKey, err := crypto.SigToPub(hash, sigBytes[:])
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -446,6 +444,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
+		log.Println(swap)
 	}
 }
 

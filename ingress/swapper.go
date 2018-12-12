@@ -116,6 +116,7 @@ func (swapper *swapper) syncSettlement() {
 		return
 	}
 	log.Println("start syncing notification from settlement...")
+
 	for notification := range orderSettled {
 		log.Println("have new notification", hex.EncodeToString(notification.OrderID[:]))
 		details, err := swapper.binder.GetMatchDetails(notification.OrderID)
@@ -124,6 +125,7 @@ func (swapper *swapper) syncSettlement() {
 			continue
 		}
 		if details.PriorityToken != 0 || !details.Settled {
+			log.Println("we should skip here")
 			continue
 		}
 

@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
@@ -384,6 +386,13 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		}
 
 		// todo: verify the delay info
+		data ,err  := json.Marshal(info.Message)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		pub, err := crypto.SigToPub(json)
+		pub.
 
 		// return the finalized swap if we have the finalized swap
 		pSwap := ingress.PartialSwap{
@@ -421,9 +430,6 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
-
-		log.Println("we are all good if we see this")
-		log.Println(swap)
 	}
 }
 

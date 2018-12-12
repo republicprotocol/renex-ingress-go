@@ -55,7 +55,8 @@ func NewBinder(auth *bind.TransactOpts, conn, wsconn Conn) (Binder, error) {
 		fmt.Println(fmt.Errorf("cannot bind to Settlement: %v", err))
 		return Binder{}, err
 	}
-	settlementWs, err := bindings.NewRenExSettlement(common.HexToAddress(conn.Config.RenExSettlementAddress), bind.ContractBackend(wsconn.Client))
+	log.Println("ws settlement address", wsconn.Config.RenExSettlementAddress)
+	settlementWs, err := bindings.NewRenExSettlement(common.HexToAddress(wsconn.Config.RenExSettlementAddress), bind.ContractBackend(wsconn.Client))
 	if err != nil {
 		fmt.Println(fmt.Errorf("cannot bind to Settlement: %v", err))
 		return Binder{}, err

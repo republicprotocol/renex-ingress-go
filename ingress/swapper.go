@@ -100,7 +100,7 @@ func (swapper *swapper) FinalizedSwap(id string) (FinalizedSwap, error) {
 }
 
 func (swapper *swapper) insertFinalizedSwap(swap FinalizedSwap) error {
-	_, err := swapper.Exec("INSERT INTO partial_swap (order_id, send_to, receive_from, send_amount, receive_amount,secret_hash, should_initiate_first, time_lock) VALUES ($1,$2,$3,$4,$5,$6,$7,&8)",
+	_, err := swapper.Exec("INSERT INTO finalized_swap (order_id, send_to, receive_from, send_amount, receive_amount, secret_hash, should_initiate_first, time_lock) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
 		swap.OrderID, swap.SendTo, swap.ReceiveFrom, swap.SendAmount, swap.ReceiveAmount, swap.SecretHash, swap.ShouldInitiateFirst, swap.TimeLock)
 	return err
 }

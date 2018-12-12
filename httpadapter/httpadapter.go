@@ -421,6 +421,9 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
+
+		log.Println("we are all good if we see this")
+		log.Println(swap)
 	}
 }
 

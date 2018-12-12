@@ -45,7 +45,7 @@
   version = "v1.7.1"
 
 [[projects]]
-  digest = "1:8bf83050739ffd7f13bdc7dd281fccc40718d52eb2ce23fe7d980a3ac1f0a8b0"
+  digest = "1:87fa9f2d71fd2516e6c0d906b7eb58886c8b4fcc6ee8cada0553a0e50bfeef3a"
   name = "github.com/ethereum/go-ethereum"
   packages = [
     ".",
@@ -83,8 +83,8 @@
     "trie",
   ]
   pruneopts = "T"
-  revision = "dae82f098570e15d44584f0d7f350713f4774727"
-  version = "v1.8.19"
+  revision = "24d727b6d6e2c0cde222fa12155c4a6db5caaf2e"
+  version = "v1.8.20"
 
 [[projects]]
   digest = "1:4c183be9fd1680d917006bb4884c1ac3d00a6bd33b0d36c8439c8cbd011e5aac"
@@ -226,11 +226,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:52d339b280567731d999ff9b56fc5b9ae731942dafa5567fe75fbe03269cc872"
+  digest = "1:fc2c2a02acf749d3642848700a563b901c3b1a621b96bb38cb835018615d5a11"
   name = "github.com/multiformats/go-multiaddr"
   packages = ["."]
   pruneopts = "T"
-  revision = "8c3eb5dc1c12c5723d5b1d7de82abfa0e6f719d7"
+  revision = "73950681ca568e59189eee1c2d2d5dec4c0dcd25"
 
 [[projects]]
   branch = "master"
@@ -306,7 +306,7 @@
 
 [[projects]]
   branch = "nightly"
-  digest = "1:1d501b63670fc1cb39c39be976b8606c519236646d3ab4229e172010dd0bf2c7"
+  digest = "1:98b871d4879bb701b68521d110c90d599ebfd5a11c0c79e896be78525eca200c"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -329,15 +329,18 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "f72013de89f51ddd0a2854e63fc6c4b8038c07f2"
+  revision = "40d5b7a41401943d99393f631e03ba3d3356797e"
 
 [[projects]]
-  branch = "master"
-  digest = "1:6bbed41f0b462168ed0c56cfa848ab1da480cd6bf161666d2eeb07a2cec4ce51"
+  branch = "fees"
+  digest = "1:77b677c4b0321c839d8f6d400b23c03f61c9e0d03a4dadf1d6c816b8cc095b6e"
   name = "github.com/republicprotocol/swapperd"
-  packages = ["foundation"]
+  packages = [
+    "foundation/blockchain",
+    "foundation/swap",
+  ]
   pruneopts = "T"
-  revision = "e5ff1d33351226bc9a026205c9bd16d98220dab9"
+  revision = "91fca71bca1835e5b1ebd26a0de6541b8868c8a3"
 
 [[projects]]
   digest = "1:9787d2d3220cbfd444596afd03ab0abcf391df169b789fbe3eae27fa2e426cf6"
@@ -428,14 +431,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4d1fea392dcd2f08f9916dba3b33a5293f8cc935e6337166c895a6cdf20b5184"
+  digest = "1:6f7c84e56a47c096e4d31823876ad74d7c55ab793b231dc2da797be2e8bcb2dc"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "T"
-  revision = "2a47403f2ae58167c4d75973960ccc62b28cb0d8"
+  revision = "7da8ea5c81829e397bdf930c5d8ba4b703616f33"
 
 [[projects]]
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
@@ -590,7 +593,7 @@
     "github.com/republicprotocol/republic-go/orderbook",
     "github.com/republicprotocol/republic-go/registry",
     "github.com/republicprotocol/republic-go/swarm",
-    "github.com/republicprotocol/swapperd/foundation",
+    "github.com/republicprotocol/swapperd/foundation/swap",
     "github.com/rs/cors",
     "github.com/satori/go.uuid",
     "golang.org/x/time/rate",

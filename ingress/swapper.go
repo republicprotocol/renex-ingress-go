@@ -150,13 +150,13 @@ func (swapper *swapper) syncSettlement() {
 		priorityAmount := details.PriorityVolume.String()
 		secondaryAmount := details.SecondaryVolume.String()
 		if details.OrderIsBuy {
-			swap.SendAmount = secondaryAmount
-			swap.ReceiveAmount = priorityAmount
+			swap.SendAmount = priorityAmount
+			swap.ReceiveAmount = secondaryAmount
 			swap.ShouldInitiateFirst = false
 			swap.SecretHash = matchedPartialSwap.SecretHash
 		} else {
-			swap.SendAmount = priorityAmount
-			swap.ReceiveAmount = secondaryAmount
+			swap.SendAmount = secondaryAmount
+			swap.ReceiveAmount = priorityAmount
 			swap.ShouldInitiateFirst = true
 			swap.SecretHash = pSwap.SecretHash
 		}

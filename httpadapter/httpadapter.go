@@ -15,12 +15,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum/crypto"
-
 	"github.com/getsentry/raven-go"
+	"github.com/republicprotocol/swapperd/foundation/blockchain"
+	"github.com/republicprotocol/swapperd/foundation/swap"
+
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
-	"github.com/republicprotocol/swapperd/foundation"
 	"github.com/rs/cors"
 	"golang.org/x/time/rate"
 )
@@ -374,13 +375,13 @@ func GetKYCHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret string) h
 
 func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var swap foundation.SwapBlob
-		if err := json.NewDecoder(r.Body).Decode(&swap); err != nil {
+		var blob swap.SwapBlob
+		if err := json.NewDecoder(r.Body).Decode(&blob); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		var info delayInfo
-		if err := json.Unmarshal(swap.DelayInfo, &info); err != nil {
+		if err := json.Unmarshal(blob.DelayInfo, &info); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -408,35 +409,56 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			return
 		}
 
-		// return the finalized swap if we have the finalized swap
+		// return the finalized blob if we have the finalized blob
 		pSwap := ingress.PartialSwap{
 			OrderID:     info.Message.OrderID,
 			KycAddr:     info.Message.KycAddr,
 			SendTo:      info.Message.SendTokenAddr,
 			ReceiveFrom: info.Message.ReceiveTokenAddr,
-			SecretHash:  swap.SecretHash,
-			TimeLock:    swap.TimeLock,
+			SecretHash:  blob.SecretHash,
+			TimeLock:    blob.TimeLock,
 		}
 		defer ingressAdapter.InsertPartialSwap(pSwap)
 
-		// Check if we have the finalized swap info.
+		// Check if we have the finalized blob info.
 		finalizedSwap, err := ingressAdapter.FinalizedSwap(pSwap.OrderID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNoContent)
 			return
 		}
 
-		// Fill missing fields in the swap and return
-		swap.Delay = false
-		swap.SendTo = finalizedSwap.SendTo
-		swap.ReceiveFrom = finalizedSwap.ReceiveFrom
-		swap.SendAmount = finalizedSwap.SendAmount
-		swap.ReceiveAmount = finalizedSwap.ReceiveAmount
-		swap.ShouldInitiateFirst = finalizedSwap.ShouldInitiateFirst
-		swap.TimeLock = finalizedSwap.TimeLock
-		swap.SecretHash = finalizedSwap.SecretHash
+		// Fill missing fields in the blob and return
+		blob.Delay = false
+		blob.SendTo = finalizedSwap.SendTo
+		blob.ReceiveFrom = finalizedSwap.ReceiveFrom
+		blob.SendAmount = finalizedSwap.SendAmount
+		blob.ReceiveAmount = finalizedSwap.ReceiveAmount
+		blob.ShouldInitiateFirst = finalizedSwap.ShouldInitiateFirst
+		blob.TimeLock = finalizedSwap.TimeLock
+		blob.SecretHash = finalizedSwap.SecretHash
 
-		data, err := json.Marshal(swap)
+		sendToken, err := blockchain.PatchToken(blob.SendToken)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		blob.BrokerSendTokenAddr, err = brokerAddress(sendToken.Blockchain)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		receiveToken, err := blockchain.PatchToken(blob.ReceiveToken)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		blob.BrokerReceiveTokenAddr, err = brokerAddress(receiveToken.Blockchain)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		data, err := json.Marshal(blob)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -444,7 +466,18 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
-		log.Println(swap)
+		log.Println(blob)
+	}
+}
+
+func brokerAddress(bcName blockchain.BlockchainName) (string, error) {
+	switch bcName {
+	case blockchain.Ethereum:
+		return os.Getenv("ETH_VAULT"), nil
+	case blockchain.Bitcoin:
+		return os.Getenv("BTC_VAULT"), nil
+	default:
+		return "", blockchain.ErrUnsupportedBlockchain(bcName)
 	}
 }
 

@@ -385,14 +385,30 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			return
 		}
 
-		// todo: verify the delay info
-		data ,err  := json.Marshal(info.Message)
+		// verify request
+		messageBytes, err := json.Marshal(info.Message)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		pub, err := crypto.SigToPub(json)
-		pub.
+
+		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(messageBytes))), messageBytes...)
+		hash := crypto.Keccak256(signatureData)
+		sigBytes, err := UnmarshalSignature(info.Signature)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		publicKey, err := crypto.SigToPub(hash, sigBytes[:])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if crypto.PubkeyToAddress(*publicKey).Hex() != info.Message.KycAddr {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
 
 		// return the finalized swap if we have the finalized swap
 		pSwap := ingress.PartialSwap{

@@ -398,6 +398,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		}
 		log.Println(4)
 
+		messageBytes = append([]byte("RenEx: swapperd: "), messageBytes...)
 		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(messageBytes))), messageBytes...)
 		hash := crypto.Keccak256(signatureData)
 		sigBytes, err := UnmarshalSignature(info.Signature)

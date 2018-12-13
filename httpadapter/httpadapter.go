@@ -389,6 +389,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		// verify request
 		messageBytes, err := json.Marshal(info.Message)
 		if err != nil {
+			log.Println("unable marshal the request", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -396,11 +397,13 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		hash := crypto.Keccak256(signatureData)
 		sigBytes, err := UnmarshalSignature(info.Signature)
 		if err != nil {
+			log.Println("unable marshal the signature", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		publicKey, err := crypto.SigToPub(hash, sigBytes[:])
 		if err != nil {
+			log.Println("unable verify signature address", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -464,6 +467,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 
 		data, err := json.Marshal(blob)
 		if err != nil {
+			log.Println("cannot marshal blob", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

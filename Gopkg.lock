@@ -333,14 +333,14 @@
 
 [[projects]]
   branch = "fees"
-  digest = "1:77b677c4b0321c839d8f6d400b23c03f61c9e0d03a4dadf1d6c816b8cc095b6e"
+  digest = "1:7fcec041f5f55250e25113f74832aad6a6a30b206ffdbcd8f7b1a5fab0cf38bd"
   name = "github.com/republicprotocol/swapperd"
   packages = [
     "foundation/blockchain",
     "foundation/swap",
   ]
   pruneopts = "T"
-  revision = "91fca71bca1835e5b1ebd26a0de6541b8868c8a3"
+  revision = "fd172c9600e9cf323d024da83863631ab0c66c16"
 
 [[projects]]
   digest = "1:9787d2d3220cbfd444596afd03ab0abcf391df169b789fbe3eae27fa2e426cf6"
@@ -411,7 +411,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:134fd2b5998199ca103bdcd2920be488fffbbf307fec71d158b773694a8a2080"
+  digest = "1:0c60c25323a50cdd330a193334388e8f1f51e50d8e2aeed95aa89316c77248d7"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -427,18 +427,18 @@
     "websocket",
   ]
   pruneopts = "T"
-  revision = "610586996380ceef02dd726cc09df7e00a3f8e56"
+  revision = "891ebc4b82d6e74f468c533b06f983c7be918a96"
 
 [[projects]]
   branch = "master"
-  digest = "1:6f7c84e56a47c096e4d31823876ad74d7c55ab793b231dc2da797be2e8bcb2dc"
+  digest = "1:3631df9157a563b9b7efe8bedae459a2d6a8db709826e2c0e26cec4f40d7d7a7"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "T"
-  revision = "7da8ea5c81829e397bdf930c5d8ba4b703616f33"
+  revision = "4d1cda033e0619309c606fc686de3adcf599539e"
 
 [[projects]]
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
@@ -593,6 +593,7 @@
     "github.com/republicprotocol/republic-go/orderbook",
     "github.com/republicprotocol/republic-go/registry",
     "github.com/republicprotocol/republic-go/swarm",
+    "github.com/republicprotocol/swapperd/foundation/blockchain",
     "github.com/republicprotocol/swapperd/foundation/swap",
     "github.com/rs/cors",
     "github.com/satori/go.uuid",

@@ -375,17 +375,20 @@ func GetKYCHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret string) h
 
 func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println(1)
 		var blob swap.SwapBlob
 		if err := json.NewDecoder(r.Body).Decode(&blob); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		log.Println(2)
 		var info delayInfo
 		if err := json.Unmarshal(blob.DelayInfo, &info); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
+		log.Println(3)
 		// verify request
 		messageBytes, err := json.Marshal(info.Message)
 		if err != nil {
@@ -393,6 +396,8 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		log.Println(4)
+
 		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(messageBytes))), messageBytes...)
 		hash := crypto.Keccak256(signatureData)
 		sigBytes, err := UnmarshalSignature(info.Signature)
@@ -401,16 +406,21 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		log.Println(5)
+
 		publicKey, err := crypto.SigToPub(hash, sigBytes[:])
 		if err != nil {
 			log.Println("unable verify signature address", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		log.Println(6)
+
 		if crypto.PubkeyToAddress(*publicKey).Hex() != info.Message.KycAddr {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+		log.Println(7)
 
 		// return the finalized blob if we have the finalized blob
 		pSwap := ingress.PartialSwap{
@@ -429,6 +439,8 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusNoContent)
 			return
 		}
+		log.Println(8)
+
 		if canceled {
 			http.Error(w, "order has been canceled", http.StatusGone)
 			return
@@ -464,6 +476,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		log.Println(9)
 
 		data, err := json.Marshal(blob)
 		if err != nil {

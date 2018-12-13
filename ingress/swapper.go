@@ -119,14 +119,28 @@ func (swapper *swapper) syncSettlement() {
 
 	for notification := range orderSettled {
 		log.Println("have new notification", hex.EncodeToString(notification.OrderID[:]))
+
 		details, err := swapper.binder.GetMatchDetails(notification.OrderID)
 		if err != nil {
 			log.Printf("cannot get match details for order=%v, err=%v", hex.EncodeToString(notification.OrderID[:]), err)
 			continue
 		}
-		if details.PriorityToken != 0 || !details.Settled {
+
+		if details.PriorityToken != 0 {
 			log.Println("we should skip here")
 			continue
+		}
+
+		for {
+			if details.Settled{
+				break
+			}
+			details, err = swapper.binder.GetMatchDetails(notification.OrderID)
+			if err != nil {
+				log.Printf("cannot get match details for order=%v, err=%v", hex.EncodeToString(notification.OrderID[:]), err)
+				continue
+			}
+			time.Sleep(time.Second)
 		}
 
 		var swap FinalizedSwap

@@ -66,10 +66,10 @@ type usersResponse struct {
 }
 
 type Message struct {
-	OrderID          string `json:"order_id"`
-	KycAddr          string `json:"kyc_addr"`
-	SendTokenAddr    string `json:"send_token_addr"`
-	ReceiveTokenAddr string `json:"receive_token_addr"`
+	OrderID          string `json:"orderID"`
+	KycAddr          string `json:"kycAddr"`
+	SendTokenAddr    string `json:"sendTokenAddr"`
+	ReceiveTokenAddr string `json:"receiveTokenAddr"`
 }
 
 type delayInfo struct {
@@ -421,9 +421,13 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		defer ingressAdapter.InsertPartialSwap(pSwap)
 
 		// Check if we have the finalized blob info.
-		finalizedSwap, err := ingressAdapter.FinalizedSwap(pSwap.OrderID)
+		finalizedSwap, canceled, err := ingressAdapter.FinalizedSwap(pSwap.OrderID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNoContent)
+			return
+		}
+		if canceled {
+			http.Error(w, "order has been canceled", http.StatusGone)
 			return
 		}
 

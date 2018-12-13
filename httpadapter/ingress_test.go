@@ -256,8 +256,8 @@ func (swapper *mockSwapper) PartialSwap(id string) (ingress.PartialSwap, error) 
 	return ingress.PartialSwap{}, nil
 }
 
-func (swapper *mockSwapper) FinalizedSwap(id string) (ingress.FinalizedSwap, error) {
-	return ingress.FinalizedSwap{}, nil
+func (swapper *mockSwapper) FinalizedSwap(id string) (ingress.FinalizedSwap, bool, error) {
+	return ingress.FinalizedSwap{}, false, nil
 }
 
 type mockLoginer struct {

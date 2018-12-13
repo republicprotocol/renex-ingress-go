@@ -56,8 +56,8 @@ func (adapter *weakAdapter) PartialSwap(id string) (ingress.PartialSwap, error) 
 	return ingress.PartialSwap{}, nil
 }
 
-func (adapter *weakAdapter) FinalizedSwap(id string) (ingress.FinalizedSwap, error) {
-	return ingress.FinalizedSwap{}, nil
+func (adapter *weakAdapter) FinalizedSwap(id string) (ingress.FinalizedSwap, bool, error) {
+	return ingress.FinalizedSwap{}, false, nil
 }
 
 type errAdapter struct {
@@ -95,8 +95,8 @@ func (adapter *errAdapter) PartialSwap(id string) (ingress.PartialSwap, error) {
 	return ingress.PartialSwap{}, nil
 }
 
-func (adapter *errAdapter) FinalizedSwap(id string) (ingress.FinalizedSwap, error) {
-	return ingress.FinalizedSwap{}, nil
+func (adapter *errAdapter) FinalizedSwap(id string) (ingress.FinalizedSwap, bool, error) {
+	return ingress.FinalizedSwap{}, false, nil
 }
 
 var _ = Describe("HTTP handlers", func() {

@@ -3,8 +3,7 @@ package ingress
 import (
 	"database/sql"
 	"encoding/base64"
-	"encoding/hex"
-	"log"
+	"fmt"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -59,7 +58,7 @@ type Swapper interface {
 
 	PartialSwap(id string) (PartialSwap, error)
 
-	FinalizedSwap(id string) (FinalizedSwap, error)
+	FinalizedSwap(id string) (FinalizedSwap, bool, error)
 }
 
 type swapper struct {
@@ -73,7 +72,7 @@ func NewSwapper(databaseURL string, binder contract.Binder) (Swapper, error) {
 		return nil, err
 	}
 	swapper := &swapper{db, binder}
-	go swapper.syncSettlement()
+
 	return swapper, nil
 }
 
@@ -91,92 +90,75 @@ func (swapper *swapper) PartialSwap(id string) (PartialSwap, error) {
 	return swap, err
 }
 
-func (swapper *swapper) FinalizedSwap(id string) (FinalizedSwap, error) {
+func (swapper *swapper) FinalizedSwap(id string) (FinalizedSwap, bool, error) {
+	orderID, err := orderIdStringToBytes(id)
+	if err != nil {
+		return FinalizedSwap{}, false, err
+	}
+
+	// Check if the order has been canceled
+	status, err := swapper.binder.OrderState(orderID)
+	if err != nil {
+		return FinalizedSwap{}, false, err
+	}
+	if status == 3 {
+		return FinalizedSwap{}, true, nil
+	}
+
+	// Get settlement details
+	details, err := swapper.binder.GetMatchDetails(orderID)
+	if err != nil {
+		return FinalizedSwap{}, false, fmt.Errorf("cannot get match details for order=%v, err=%v", id, err)
+	}
+	if !details.Settled {
+		return FinalizedSwap{}, false, fmt.Errorf("order=%v has not been settled", id)
+	}
+	if details.PriorityToken != 0 {
+		return FinalizedSwap{}, false, fmt.Errorf("order=%v is not an atomic swap order", id)
+	}
+
+	// Construct the missing fields of the swap.
 	var swap FinalizedSwap
 	swap.OrderID = id
-	err := swapper.QueryRow("SELECT send_to, receive_from, send_amount, receive_amount, secret_hash, should_initiate_first, time_lock FROM finalized_swap WHERE order_id = $1", id).
-		Scan(&swap.SendTo, &swap.ReceiveFrom, &swap.SendAmount, &swap.ReceiveAmount, &swap.SecretHash, &swap.ShouldInitiateFirst, &swap.TimeLock)
-	return swap, err
-}
-
-func (swapper *swapper) insertFinalizedSwap(swap FinalizedSwap) error {
-	_, err := swapper.Exec("INSERT INTO finalized_swap (order_id, send_to, receive_from, send_amount, receive_amount, secret_hash, should_initiate_first, time_lock) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-		swap.OrderID, swap.SendTo, swap.ReceiveFrom, swap.SendAmount, swap.ReceiveAmount, swap.SecretHash, swap.ShouldInitiateFirst, swap.TimeLock)
-	return err
-}
-
-// syncSettlement listens to the order settlement event from the settlement
-// contract. If the settled order is an atomic swap order, we collect the data
-// needed for the swap and store them in the database.
-func (swapper *swapper) syncSettlement() {
-	orderIDs := make([][32]byte, 0)
-	orderSettled, err := swapper.binder.WatchLogOrderSettled(orderIDs)
+	pSwap, err := swapper.PartialSwap(swap.OrderID)
 	if err != nil {
-		log.Println("cannot subscribe to the contract", err)
-		return
+		return FinalizedSwap{}, false, fmt.Errorf("cannot get partial swap for order=%v, err=%v", swap.OrderID, err)
+
 	}
-	log.Println("start syncing notification from settlement...")
-
-	for notification := range orderSettled {
-		log.Println("have new notification", hex.EncodeToString(notification.OrderID[:]))
-
-		details, err := swapper.binder.GetMatchDetails(notification.OrderID)
-		if err != nil {
-			log.Printf("cannot get match details for order=%v, err=%v", hex.EncodeToString(notification.OrderID[:]), err)
-			continue
-		}
-
-		if details.PriorityToken != 0 {
-			log.Println("we should skip here")
-			continue
-		}
-
-		for {
-			if details.Settled{
-				break
-			}
-			details, err = swapper.binder.GetMatchDetails(notification.OrderID)
-			if err != nil {
-				log.Printf("cannot get match details for order=%v, err=%v", hex.EncodeToString(notification.OrderID[:]), err)
-				continue
-			}
-			time.Sleep(time.Second)
-		}
-
-		var swap FinalizedSwap
-		swap.OrderID = base64.StdEncoding.EncodeToString(notification.OrderID[:])
-		pSwap, err := swapper.PartialSwap(swap.OrderID)
-		if err != nil {
-			log.Printf("cannot get partial swap for order=%v, err=%v", swap.OrderID, err)
-			continue
-		}
-		matchedID := base64.StdEncoding.EncodeToString(details.MatchedID[:])
-		matchedPartialSwap, err := swapper.PartialSwap(matchedID)
-		if err != nil {
-			log.Printf("cannot get matched partial swap for order=%v, err=%v", matchedID, err)
-			continue
-		}
-		timelock := time.Now().Add(48 * time.Hour)
-		swap.SendTo = matchedPartialSwap.ReceiveFrom
-		swap.ReceiveFrom = matchedPartialSwap.SendTo
-		swap.TimeLock = timelock.Unix()
-
-		priorityAmount := details.PriorityVolume.String()
-		secondaryAmount := details.SecondaryVolume.String()
-		if details.OrderIsBuy {
-			swap.SendAmount = priorityAmount
-			swap.ReceiveAmount = secondaryAmount
-			swap.ShouldInitiateFirst = false
-			swap.SecretHash = matchedPartialSwap.SecretHash
-		} else {
-			swap.SendAmount = secondaryAmount
-			swap.ReceiveAmount = priorityAmount
-			swap.ShouldInitiateFirst = true
-			swap.SecretHash = pSwap.SecretHash
-		}
-
-		if err := swapper.insertFinalizedSwap(swap); err != nil {
-			log.Printf("cannot get insert finalized swap into database, order=%v, err=%v", swap.OrderID, err)
-		}
+	matchedID := base64.StdEncoding.EncodeToString(details.MatchedID[:])
+	matchedPartialSwap, err := swapper.PartialSwap(matchedID)
+	if err != nil {
+		return FinalizedSwap{}, false, fmt.Errorf("cannot get matched partial swap for order=%v, err=%v", matchedID, err)
 	}
+	timelock := time.Now().Add(48 * time.Hour)
+	swap.SendTo = matchedPartialSwap.ReceiveFrom
+	swap.ReceiveFrom = matchedPartialSwap.SendTo
+	swap.TimeLock = timelock.Unix()
+
+	priorityAmount := details.PriorityVolume.String()
+	secondaryAmount := details.SecondaryVolume.String()
+	if details.OrderIsBuy {
+		swap.SendAmount = priorityAmount
+		swap.ReceiveAmount = secondaryAmount
+		swap.ShouldInitiateFirst = false
+		swap.SecretHash = matchedPartialSwap.SecretHash
+	} else {
+		swap.SendAmount = secondaryAmount
+		swap.ReceiveAmount = priorityAmount
+		swap.ShouldInitiateFirst = true
+		swap.SecretHash = pSwap.SecretHash
+	}
+
+	return swap, false, nil
+}
+
+func orderIdStringToBytes(id string) ([32]byte, error) {
+	orderIDBytes, err := base64.StdEncoding.DecodeString(id)
+	if err != nil {
+		return [32]byte{}, err
+	}
+	var orderID [32]byte
+	copy(orderID[:], orderIDBytes[:])
+
+	return orderID, nil
 }

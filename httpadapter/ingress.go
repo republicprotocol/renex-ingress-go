@@ -61,7 +61,7 @@ type LoginAdapter interface {
 type OrderAdapter interface {
 	InsertPartialSwap(swap ingress.PartialSwap) error
 	PartialSwap(id string) (ingress.PartialSwap, error)
-	FinalizedSwap(id string) (ingress.FinalizedSwap, error)
+	FinalizedSwap(id string) (ingress.FinalizedSwap, bool, error)
 }
 
 // An IngressAdapter implements the OpenOrderAdapter and the
@@ -146,6 +146,6 @@ func (adapter *ingressAdapter) PartialSwap(id string) (ingress.PartialSwap, erro
 	return adapter.Ingress.PartialSwap(id)
 }
 
-func (adapter *ingressAdapter) FinalizedSwap(id string) (ingress.FinalizedSwap, error) {
+func (adapter *ingressAdapter) FinalizedSwap(id string) (ingress.FinalizedSwap, bool, error) {
 	return adapter.Ingress.FinalizedSwap(id)
 }

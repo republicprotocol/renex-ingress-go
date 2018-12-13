@@ -141,3 +141,7 @@ func (binder *Binder) OrderTrader(id [32]byte) (string, error) {
 
 	return trader.Hex(), nil
 }
+
+func (binder *Binder) OrderState(id [32]byte) (uint8, error) {
+	return binder.orderbook.OrderState(&bind.CallOpts{}, id)
+}

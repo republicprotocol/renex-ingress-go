@@ -488,8 +488,8 @@ func (swapper *mockSwapper) PartialSwap(id string) (PartialSwap, error) {
 	return PartialSwap{}, nil
 }
 
-func (swapper *mockSwapper) FinalizedSwap(id string) (FinalizedSwap, error) {
-	return FinalizedSwap{}, nil
+func (swapper *mockSwapper) FinalizedSwap(id string) (FinalizedSwap, bool, error) {
+	return FinalizedSwap{}, false, nil
 }
 
 type mockLoginer struct {

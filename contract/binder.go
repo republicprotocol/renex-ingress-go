@@ -3,7 +3,6 @@ package contract
 import (
 	"context"
 	"fmt"
-	"log"
 	"math/big"
 	"sync"
 
@@ -49,13 +48,11 @@ func NewBinder(auth *bind.TransactOpts, conn, wsconn Conn) (Binder, error) {
 		fmt.Println(fmt.Errorf("cannot bind to Orderbook: %v", err))
 		return Binder{}, err
 	}
-	log.Println("settlement address ", conn.Config.RenExSettlementAddress)
 	settlement, err := bindings.NewRenExSettlement(common.HexToAddress(conn.Config.RenExSettlementAddress), bind.ContractBackend(conn.Client))
 	if err != nil {
 		fmt.Println(fmt.Errorf("cannot bind to Settlement: %v", err))
 		return Binder{}, err
 	}
-	log.Println("ws settlement address", wsconn.Config.RenExSettlementAddress)
 	settlementWs, err := bindings.NewRenExSettlement(common.HexToAddress(wsconn.Config.RenExSettlementAddress), bind.ContractBackend(wsconn.Client))
 	if err != nil {
 		fmt.Println(fmt.Errorf("cannot bind to Settlement: %v", err))

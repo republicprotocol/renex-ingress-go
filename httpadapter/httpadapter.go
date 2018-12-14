@@ -423,7 +423,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			SendTo:      info.Message.SendTokenAddr,
 			ReceiveFrom: info.Message.ReceiveTokenAddr,
 			SecretHash:  blob.SecretHash,
-			TimeLock:    blob.TimeLock,
+			TimeLock:    time.Now().Unix(),
 		}
 		defer ingressAdapter.InsertPartialSwap(pSwap)
 
@@ -446,7 +446,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		blob.SendAmount = finalizedSwap.SendAmount
 		blob.ReceiveAmount = finalizedSwap.ReceiveAmount
 		blob.ShouldInitiateFirst = finalizedSwap.ShouldInitiateFirst
-		blob.TimeLock = time.Now().Unix()
+		blob.TimeLock = finalizedSwap.TimeLock
 		blob.SecretHash = finalizedSwap.SecretHash
 
 		sendToken, err := blockchain.PatchToken(blob.SendToken)
@@ -469,7 +469,6 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		log.Println(9)
 
 		data, err := json.Marshal(blob)
 		if err != nil {

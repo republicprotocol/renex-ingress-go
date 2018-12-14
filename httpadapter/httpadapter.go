@@ -423,7 +423,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			SendTo:      info.Message.SendTokenAddr,
 			ReceiveFrom: info.Message.ReceiveTokenAddr,
 			SecretHash:  blob.SecretHash,
-			TimeLock:    time.Now().Unix(),
+			TimeLock:    time.Now().Add(48 * time.Hour).Unix(),
 		}
 		defer ingressAdapter.InsertPartialSwap(pSwap)
 

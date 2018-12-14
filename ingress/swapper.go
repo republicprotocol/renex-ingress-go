@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
-	"time"
 
 	_ "github.com/lib/pq"
 
@@ -130,10 +129,8 @@ func (swapper *swapper) FinalizedSwap(id string) (FinalizedSwap, bool, error) {
 	if err != nil {
 		return FinalizedSwap{}, false, fmt.Errorf("cannot get matched partial swap for order=%v, err=%v", matchedID, err)
 	}
-	timelock := time.Now().Add(48 * time.Hour)
 	swap.SendTo = matchedPartialSwap.ReceiveFrom
 	swap.ReceiveFrom = matchedPartialSwap.SendTo
-	swap.TimeLock = timelock.Unix()
 
 	priorityAmount := details.PriorityVolume.String()
 	secondaryAmount := details.SecondaryVolume.String()
@@ -142,11 +139,13 @@ func (swapper *swapper) FinalizedSwap(id string) (FinalizedSwap, bool, error) {
 		swap.ReceiveAmount = secondaryAmount
 		swap.ShouldInitiateFirst = false
 		swap.SecretHash = matchedPartialSwap.SecretHash
+		swap.TimeLock = matchedPartialSwap.TimeLock
 	} else {
 		swap.SendAmount = secondaryAmount
 		swap.ReceiveAmount = priorityAmount
 		swap.ShouldInitiateFirst = true
 		swap.SecretHash = pSwap.SecretHash
+		swap.TimeLock = pSwap.TimeLock
 	}
 
 	return swap, false, nil

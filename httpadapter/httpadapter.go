@@ -375,20 +375,17 @@ func GetKYCHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret string) h
 
 func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println(1)
 		var blob swap.SwapBlob
 		if err := json.NewDecoder(r.Body).Decode(&blob); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		log.Println(2)
 		var info delayInfo
 		if err := json.Unmarshal(blob.DelayInfo, &info); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		log.Println(3)
 		// verify request
 		messageBytes, err := json.Marshal(info.Message)
 		if err != nil {
@@ -396,7 +393,6 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println(4)
 
 		messageBytes = append([]byte("RenEx: swapperd: "), messageBytes...)
 		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(messageBytes))), messageBytes...)
@@ -407,7 +403,6 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println(5)
 
 		publicKey, err := crypto.SigToPub(hash, sigBytes[:])
 		if err != nil {
@@ -415,13 +410,11 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println(6)
 
 		if crypto.PubkeyToAddress(*publicKey).Hex() != info.Message.KycAddr {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		log.Println(7)
 
 		// return the finalized blob if we have the finalized blob
 		pSwap := ingress.PartialSwap{
@@ -440,7 +433,6 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusNoContent)
 			return
 		}
-		log.Println(8)
 
 		if canceled {
 			http.Error(w, "order has been canceled", http.StatusGone)
@@ -454,7 +446,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		blob.SendAmount = finalizedSwap.SendAmount
 		blob.ReceiveAmount = finalizedSwap.ReceiveAmount
 		blob.ShouldInitiateFirst = finalizedSwap.ShouldInitiateFirst
-		blob.TimeLock = finalizedSwap.TimeLock
+		blob.TimeLock = time.Now().Unix()
 		blob.SecretHash = finalizedSwap.SecretHash
 
 		sendToken, err := blockchain.PatchToken(blob.SendToken)

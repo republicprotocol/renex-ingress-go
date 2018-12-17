@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/crypto/sha3"
+
 	"github.com/getsentry/raven-go"
 	"github.com/republicprotocol/swapperd/foundation/blockchain"
 	"github.com/republicprotocol/swapperd/foundation/swap"
@@ -405,9 +407,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			return
 		}
 
-		messageBytes = append([]byte("RenEx: swapperd: "), messageBytes...)
-		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(messageBytes))), messageBytes...)
-		hash := crypto.Keccak256(signatureData)
+		hash := sha3.Sum256(messageBytes)
 		sigBytes, err := UnmarshalSignature(info.Signature)
 		if err != nil {
 			log.Println("unable marshal the signature", err)
@@ -415,7 +415,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			return
 		}
 
-		publicKey, err := crypto.SigToPub(hash, sigBytes[:])
+		publicKey, err := crypto.SigToPub(hash[:], sigBytes[:])
 		if err != nil {
 			log.Println("unable verify signature address", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

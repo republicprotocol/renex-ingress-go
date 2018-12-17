@@ -93,7 +93,7 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 	r.HandleFunc("/kyber", rateLimit(limiter, KyberKYCHandler(ingressAdapter, kyberID, kyberSecret))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, ApproveWithdrawalHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/kyc/{address}", rateLimit(limiter, GetKYCHandler(ingressAdapter, kyberID, kyberSecret))).Methods("GET")
-	r.HandleFunc("/swapperd/cb", rateLimit(limiter, PostSwapCallbackHandler(ingressAdapter))).Methods("POST")
+	r.HandleFunc("/swapperd/cb", rateLimit(limiter, PostSwapCallbackHandler(ingressAdapter, kyberID, kyberSecret))).Methods("POST")
 	r.Use(RecoveryHandler)
 
 	handler := cors.New(cors.Options{
@@ -373,7 +373,7 @@ func GetKYCHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret string) h
 	}
 }
 
-func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
+func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var blob swap.SwapBlob
 		if err := json.NewDecoder(r.Body).Decode(&blob); err != nil {
@@ -383,6 +383,17 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter) http.HandlerFunc {
 		var info delayInfo
 		if err := json.Unmarshal(blob.DelayInfo, &info); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// check if the trader address has been kyced
+		kycType, err := traderVerified(ingressAdapter, kyberID, kyberSecret, info.Message.KycAddr)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if kycType == 0 {
+			http.Error(w, "trader not kyced", http.StatusUnauthorized)
 			return
 		}
 

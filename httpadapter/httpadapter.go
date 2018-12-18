@@ -405,6 +405,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			return
 		}
 
+		log.Println(info.Message)
 		// verify request
 		hash := sha3.Sum256(info.Message)
 		log.Println("hash without ethereum prefix is :", base64.StdEncoding.EncodeToString(hash[:]))

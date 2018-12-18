@@ -398,7 +398,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			http.Error(w, "trader not kyced", http.StatusUnauthorized)
 			return
 		}
-
+		log.Println(1)
 		// verify request
 		messageBytes, err := json.Marshal(info.Message)
 		if err != nil {
@@ -407,13 +407,17 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			return
 		}
 
+		log.Println(2)
 		hash := sha3.Sum256(messageBytes)
+		log.Println(3)
+
 		sigBytes, err := UnmarshalSignature(info.Signature)
 		if err != nil {
 			log.Println("unable marshal the signature", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		log.Println(4)
 
 		publicKey, err := crypto.SigToPub(hash[:], sigBytes[:])
 		if err != nil {
@@ -421,11 +425,13 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		log.Println(5)
 
 		if crypto.PubkeyToAddress(*publicKey).Hex() != info.Message.KycAddr {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+		log.Println(6)
 
 		// return the finalized blob if we have the finalized blob
 		pSwap := ingress.PartialSwap{

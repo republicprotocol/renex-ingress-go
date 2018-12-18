@@ -381,7 +381,6 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		log.Println("delay infor is ", string(blob.DelayInfo))
 		var info delayInfo
 		if err := json.Unmarshal(blob.DelayInfo, &info); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -395,15 +394,12 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 
 		// verify request
 		hash := sha3.Sum256(messageByte)
-		log.Println("hash without ethereum prefix is :", base64.StdEncoding.EncodeToString(hash[:]))
-
 		sigBytes, err := base64.StdEncoding.DecodeString(info.Signature)
 		if err != nil {
 			log.Println("unable marshal the signature", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println(4)
 
 		publicKey, err := crypto.SigToPub(hash[:], sigBytes)
 		if err != nil {
@@ -411,8 +407,6 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println(5)
-
 		signerAddr := crypto.PubkeyToAddress(*publicKey).Hex()
 		kycType, err := traderVerified(ingressAdapter, kyberID, kyberSecret, signerAddr)
 		if err != nil {

@@ -16,16 +16,14 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/crypto/sha3"
-
-	"github.com/getsentry/raven-go"
-	"github.com/republicprotocol/swapperd/foundation/blockchain"
-	"github.com/republicprotocol/swapperd/foundation/swap"
-
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
+	"github.com/republicprotocol/swapperd/foundation/blockchain"
+	"github.com/republicprotocol/swapperd/foundation/swap"
 	"github.com/rs/cors"
+	"golang.org/x/crypto/sha3"
 	"golang.org/x/time/rate"
 )
 
@@ -395,8 +393,28 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			return
 		}
 
-		// check if the trader address has been kyced
-		kycType, err := traderVerified(ingressAdapter, kyberID, kyberSecret, info.Message.KycAddr)
+		// verify request
+		hash := sha3.Sum256(messageByte)
+		log.Println("hash without ethereum prefix is :", base64.StdEncoding.EncodeToString(hash[:]))
+
+		sigBytes, err := base64.StdEncoding.DecodeString(info.Signature)
+		if err != nil {
+			log.Println("unable marshal the signature", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Println(4)
+
+		publicKey, err := crypto.SigToPub(hash[:], sigBytes)
+		if err != nil {
+			log.Println("unable verify signature address", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Println(5)
+
+		signerAddr := crypto.PubkeyToAddress(*publicKey).Hex()
+		kycType, err := traderVerified(ingressAdapter, kyberID, kyberSecret, signerAddr)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
@@ -405,35 +423,6 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			http.Error(w, "trader not kyced", http.StatusUnauthorized)
 			return
 		}
-
-		// verify request
-		hash := sha3.Sum256(messageByte)
-		log.Println("hash without ethereum prefix is :", base64.StdEncoding.EncodeToString(hash[:]))
-		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(messageByte))), messageByte...)
-		hash = sha3.Sum256(signatureData)
-		// log.Println("hash with ethereum prefix is :", base64.StdEncoding.EncodeToString(hash[:]))
-
-		sigBytes, err := UnmarshalSignature(info.Signature)
-		if err != nil {
-			log.Println("unable marshal the signature", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		log.Println(4)
-
-		publicKey, err := crypto.SigToPub(hash[:], sigBytes[:])
-		if err != nil {
-			log.Println("unable verify signature address", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		log.Println(5)
-
-		if crypto.PubkeyToAddress(*publicKey).Hex() != info.Message.KycAddr {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		log.Println(6)
 
 		// return the finalized blob if we have the finalized blob
 		pSwap := ingress.PartialSwap{

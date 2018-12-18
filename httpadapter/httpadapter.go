@@ -399,6 +399,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			http.Error(w, "trader not kyced", http.StatusUnauthorized)
 			return
 		}
+
 		// verify request
 		messageBytes, err := json.Marshal(info.Message)
 		if err != nil {
@@ -407,6 +408,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			return
 		}
 
+		log.Println(string(messageBytes))
 		hash := sha3.Sum256(messageBytes)
 		log.Println("hash without ethereum prefix is :", base64.StdEncoding.EncodeToString(hash[:]))
 		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(messageBytes))), messageBytes...)

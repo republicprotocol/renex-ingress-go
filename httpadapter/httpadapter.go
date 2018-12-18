@@ -409,8 +409,8 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 		// verify request
 		hash := sha3.Sum256(messageByte)
 		log.Println("hash without ethereum prefix is :", base64.StdEncoding.EncodeToString(hash[:]))
-		// signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(messageBytes))), messageBytes...)
-		// hashwithprefix = sha3.Sum256(signatureData)
+		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(messageByte))), messageByte...)
+		hash = sha3.Sum256(signatureData)
 		// log.Println("hash with ethereum prefix is :", base64.StdEncoding.EncodeToString(hash[:]))
 
 		sigBytes, err := UnmarshalSignature(info.Signature)

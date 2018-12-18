@@ -69,10 +69,10 @@ type usersResponse struct {
 }
 
 type Message struct {
-	OrderID          string `json:"orderID"`
 	KycAddr          string `json:"kycAddr"`
-	SendTokenAddr    string `json:"sendTokenAddr"`
+	OrderID          string `json:"orderID"`
 	ReceiveTokenAddr string `json:"receiveTokenAddr"`
+	SendTokenAddr    string `json:"sendTokenAddr"`
 }
 
 type delayInfo struct {
@@ -383,6 +383,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		log.Println(string(blob.DelayInfo))
 		var info delayInfo
 		if err := json.Unmarshal(blob.DelayInfo, &info); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -410,7 +411,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 		hash := sha3.Sum256(info.Message)
 		log.Println("hash without ethereum prefix is :", base64.StdEncoding.EncodeToString(hash[:]))
 		// signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(messageBytes))), messageBytes...)
-		// hash = sha3.Sum256(signatureData)
+		// hashwithprefix = sha3.Sum256(signatureData)
 		// log.Println("hash with ethereum prefix is :", base64.StdEncoding.EncodeToString(hash[:]))
 
 		sigBytes, err := UnmarshalSignature(info.Signature)

@@ -76,8 +76,8 @@ type Message struct {
 }
 
 type delayInfo struct {
-	Message   json.RawMessage `json:"message"`
-	Signature string          `json:"signature"`
+	Message   Message `json:"message"`
+	Signature string  `json:"signature"`
 }
 
 const (
@@ -383,20 +383,20 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		log.Println(string(blob.DelayInfo))
+		log.Println("delay infor is ", string(blob.DelayInfo))
 		var info delayInfo
 		if err := json.Unmarshal(blob.DelayInfo, &info); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		var message Message
-		if err := json.Unmarshal(info.Message, &message); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		messageByte, err := json.Marshal(info.Message)
+		if err != nil {
+			http.Error(w, "unable to marshal the message", http.StatusBadRequest)
 			return
 		}
 
 		// check if the trader address has been kyced
-		kycType, err := traderVerified(ingressAdapter, kyberID, kyberSecret, message.KycAddr)
+		kycType, err := traderVerified(ingressAdapter, kyberID, kyberSecret, info.Message.KycAddr)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
@@ -406,9 +406,8 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			return
 		}
 
-		log.Println(string(info.Message))
 		// verify request
-		hash := sha3.Sum256(info.Message)
+		hash := sha3.Sum256(messageByte)
 		log.Println("hash without ethereum prefix is :", base64.StdEncoding.EncodeToString(hash[:]))
 		// signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(messageBytes))), messageBytes...)
 		// hashwithprefix = sha3.Sum256(signatureData)
@@ -430,7 +429,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 		}
 		log.Println(5)
 
-		if crypto.PubkeyToAddress(*publicKey).Hex() != message.KycAddr {
+		if crypto.PubkeyToAddress(*publicKey).Hex() != info.Message.KycAddr {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -438,10 +437,10 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 
 		// return the finalized blob if we have the finalized blob
 		pSwap := ingress.PartialSwap{
-			OrderID:     message.OrderID,
-			KycAddr:     message.KycAddr,
-			SendTo:      message.SendTokenAddr,
-			ReceiveFrom: message.ReceiveTokenAddr,
+			OrderID:     info.Message.OrderID,
+			KycAddr:     info.Message.KycAddr,
+			SendTo:      info.Message.SendTokenAddr,
+			ReceiveFrom: info.Message.ReceiveTokenAddr,
 			SecretHash:  blob.SecretHash,
 			TimeLock:    time.Now().Add(48 * time.Hour).Unix(),
 		}

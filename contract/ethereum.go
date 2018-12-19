@@ -41,7 +41,7 @@ func Connect(config RenExConfig) (Conn, error) {
 			config.RenExBrokerVerifierAddress = "0x60fD65ab8db0EdEC2Fc4df254888232e30416f7f"
 			config.OrderbookAddress = "0xA9b453FC64b4766Aab8a867801d0a4eA7b1474E0"
 			config.WyreAddress = "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f"
-			config.RenExSettlementAddress = "0x8EB372d0bEE7635B9DC355f2cF19E28F3BBECA53"
+			config.RenExSettlementAddress = "0xB560B9f0B9D7B5c3BAE2f6b5b380a5521f206b6e"
 		case NetworkNightly:
 			config.RenExBrokerVerifierAddress = "0xcf2F6b4b698Cd6a6B3eb1d874a939742d15f8e7E"
 			config.OrderbookAddress = "0x376127aDc18260fc238eBFB6626b2F4B59eC9b66"
@@ -88,7 +88,7 @@ func ConnectWs(config RenExConfig) (Conn, error) {
 			config.RenExBrokerVerifierAddress = "0x60fD65ab8db0EdEC2Fc4df254888232e30416f7f"
 			config.OrderbookAddress = "0xA9b453FC64b4766Aab8a867801d0a4eA7b1474E0"
 			config.WyreAddress = "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f"
-			config.RenExSettlementAddress = "0x8EB372d0bEE7635B9DC355f2cF19E28F3BBECA53"
+			config.RenExSettlementAddress = "0xB560B9f0B9D7B5c3BAE2f6b5b380a5521f206b6e"
 		case NetworkLocal:
 		default:
 			return Conn{}, fmt.Errorf("no default contract address on %s", config.Network)

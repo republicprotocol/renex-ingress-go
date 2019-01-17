@@ -404,6 +404,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 		publicKey, err := crypto.SigToPub(hash[:], sigBytes)
 		if err != nil {
 			log.Println("unable verify signature address", err)
+			log.Println("signature:", info.Signature)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

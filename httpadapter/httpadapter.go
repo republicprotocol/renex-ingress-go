@@ -387,10 +387,6 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		log.Println()
-		log.Printf("%+v\n", blob)
-		log.Println(string(blob.DelayInfo))
-		log.Printf("%+v\n", info)
 		messageByte, err := json.Marshal(info.Message)
 		if err != nil {
 			http.Error(w, "unable to marshal the message", http.StatusBadRequest)
@@ -409,7 +405,6 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 		publicKey, err := crypto.SigToPub(hash[:], sigBytes)
 		if err != nil {
 			log.Println("unable verify signature address", err)
-			log.Println("signature:", info.Signature)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -487,7 +482,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
-		log.Println(blob)
+		log.Printf("%+v", blob)
 	}
 }
 

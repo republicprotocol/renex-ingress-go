@@ -387,6 +387,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			return
 		}
 		log.Printf("%+v\n", blob)
+		log.Printf("%+v\n", info)
 		messageByte, err := json.Marshal(info.Message)
 		if err != nil {
 			http.Error(w, "unable to marshal the message", http.StatusBadRequest)

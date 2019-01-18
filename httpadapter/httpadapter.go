@@ -452,7 +452,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 		blob.TimeLock = finalizedSwap.TimeLock
 		blob.SecretHash = finalizedSwap.SecretHash
 
-		sendToken, err := blockchain.PatchToken(blob.SendToken)
+		sendToken, err := blockchain.PatchToken(string(blob.SendToken))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -462,7 +462,7 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		receiveToken, err := blockchain.PatchToken(blob.ReceiveToken)
+		receiveToken, err := blockchain.PatchToken(string(blob.ReceiveToken))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -493,7 +493,7 @@ func brokerAddress(bcName blockchain.BlockchainName) (string, error) {
 	case blockchain.Bitcoin:
 		return os.Getenv("BTC_VAULT"), nil
 	default:
-		return "", blockchain.ErrUnsupportedBlockchain(bcName)
+		return "", blockchain.NewErrUnsupportedBlockchain(bcName)
 	}
 }
 

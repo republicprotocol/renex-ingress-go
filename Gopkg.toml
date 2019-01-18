@@ -13,7 +13,7 @@
 
 [[constraint]]
   name = "github.com/republicprotocol/swapperd"
-  branch = "fees"
+  branch = "tests"
 
 # Temporary fix https://github.com/golang/dep/issues/1799
 [[override]]

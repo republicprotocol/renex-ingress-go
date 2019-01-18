@@ -14,19 +14,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3639e0fa327a76bb39b5279696a7fd90584082785de52671de0cb5ae680cda0a"
+  digest = "1:7cee4042afa1b4a23ce6c2cdac8abc272badfe2f097a3764664d9f4ef68e139c"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
   pruneopts = "T"
-  revision = "aa2a42e13be68c4a95fe9e58003adaf63fe6476f"
+  revision = "b7a59f2ffb2369336aaa78fc9a555e4fd277616b"
 
 [[projects]]
   branch = "master"
-  digest = "1:74e6390b521e5f68be220af535e4122b246401bbd118a08a36cac84818bae4ad"
+  digest = "1:80c3d831cb5d93d8e585d7a99256b2009a72453506e6c5a1a36e1271f7d47127"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   pruneopts = "T"
-  revision = "7d2daa5bfef28c5e282571bc06416516936115ee"
+  revision = "ed77733ec07dfc8a513741138419b8d9d3de9d2d"
 
 [[projects]]
   digest = "1:fed1f537c2f1269fe475a8556c393fe466641682d73ef8fd0491cd3aa1e47bad"
@@ -45,7 +45,7 @@
   version = "v1.7.1"
 
 [[projects]]
-  digest = "1:87fa9f2d71fd2516e6c0d906b7eb58886c8b4fcc6ee8cada0553a0e50bfeef3a"
+  digest = "1:b42be5a3601f833e0b9f2d6625d887ec1309764bfcac3d518f3db425dcd4ec5c"
   name = "github.com/ethereum/go-ethereum"
   packages = [
     ".",
@@ -70,7 +70,6 @@
     "crypto/bn256/cloudflare",
     "crypto/bn256/google",
     "crypto/secp256k1",
-    "crypto/sha3",
     "ethclient",
     "ethdb",
     "event",
@@ -83,8 +82,8 @@
     "trie",
   ]
   pruneopts = "T"
-  revision = "24d727b6d6e2c0cde222fa12155c4a6db5caaf2e"
-  version = "v1.8.20"
+  revision = "9dc5d1a915ac0e0bd8429d6ac41df50eec91de5f"
+  version = "v1.8.21"
 
 [[projects]]
   digest = "1:4c183be9fd1680d917006bb4884c1ac3d00a6bd33b0d36c8439c8cbd011e5aac"
@@ -210,11 +209,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:445210ef1e723060b3ebeb691648b5090f154992ee35f7065b70a6a5a96a3bb8"
+  digest = "1:ccf646ee8a07f460c43e994bb9a79e594dc3636dca1b607c294b7df5b1624868"
   name = "github.com/minio/sha256-simd"
   packages = ["."]
   pruneopts = "T"
-  revision = "51976451ce1942acbb55707a983ed232fa027110"
+  revision = "cc1980cb03383b1d46f518232672584432d7532d"
 
 [[projects]]
   digest = "1:07c8d9601e95a4f8c2ff7c697db1974bf74abde8a0a0f09f736f53d9bc88095c"
@@ -226,19 +225,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:fc2c2a02acf749d3642848700a563b901c3b1a621b96bb38cb835018615d5a11"
+  digest = "1:b782eff9c054952dbbf7595b3772064f7567aec7fc69f4f398107ce330e407ff"
   name = "github.com/multiformats/go-multiaddr"
   packages = ["."]
   pruneopts = "T"
-  revision = "73950681ca568e59189eee1c2d2d5dec4c0dcd25"
+  revision = "152990b98bf9dce961ca2aefb1002cd96cfff6cb"
 
 [[projects]]
   branch = "master"
-  digest = "1:d601b4930259bfbdb20e2b85dbecc660dc67aaa8fec94e1df3afad49e0bfc2df"
+  digest = "1:870888967337c579909b6017019b9f288325fab9417d398aeedf6172286e9b33"
   name = "github.com/multiformats/go-multihash"
   packages = ["."]
   pruneopts = "T"
-  revision = "1dbee63c8258e5714536b554eeabe0a1068b259a"
+  revision = "3cedc8477438947930aa0eb653e43f7d8c4feded"
 
 [[projects]]
   digest = "1:1de2ef6996903caab4bcf41f7885aa276d8e20076ba52ca80b2c6c32efb9c5f5"
@@ -297,12 +296,12 @@
   version = "v1.2"
 
 [[projects]]
-  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
+  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
   name = "github.com/pkg/errors"
   packages = ["."]
   pruneopts = "T"
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
 
 [[projects]]
   branch = "nightly"
@@ -332,15 +331,15 @@
   revision = "40d5b7a41401943d99393f631e03ba3d3356797e"
 
 [[projects]]
-  branch = "fees"
-  digest = "1:7fcec041f5f55250e25113f74832aad6a6a30b206ffdbcd8f7b1a5fab0cf38bd"
+  branch = "tests"
+  digest = "1:e6f76b0e33951964b2707af1d727a23f3413e81f4677ab9cf956ff6b5feaeb07"
   name = "github.com/republicprotocol/swapperd"
   packages = [
     "foundation/blockchain",
     "foundation/swap",
   ]
   pruneopts = "T"
-  revision = "fd172c9600e9cf323d024da83863631ab0c66c16"
+  revision = "5ce4aa8188e3afcd99c8538c97db46a035949b2e"
 
 [[projects]]
   digest = "1:9787d2d3220cbfd444596afd03ab0abcf391df169b789fbe3eae27fa2e426cf6"
@@ -397,7 +396,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d470cb69884835b1800e93ceceb85afcf981ea647e61d99398a76af7a95bad6a"
+  digest = "1:5f6a40f74aa9639cfcdaccb526d14a6a7c18900ea8f339416a43a580beb32c34"
   name = "golang.org/x/crypto"
   packages = [
     "blake2s",
@@ -407,11 +406,11 @@
     "sha3",
   ]
   pruneopts = "T"
-  revision = "505ab145d0a99da450461ae2c1a9f6cd10d1f447"
+  revision = "ff983b9c42bc9fbf91556e191cc8efb585c16908"
 
 [[projects]]
   branch = "master"
-  digest = "1:0c60c25323a50cdd330a193334388e8f1f51e50d8e2aeed95aa89316c77248d7"
+  digest = "1:5be93c879e360e3a5a59fc463938c1761592cbf93664d29ca06970081a564a90"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -427,18 +426,18 @@
     "websocket",
   ]
   pruneopts = "T"
-  revision = "891ebc4b82d6e74f468c533b06f983c7be918a96"
+  revision = "915654e7eabcea33ae277abbecf52f0d8b7a9fdc"
 
 [[projects]]
   branch = "master"
-  digest = "1:3631df9157a563b9b7efe8bedae459a2d6a8db709826e2c0e26cec4f40d7d7a7"
+  digest = "1:1748ccad64c8a1fc602f507f9c68520c8ece1cff31be9ef810c41b3715d2c8f4"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "T"
-  revision = "4d1cda033e0619309c606fc686de3adcf599539e"
+  revision = "11f53e03133963fb11ae0588e08b5e0b85be8be5"
 
 [[projects]]
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
@@ -485,14 +484,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5fc6c317675b746d0c641b29aa0aab5fcb403c0d07afdbf0de86b0d447a0502a"
+  digest = "1:1aa609a0033ef2927e083f2e5e07203ca35fe21c4a24b563de9fea16ddaae9ba"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "T"
-  revision = "bd91e49a0898e27abb88c339b432fa53d7497ac0"
+  revision = "db91494dd46c1fdcbbde05e5ff5eb56df8f7d79a"
 
 [[projects]]
-  digest = "1:c32026b4d2b9f7240ad72edf0dffca4e5863d5edc1ea25416d64929926b5ac67"
+  digest = "1:adec72b8770ba7ad04c7a5a8ef8c6cc13a766bd11f900b60f360303b4f56e0b1"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -528,8 +527,8 @@
     "tap",
   ]
   pruneopts = "T"
-  revision = "df014850f6dee74ba2fc94874043a9f3f75fbfd8"
-  version = "v1.17.0"
+  revision = "a02b0774206b209466313a0b525d2c738fe407eb"
+  version = "v1.18.0"
 
 [[projects]]
   digest = "1:7fc160b460a6fc506b37fcca68332464c3f2cd57b6e3f111f26c5bbfd2d5518e"
@@ -597,6 +596,7 @@
     "github.com/republicprotocol/swapperd/foundation/swap",
     "github.com/rs/cors",
     "github.com/satori/go.uuid",
+    "golang.org/x/crypto/sha3",
     "golang.org/x/time/rate",
   ]
   solver-name = "gps-cdcl"

@@ -382,11 +382,14 @@ func PostSwapCallbackHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret
 			return
 		}
 		var info delayInfo
+
 		if err := json.Unmarshal(blob.DelayInfo, &info); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		log.Println()
 		log.Printf("%+v\n", blob)
+		log.Println(string(blob.DelayInfo))
 		log.Printf("%+v\n", info)
 		messageByte, err := json.Marshal(info.Message)
 		if err != nil {

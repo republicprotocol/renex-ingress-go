@@ -85,8 +85,8 @@ type PostSwapRequest struct {
 }
 
 type PostAuthorizeRequest struct {
-	AtomAddress string `json:"atomAddress"`
-	Signature   string `json:"signature"`
+	Address   string `json:"address"`
+	Signature string `json:"signature"`
 }
 
 type GetAuthorizeResponse struct {

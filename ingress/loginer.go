@@ -19,6 +19,7 @@ type Loginer interface {
 	SelectLogin(address string) (int64, string, error)
 	InsertLogin(address, referrer string) error
 	UpdateLogin(address string, kyberUID int64, kycType int) error
+	Authorize(authorizer, authorizedAddr string) error
 }
 
 type loginer struct {
@@ -80,4 +81,10 @@ func (loginer *loginer) UpdateLogin(address string, kyberUID int64, kycType int)
 		}
 	}
 	return nil
+}
+
+func (loginer *loginer) Authorize(authorizer, authorizedAddr string) error {
+	timestamp := time.Now().Unix()
+	_, err := loginer.Exec("INSERT INTO traders (address, kyc_wyre, kyc_kyber, authorizer, created_at, last_verified_at) select $1,kyc_wyre,kyc_kyber,$2,$3,last_verified_at FROM traders where address=$2 ON CONFLICT DO NOTHING", strings.ToLower(authorizedAddr), strings.ToLower(authorizer), timestamp)
+	return err
 }

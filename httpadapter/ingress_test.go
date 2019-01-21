@@ -275,6 +275,10 @@ func (loginer *mockLoginer) UpdateLogin(address string, kyberUID int64, kycType 
 	return nil
 }
 
+func (Loginer *mockLoginer) Authorize(authorizer, authorizedAddr string) error {
+	return nil
+}
+
 type mockIngress struct {
 	ingress.Swapper
 	ingress.Loginer

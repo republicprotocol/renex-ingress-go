@@ -506,3 +506,7 @@ func (Loginer *mockLoginer) InsertLogin(address, referrer string) error {
 func (Loginer *mockLoginer) UpdateLogin(address string, kyberUID int64, kycType int) error {
 	return nil
 }
+
+func (Loginer *mockLoginer) Authorize(authorizer, authorizedAddr string) error {
+	return nil
+}

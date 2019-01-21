@@ -48,6 +48,10 @@ func (adapter *weakAdapter) PostVerification(string, int64, int) error {
 	return nil
 }
 
+func (adapter *weakAdapter) Authorize(authorizer, authorizedAddr string) error {
+	return nil
+}
+
 func (adapter *weakAdapter) InsertPartialSwap(swap ingress.PartialSwap) error {
 	return nil
 }
@@ -85,6 +89,10 @@ func (adapter *errAdapter) PostLogin(string, string) error {
 
 func (adapter *errAdapter) PostVerification(string, int64, int) error {
 	return errors.New("cannot post verification")
+}
+
+func (adapter *errAdapter) Authorize(authorizer, authorizedAddr string) error {
+	return nil
 }
 
 func (adapter *errAdapter) InsertPartialSwap(swap ingress.PartialSwap) error {

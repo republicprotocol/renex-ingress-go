@@ -520,8 +520,21 @@ func PostAuthorizeHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret st
 		}
 
 		// todo : Handle the new address
-		// update authorised address in th database
+		var address string
+		switch len(auth.Address) {
+		case 40:
+			address = "0x" + auth.Address
+		case 42:
+			address = auth.Address
+		default:
+			handleErr(w, "invalid address", http.StatusBadRequest)
+		}
 
+		if err := ingressAdapter.Authorize(signerAddr, address); err != nil {
+			handleErr(w, fmt.Sprintf("cannot store the new address, %v", err), http.StatusInternalServerError)
+		}
+
+		w.WriteHeader(http.StatusCreated)
 	}
 }
 

@@ -56,6 +56,7 @@ type LoginAdapter interface {
 	PostLogin(address, referrer string) error
 	PostVerification(address string, kyberUID int64, kycType int) error
 	WyreVerified(traderIn string) (bool, error)
+	Authorize(authorizer, authorizedAddr string) error
 }
 
 type OrderAdapter interface {
@@ -136,6 +137,10 @@ func (adapter *ingressAdapter) PostLogin(address, referrer string) error {
 
 func (adapter *ingressAdapter) PostVerification(address string, kyberUID int64, kycType int) error {
 	return adapter.UpdateLogin(address, kyberUID, kycType)
+}
+
+func (adapter *ingressAdapter) Authorize(authorizer, authorizedAddr string) error {
+	return adapter.Ingress.Authorize(authorizer, authorizedAddr)
 }
 
 func (adapter *ingressAdapter) InsertPartialSwap(swap ingress.PartialSwap) error {

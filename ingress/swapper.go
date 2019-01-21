@@ -112,9 +112,6 @@ func (swapper *swapper) FinalizedSwap(id string) (FinalizedSwap, bool, error) {
 	if !details.Settled {
 		return FinalizedSwap{}, false, fmt.Errorf("order=%v has not been settled", id)
 	}
-	if details.PriorityToken != 0 {
-		return FinalizedSwap{}, false, fmt.Errorf("order=%v is not an atomic swap order", id)
-	}
 
 	// Construct the missing fields of the swap.
 	var swap FinalizedSwap

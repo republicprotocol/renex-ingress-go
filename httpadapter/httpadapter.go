@@ -496,6 +496,8 @@ func PostAuthorizeHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret st
 			return
 		}
 
+		log.Println("address:", auth.Address)
+
 		// Extract the signer's address
 		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(common.Hex2Bytes(auth.Address)))), common.Hex2Bytes(auth.Address)...)
 		log.Println("signed data:", common.Bytes2Hex(signatureData))

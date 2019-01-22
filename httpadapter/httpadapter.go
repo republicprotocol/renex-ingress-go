@@ -498,7 +498,10 @@ func PostAuthorizeHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret st
 
 		// Extract the signer's address
 		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(common.Hex2Bytes(auth.Address)))), common.Hex2Bytes(auth.Address)...)
-		hash := sha3.Sum256(signatureData)
+		log.Println("signed data:", common.Bytes2Hex(signatureData))
+		hash := crypto.Keccak256(signatureData)
+		log.Println("hash:", common.Bytes2Hex(hash))
+
 		sigBytes, err := base64.StdEncoding.DecodeString(auth.Signature)
 		if err != nil {
 			handleErr(w, fmt.Sprintf("unable marshal the signature, %v", err), http.StatusInternalServerError)
@@ -522,7 +525,6 @@ func PostAuthorizeHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret st
 			return
 		}
 
-		// todo : Handle the new address
 		var address string
 		switch len(auth.Address) {
 		case 40:
@@ -687,7 +689,6 @@ func rateLimit(limiter *rate.Limiter, next http.HandlerFunc) http.HandlerFunc {
 }
 
 func handleErr(w http.ResponseWriter, errMessage string, code int) {
-	//
 	log.Println(errMessage)
 	http.Error(w, errMessage, code)
 }

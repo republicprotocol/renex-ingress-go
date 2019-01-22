@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
@@ -95,7 +97,7 @@ func NewIngressServer(ingressAdapter IngressAdapter, approvedTraders []string, k
 	r.HandleFunc("/kyber", rateLimit(limiter, PostKyberHandler(ingressAdapter, kyberID, kyberSecret))).Methods("POST")
 	r.HandleFunc("/withdrawals", rateLimit(limiter, PostWithdrawalHandler(ingressAdapter))).Methods("POST")
 	r.HandleFunc("/swapperd/cb", rateLimit(limiter, PostSwapCallbackHandler(ingressAdapter, kyberID, kyberSecret))).Methods("POST")
-	r.HandleFunc("/authorise", rateLimit(limiter, PostAuthorizeHandler(ingressAdapter, kyberID, kyberSecret))).Methods("POST")
+	r.HandleFunc("/authorize", rateLimit(limiter, PostAuthorizeHandler(ingressAdapter, kyberID, kyberSecret))).Methods("POST")
 	r.Use(RecoveryHandler)
 
 	handler := cors.New(cors.Options{
@@ -495,7 +497,8 @@ func PostAuthorizeHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret st
 		}
 
 		// Extract the signer's address
-		hash := sha3.Sum256([]byte(auth.Address))
+		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(common.Hex2Bytes(auth.Address)))), common.Hex2Bytes(auth.Address)...)
+		hash := sha3.Sum256(signatureData)
 		sigBytes, err := base64.StdEncoding.DecodeString(auth.Signature)
 		if err != nil {
 			handleErr(w, fmt.Sprintf("unable marshal the signature, %v", err), http.StatusInternalServerError)

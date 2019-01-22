@@ -498,9 +498,14 @@ func PostAuthorizeHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret st
 
 		log.Println("address:", auth.Address)
 
-		// Extract the signer's address
-		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(common.Hex2Bytes(auth.Address)))), common.Hex2Bytes(auth.Address)...)
+		address := common.HexToAddress(auth.Address)
+		message := address.Bytes()
+		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
 		log.Println("signed data:", common.Bytes2Hex(signatureData))
+		//
+		// // Extract the signer's address
+		// signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(common.Hex2Bytes(auth.Address)))), common.Hex2Bytes(auth.Address)...)
+		// log.Println("signed data:", common.Bytes2Hex(signatureData))
 		hash := crypto.Keccak256(signatureData)
 		log.Println("hash:", common.Bytes2Hex(hash))
 
@@ -527,17 +532,17 @@ func PostAuthorizeHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret st
 			return
 		}
 
-		var address string
+		var addr string
 		switch len(auth.Address) {
 		case 40:
-			address = "0x" + auth.Address
+			addr = "0x" + auth.Address
 		case 42:
-			address = auth.Address
+			addr = auth.Address
 		default:
 			handleErr(w, "invalid address", http.StatusBadRequest)
 		}
 
-		if err := ingressAdapter.Authorize(signerAddr, address); err != nil {
+		if err := ingressAdapter.Authorize(signerAddr, addr); err != nil {
 			handleErr(w, fmt.Sprintf("cannot store the new address, %v", err), http.StatusInternalServerError)
 		}
 

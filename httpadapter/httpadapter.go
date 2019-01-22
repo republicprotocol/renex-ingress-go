@@ -514,7 +514,7 @@ func PostAuthorizeHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret st
 		// Verify if the singer is kyced
 		kycType, err := traderVerified(ingressAdapter, kyberID, kyberSecret, signerAddr)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			http.Error(w, fmt.Sprintf("%v: signer %v", err.Error(), signerAddr), http.StatusUnauthorized)
 			return
 		}
 		if kycType == 0 {

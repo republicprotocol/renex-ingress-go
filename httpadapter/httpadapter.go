@@ -572,9 +572,11 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 	if disableKYC {
 		return ingress.KYCWyre, nil
 	}
+	address = strings.TrimSpace(strings.ToLower(address))
 	if address[:2] != "0x" {
 		address = "0x" + address
 	}
+
 	verified, err := loginAdapter.WyreVerified(address)
 	if err != nil {
 		return ingress.KYCNone, fmt.Errorf("cannot check wyre verification: %v", err)

@@ -11,6 +11,15 @@ import (
 	"github.com/republicprotocol/renex-ingress-go/contract/bindings"
 )
 
+// CREATE TABLE withdrawals (
+//     hash        bytea,
+//     address     varchar(42),
+//     token       int,
+// 	amount      varchar,
+//     timestamp   bigint,
+//     nonce       int
+// );
+
 // Binder implements all methods that will communicate with the smart contracts
 type Binder struct {
 	mu           *sync.RWMutex

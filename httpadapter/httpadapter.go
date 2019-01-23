@@ -16,8 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
@@ -496,8 +494,7 @@ func PostAuthorizeHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret st
 			return
 		}
 
-		address := common.HexToAddress(auth.Address)
-		message := append([]byte("RenEx: authorize: "), address.Bytes()...)
+		message := []byte(fmt.Sprintf("RenEx: authorize: %v", auth.Address))
 		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
 
 		// // Extract the signer's addresssd

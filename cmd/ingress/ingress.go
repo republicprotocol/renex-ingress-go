@@ -80,6 +80,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)
 	}
+	log.Printf("settlement registry %v", conn.Config.SettlementRegistryAddress)
 	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
 	binder, err := contract.NewBinder(auth, conn)
 	if err != nil {
@@ -90,11 +91,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)
 	}
-	wsConn, err := renExContract.ConnectWs(config.RenExEthereum)
-	if err != nil {
-		log.Fatalf("cannot connect to ethereum vis websocket: %v", err)
-	}
-	contractBinder, err := renExContract.NewBinder(auth, contractConn, wsConn)
+	contractBinder, err := renExContract.NewBinder(auth, contractConn)
 	if err != nil {
 		log.Fatalf("cannot create contract binder: %v", err)
 	}

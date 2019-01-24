@@ -14,11 +14,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7cee4042afa1b4a23ce6c2cdac8abc272badfe2f097a3764664d9f4ef68e139c"
+  digest = "1:777cd5e02fa5e4dbd84085af4634903d2f5e12141ca53a383dee7ebad1800f63"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
   pruneopts = "T"
-  revision = "b7a59f2ffb2369336aaa78fc9a555e4fd277616b"
+  revision = "8f049bdb8feb7d7d5f1a9b9cd854396112fb0c0e"
 
 [[projects]]
   branch = "master"
@@ -304,8 +304,8 @@
   version = "v0.8.1"
 
 [[projects]]
-  branch = "nightly"
-  digest = "1:98b871d4879bb701b68521d110c90d599ebfd5a11c0c79e896be78525eca200c"
+  branch = "new-settlement"
+  digest = "1:3b34da5097c67af62b3d321a42e30fa71213c96447a1fdab0bd9bf2cece16ec4"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -328,18 +328,18 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "40d5b7a41401943d99393f631e03ba3d3356797e"
+  revision = "22840c4041205f3953e766597f92c54d474f595a"
 
 [[projects]]
-  branch = "tests"
-  digest = "1:e6f76b0e33951964b2707af1d727a23f3413e81f4677ab9cf956ff6b5feaeb07"
+  branch = "erc20"
+  digest = "1:d27d5ce80b3ceca5916fa79d7a6c49c01571577e40a170fef5a57c63d33f3acd"
   name = "github.com/republicprotocol/swapperd"
   packages = [
     "foundation/blockchain",
     "foundation/swap",
   ]
   pruneopts = "T"
-  revision = "5ce4aa8188e3afcd99c8538c97db46a035949b2e"
+  revision = "85d50f4037e833be96a8178ef62dd5188659f340"
 
 [[projects]]
   digest = "1:9787d2d3220cbfd444596afd03ab0abcf391df169b789fbe3eae27fa2e426cf6"
@@ -396,7 +396,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5f6a40f74aa9639cfcdaccb526d14a6a7c18900ea8f339416a43a580beb32c34"
+  digest = "1:9597e9892bc4371fca72784a74b189acb44087f4ee29f19bac9ab2d65edb712c"
   name = "golang.org/x/crypto"
   packages = [
     "blake2s",
@@ -406,11 +406,11 @@
     "sha3",
   ]
   pruneopts = "T"
-  revision = "ff983b9c42bc9fbf91556e191cc8efb585c16908"
+  revision = "057139ce5d2bdbe6fe73c53679e24e9cf007f637"
 
 [[projects]]
   branch = "master"
-  digest = "1:5be93c879e360e3a5a59fc463938c1761592cbf93664d29ca06970081a564a90"
+  digest = "1:f758c83a22e6df9326129cfc7b8b6c0e6898c29ec64e8b6f99d8ca9208df4f06"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -426,18 +426,18 @@
     "websocket",
   ]
   pruneopts = "T"
-  revision = "915654e7eabcea33ae277abbecf52f0d8b7a9fdc"
+  revision = "ed066c81e75eba56dd9bd2139ade88125b855585"
 
 [[projects]]
   branch = "master"
-  digest = "1:1748ccad64c8a1fc602f507f9c68520c8ece1cff31be9ef810c41b3715d2c8f4"
+  digest = "1:170b04816272c890b899fd426476c8ec4a2f9b539d36eac3708ccdd48b7bd02b"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "T"
-  revision = "11f53e03133963fb11ae0588e08b5e0b85be8be5"
+  revision = "c6b37f3e92850b723493d63fd35aad34e19e048d"
 
 [[projects]]
   digest = "1:6164911cb5e94e8d8d5131d646613ff82c14f5a8ce869de2f6d80d9889df8c5a"
@@ -484,11 +484,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1aa609a0033ef2927e083f2e5e07203ca35fe21c4a24b563de9fea16ddaae9ba"
+  digest = "1:2255fee1df9431ec9c0a373a4e112a60b28ae435d7af57d69f4f2e2e86800cad"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "T"
-  revision = "db91494dd46c1fdcbbde05e5ff5eb56df8f7d79a"
+  revision = "8819c946db4494a2259bf100a377f51aa585d893"
 
 [[projects]]
   digest = "1:adec72b8770ba7ad04c7a5a8ef8c6cc13a766bd11f900b60f360303b4f56e0b1"

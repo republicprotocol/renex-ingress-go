@@ -305,7 +305,7 @@
 
 [[projects]]
   branch = "new-settlement"
-  digest = "1:3b34da5097c67af62b3d321a42e30fa71213c96447a1fdab0bd9bf2cece16ec4"
+  digest = "1:5383d9c44efe2f9ecd25ffc248978362cfcf73a6ac2505ce2d555621f7626cdf"
   name = "github.com/republicprotocol/republic-go"
   packages = [
     "contract",
@@ -328,7 +328,7 @@
     "swarm",
   ]
   pruneopts = "T"
-  revision = "22840c4041205f3953e766597f92c54d474f595a"
+  revision = "cd62ac29a9df52d764c4900ca2b0cf08fcd5072d"
 
 [[projects]]
   branch = "erc20"

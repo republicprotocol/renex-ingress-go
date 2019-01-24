@@ -77,6 +77,7 @@ func main() {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
 	conn, err := contract.Connect(config.RepublicEthereum)
+	conn.Config.SettlementRegistryAddress = "0x70bfe40f98c06a0ad60759be8c4b1ecf0c354baf"
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)
 	}

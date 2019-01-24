@@ -9,7 +9,7 @@
 
 [[constraint]]
   name = "github.com/republicprotocol/republic-go"
-  branch = "nightly"
+  branch = "new-settlement"
 
 [[constraint]]
   name = "github.com/republicprotocol/swapperd"

@@ -80,7 +80,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)
 	}
-	log.Printf("settlement registry %v", conn.Config.SettlementRegistryAddress)
 	auth := bind.NewKeyedTransactor(keystore.EcdsaKey.PrivateKey)
 	binder, err := contract.NewBinder(auth, conn)
 	if err != nil {

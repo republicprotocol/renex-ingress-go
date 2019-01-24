@@ -2,7 +2,6 @@ package ingress
 
 import (
 	"database/sql"
-	"log"
 	"strings"
 	"time"
 
@@ -85,7 +84,6 @@ func (loginer *loginer) UpdateLogin(address string, kyberUID int64, kycType int)
 }
 
 func (loginer *loginer) Authorize(authorizer, authorizedAddr string) error {
-	log.Printf("authorizer:%v, authorized address: %v", authorizer, authorizedAddr)
 	timestamp := time.Now().Unix()
 	_, err := loginer.Exec("INSERT INTO traders (address, kyc_wyre, kyc_kyber, authorizer, created_at, last_verified_at) SELECT $1,kyc_wyre,kyc_kyber,$2::VARCHAR,$3,last_verified_at FROM traders where address=$2 ON CONFLICT DO NOTHING", strings.ToLower(authorizedAddr), strings.ToLower(authorizer), timestamp)
 	return err

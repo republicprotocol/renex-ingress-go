@@ -76,7 +76,7 @@ func NewSwapper(databaseURL string, binder contract.Binder) (Swapper, error) {
 }
 
 func (swapper *swapper) InsertPartialSwap(swap PartialSwap) error {
-	_, err := swapper.Exec("INSERT INTO partial_swap (order_id, kyc_addr, send_to, receive_from ,secret_hash, time_lock) VALUES ($1,$2,$3,$4,$5,$6)",
+	_, err := swapper.Exec("INSERT INTO partial_swap (order_id, kyc_addr, send_to, receive_from ,secret_hash, time_lock) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING",
 		swap.OrderID, swap.KycAddr, swap.SendTo, swap.ReceiveFrom, swap.SecretHash, swap.TimeLock)
 	return err
 }

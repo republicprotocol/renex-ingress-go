@@ -496,12 +496,7 @@ func PostAuthorizeHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret st
 
 		message := []byte(fmt.Sprintf("RenEx: authorize: %v", auth.Address))
 		signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(message))), message...)
-
-		// // Extract the signer's addresssd
-		// signatureData := append([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(common.Hex2Bytes(auth.Address)))), common.Hex2Bytes(auth.Address)...)
-		// log.Println("signed data:", common.Bytes2Hex(signatureData))
 		hash := crypto.Keccak256(signatureData)
-
 		sigBytes, err := base64.StdEncoding.DecodeString(auth.Signature)
 		if err != nil {
 			handleErr(w, fmt.Sprintf("unable marshal the signature, %v", err), http.StatusInternalServerError)

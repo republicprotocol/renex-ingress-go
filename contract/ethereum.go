@@ -43,11 +43,6 @@ func Connect(config RenExConfig) (Conn, error) {
 			config.OrderbookAddress = "0xA9b453FC64b4766Aab8a867801d0a4eA7b1474E0"
 			config.WyreAddress = "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f"
 			config.RenExSettlementAddress = "0xC7C9EC3299Df21c22A076Fd896F2df5a8fc79cB3"
-		case NetworkNightly:
-			config.RenExBrokerVerifierAddress = "0xcf2F6b4b698Cd6a6B3eb1d874a939742d15f8e7E"
-			config.OrderbookAddress = "0x376127aDc18260fc238eBFB6626b2F4B59eC9b66"
-			config.WyreAddress = "0xB14fA2276D8bD26713A6D98871b2d63Da9eefE6f"
-		case NetworkLocal:
 		default:
 			return Conn{}, fmt.Errorf("no default contract address on %s", config.Network)
 		}

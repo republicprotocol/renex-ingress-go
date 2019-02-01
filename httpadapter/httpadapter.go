@@ -619,6 +619,8 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 		return ingress.KYCNone, fmt.Errorf("cannot read information from kyber: %v", err)
 	}
 
+	fmt.Println(string(bodyBytes))
+
 	var tokenResp tokenResponse
 	if err := json.Unmarshal(bodyBytes, &tokenResp); err != nil {
 		return ingress.KYCNone, fmt.Errorf("cannot unmarshal kyber access token data: %v", err)

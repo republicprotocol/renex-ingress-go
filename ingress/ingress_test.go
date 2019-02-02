@@ -19,6 +19,7 @@ import (
 	"github.com/republicprotocol/republic-go/identity"
 	"github.com/republicprotocol/republic-go/order"
 	"github.com/republicprotocol/republic-go/registry"
+	"github.com/republicprotocol/republic-go/testutils"
 )
 
 var _ = Describe("Ingress", func() {
@@ -435,7 +436,7 @@ func (binder *ingressBinder) setOrderStatus(orderID order.ID, status order.Statu
 func createOrder() (order.Order, error) {
 	parity := order.ParityBuy
 	nonce := uint64(mathRand.Intn(1000000000))
-	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, order.TokensETHREN, 1e12, 1e12, 1e12, nonce), nil
+	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, testutils.TokensETHREN, 1e12, 1e12, 1e12, nonce), nil
 }
 
 type mockSwarmer struct {

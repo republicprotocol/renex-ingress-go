@@ -85,7 +85,11 @@ const (
 )
 
 // TODO: Make this an environment variable
-const KYBER_URL = "https://kyberswap.com"
+var KYBER_URL string
+
+func init() {
+	KYBER_URL = os.Getenv("KYBER_URL")
+}
 
 // NewIngressServer returns an http server that forwards requests to an
 // IngressAdapter.
@@ -242,11 +246,7 @@ func PostKyberHandler(loginAdapter LoginAdapter, kyberID, kyberSecret string) ht
 		}
 
 		// Forward updated request data to Kyber
-<<<<<<< HEAD
 		url := KYBER_URL + "/oauth/token"
-=======
-		url := "https://kyberswap.com/oauth/token"
->>>>>>> master
 		postRequest, err := http.NewRequest("POST", url, bytes.NewBuffer(byteArray))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -285,11 +285,7 @@ func PostKyberHandler(loginAdapter LoginAdapter, kyberID, kyberSecret string) ht
 		}
 
 		// Send retrieved access token to Kyber to access user information
-<<<<<<< HEAD
 		userResp, err := http.Get(KYBER_URL + "/api/user_info?access_token=" + tokenResp.AccessToken)
-=======
-		userResp, err := http.Get("https://kyberswap.com/api/user_info?access_token=" + tokenResp.AccessToken)
->>>>>>> master
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("unable to retrieve user info: %v", err)))
@@ -618,11 +614,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 
 	// If user has not verified recently, retrieve access token for interacting
 	// with Kyber API
-<<<<<<< HEAD
 	urlString := KYBER_URL + "/oauth/token"
-=======
-	urlString := "https://kyberswap.com/oauth/token"
->>>>>>> master
 	resp, err := http.PostForm(urlString, url.Values{"grant_type": {"client_credentials"}, "client_id": {kyberID}, "client_secret": {kyberSecret}})
 	if err != nil {
 		return ingress.KYCNone, fmt.Errorf("cannot send information to kyber: %v", err)
@@ -640,11 +632,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 	}
 
 	// Retrieve information for trader with uID
-<<<<<<< HEAD
 	resp, err = http.Get(KYBER_URL + "/api/authorized_users?access_token=" + tokenResp.AccessToken + "&uid=" + fmt.Sprintf("%v", kyberUID))
-=======
-	resp, err = http.Get("https://kyberswap.com/api/authorized_users?access_token=" + tokenResp.AccessToken + "&uid=" + fmt.Sprintf("%v", kyberUID))
->>>>>>> master
 	if err != nil {
 		return ingress.KYCNone, fmt.Errorf("cannot send user information to kyber: %v", err)
 	}

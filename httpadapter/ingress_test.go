@@ -8,6 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/republicprotocol/republic-go/testutils"
+
 	"github.com/ethereum/go-ethereum/common"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -315,5 +317,5 @@ func (ingress *mockIngress) ProcessRequests(done <-chan struct{}) <-chan error {
 func createOrder() (order.Order, error) {
 	parity := order.ParityBuy
 	nonce := uint64(mathRand.Intn(1000000000))
-	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, order.TokensETHREN, 1e12, 1e12, 1e12, nonce), nil
+	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, testutils.TokensETHREN, 1e12, 1e12, 1e12, nonce), nil
 }

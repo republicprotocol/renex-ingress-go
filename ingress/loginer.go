@@ -19,6 +19,7 @@ type Loginer interface {
 	SelectLogin(address string) (int64, string, error)
 	InsertLogin(address, referrer string) error
 	UpdateLogin(address string, kyberUID int64, kycType int) error
+	Authorize(authorizer, authorizedAddr string) error
 }
 
 type loginer struct {
@@ -59,10 +60,10 @@ func (loginer *loginer) UpdateLogin(address string, kyberUID int64, kycType int)
 	timestamp := time.Now().Unix()
 	switch kycType {
 	case KYCWyre:
-		_, err := loginer.Exec("UPDATE traders SET kyc_wyre=$1, last_verified_at=$2 WHERE address=$1", strings.ToLower(address), timestamp)
+		_, err := loginer.Exec("UPDATE traders SET kyc_wyre=$1, last_verified_at=$2 WHERE address=$1 OR authorizer=$1", strings.ToLower(address), timestamp)
 		return err
 	case KYCKyber:
-		_, err := loginer.Exec("UPDATE traders SET kyc_kyber=$2, last_verified_at=$3 WHERE address=$1", strings.ToLower(address), kyberUID, timestamp)
+		_, err := loginer.Exec("UPDATE traders SET kyc_kyber=$2, last_verified_at=$3 WHERE address=$1 OR authorizer=$1", strings.ToLower(address), kyberUID, timestamp)
 		if err != nil {
 			return err
 		}
@@ -80,4 +81,10 @@ func (loginer *loginer) UpdateLogin(address string, kyberUID int64, kycType int)
 		}
 	}
 	return nil
+}
+
+func (loginer *loginer) Authorize(authorizer, authorizedAddr string) error {
+	timestamp := time.Now().Unix()
+	_, err := loginer.Exec("INSERT INTO traders (address, kyc_wyre, kyc_kyber, authorizer, created_at, last_verified_at) SELECT $1,kyc_wyre,kyc_kyber,$2::VARCHAR,$3,last_verified_at FROM traders where address=$2 ON CONFLICT DO NOTHING", strings.ToLower(authorizedAddr), strings.ToLower(authorizer), timestamp)
+	return err
 }

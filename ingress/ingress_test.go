@@ -19,6 +19,7 @@ import (
 	"github.com/republicprotocol/republic-go/identity"
 	"github.com/republicprotocol/republic-go/order"
 	"github.com/republicprotocol/republic-go/registry"
+	"github.com/republicprotocol/republic-go/testutils"
 )
 
 var _ = Describe("Ingress", func() {
@@ -435,7 +436,7 @@ func (binder *ingressBinder) setOrderStatus(orderID order.ID, status order.Statu
 func createOrder() (order.Order, error) {
 	parity := order.ParityBuy
 	nonce := uint64(mathRand.Intn(1000000000))
-	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, order.TokensETHREN, 1e12, 1e12, 1e12, nonce), nil
+	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, testutils.TokensETHREN, 1e12, 1e12, 1e12, nonce), nil
 }
 
 type mockSwarmer struct {
@@ -480,23 +481,16 @@ func captureErrorsFromErrorChannel(errs <-chan error) {
 type mockSwapper struct {
 }
 
-func (swapper *mockSwapper) SelectAuthorizedAddress(kycAddress string) (string, error) {
-	return "", nil
-}
-func (swapper *mockSwapper) InsertAuthorizedAddress(kycAddress string, atomAddress string) error {
+func (swapper *mockSwapper) InsertPartialSwap(swap PartialSwap) error {
 	return nil
 }
-func (swapper *mockSwapper) SelectAddress(orderID string) (string, error) {
-	return "", nil
+
+func (swapper *mockSwapper) PartialSwap(id string) (PartialSwap, error) {
+	return PartialSwap{}, nil
 }
-func (swapper *mockSwapper) InsertAddress(orderID string, address string) error {
-	return nil
-}
-func (swapper *mockSwapper) SelectSwapDetails(orderID string) (string, error) {
-	return "", nil
-}
-func (swapper *mockSwapper) InsertSwapDetails(orderID string, swapDetails string) error {
-	return nil
+
+func (swapper *mockSwapper) FinalizedSwap(id string) (FinalizedSwap, bool, error) {
+	return FinalizedSwap{}, false, nil
 }
 
 type mockLoginer struct {
@@ -511,5 +505,9 @@ func (Loginer *mockLoginer) InsertLogin(address, referrer string) error {
 }
 
 func (Loginer *mockLoginer) UpdateLogin(address string, kyberUID int64, kycType int) error {
+	return nil
+}
+
+func (Loginer *mockLoginer) Authorize(authorizer, authorizedAddr string) error {
 	return nil
 }

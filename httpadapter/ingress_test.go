@@ -8,6 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/republicprotocol/republic-go/testutils"
+
 	"github.com/ethereum/go-ethereum/common"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -248,28 +250,16 @@ var _ = Describe("Ingress Adapter", func() {
 type mockSwapper struct {
 }
 
-func (swapper *mockSwapper) SelectAuthorizedAddress(kycAddress string) (string, error) {
-	return "", nil
-}
-
-func (swapper *mockSwapper) InsertAuthorizedAddress(kycAddress string, atomAddress string) error {
+func (swapper *mockSwapper) InsertPartialSwap(swap ingress.PartialSwap) error {
 	return nil
 }
 
-func (swapper *mockSwapper) SelectAddress(orderID string) (string, error) {
-	return "", nil
+func (swapper *mockSwapper) PartialSwap(id string) (ingress.PartialSwap, error) {
+	return ingress.PartialSwap{}, nil
 }
 
-func (swapper *mockSwapper) InsertAddress(orderID string, address string) error {
-	return nil
-}
-
-func (swapper *mockSwapper) SelectSwapDetails(orderID string) (string, error) {
-	return "", nil
-}
-
-func (swapper *mockSwapper) InsertSwapDetails(orderID string, swapDetails string) error {
-	return nil
+func (swapper *mockSwapper) FinalizedSwap(id string) (ingress.FinalizedSwap, bool, error) {
+	return ingress.FinalizedSwap{}, false, nil
 }
 
 type mockLoginer struct {
@@ -284,6 +274,10 @@ func (loginer *mockLoginer) InsertLogin(address, referrer string) error {
 }
 
 func (loginer *mockLoginer) UpdateLogin(address string, kyberUID int64, kycType int) error {
+	return nil
+}
+
+func (Loginer *mockLoginer) Authorize(authorizer, authorizedAddr string) error {
 	return nil
 }
 
@@ -323,5 +317,5 @@ func (ingress *mockIngress) ProcessRequests(done <-chan struct{}) <-chan error {
 func createOrder() (order.Order, error) {
 	parity := order.ParityBuy
 	nonce := uint64(mathRand.Intn(1000000000))
-	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, order.TokensETHREN, 1e12, 1e12, 1e12, nonce), nil
+	return order.NewOrder(parity, order.TypeLimit, time.Now().Add(time.Hour), order.SettlementRenEx, testutils.TokensETHREN, 1e12, 1e12, 1e12, nonce), nil
 }

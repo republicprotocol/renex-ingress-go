@@ -32,4 +32,3 @@ type WithdrawalRequest struct {
 
 // IsRequest implements the Request interface.
 func (req WithdrawalRequest) IsRequest() {}
-

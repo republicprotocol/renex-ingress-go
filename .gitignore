@@ -9,3 +9,4 @@ vendor
 
 # Local environment variables
 .env
+.idea

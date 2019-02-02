@@ -76,7 +76,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot get multi-address: %v", err)
 	}
-
 	conn, err := contract.Connect(config.RepublicEthereum)
 	if err != nil {
 		log.Fatalf("cannot connect to ethereum: %v", err)
@@ -95,7 +94,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot create contract binder: %v", err)
 	}
-	swapper, err := ingress.NewSwapper(dbParam)
+	swapper, err := ingress.NewSwapper(dbParam, contractBinder)
 	if err != nil {
 		log.Fatalf("cannot connect to the database: %v", err)
 	}
@@ -105,7 +104,7 @@ func main() {
 	}
 
 	// New database for persistent storage
-	store, err := leveldb.NewStore(path.Join(os.Getenv("HOME"), "data"), 72*time.Hour, 24*time.Hour)
+	store, err := leveldb.NewStore(path.Join(os.Getenv("HOME"), "data"), 72*time.Hour)
 	if err != nil {
 		log.Fatalf("cannot open leveldb: %v", err)
 	}

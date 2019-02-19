@@ -647,7 +647,6 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 	if err := json.Unmarshal(bodyBytes, &usersResp); err != nil {
 		return ingress.KYCNone, fmt.Errorf("cannot unmarshal authorized kyber users: %v", err)
 	}
-	log.Println("error here 2 : ", resp.Status, string(bodyBytes))
 
 	// Submit verification if the selected address is still verified with the
 	// trader's Kyber account

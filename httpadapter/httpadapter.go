@@ -19,9 +19,9 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/getsentry/raven-go"
 	"github.com/gorilla/mux"
+	"github.com/renproject/swapperd/foundation/blockchain"
+	"github.com/renproject/swapperd/foundation/swap"
 	"github.com/republicprotocol/renex-ingress-go/ingress"
-	"github.com/republicprotocol/swapperd/foundation/blockchain"
-	"github.com/republicprotocol/swapperd/foundation/swap"
 	"github.com/rs/cors"
 	"golang.org/x/crypto/sha3"
 	"golang.org/x/time/rate"
@@ -595,7 +595,6 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 	kyberUID, timestamp, err := loginAdapter.GetLogin(address)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Println("error here1 : ", address)
 			return ingress.KYCNone, nil
 		}
 		return ingress.KYCNone, fmt.Errorf("cannot get verification information from database: %v", err)

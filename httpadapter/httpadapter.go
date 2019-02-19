@@ -547,7 +547,7 @@ func PostAuthorizeHandler(ingressAdapter IngressAdapter, kyberID, kyberSecret st
 
 func brokerAddress(bcName blockchain.BlockchainName) (string, error) {
 	switch bcName {
-	case blockchain.Ethereum:
+	case blockchain.Ethereum, blockchain.ERC20:
 		return os.Getenv("ETH_VAULT"), nil
 	case blockchain.Bitcoin:
 		return os.Getenv("BTC_VAULT"), nil

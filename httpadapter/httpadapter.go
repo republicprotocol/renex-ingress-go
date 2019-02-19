@@ -595,6 +595,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 	kyberUID, timestamp, err := loginAdapter.GetLogin(address)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			log.Println("error here1 : ", address)
 			return ingress.KYCNone, nil
 		}
 		return ingress.KYCNone, fmt.Errorf("cannot get verification information from database: %v", err)
@@ -647,6 +648,7 @@ func traderVerified(loginAdapter LoginAdapter, kyberID, kyberSecret, address str
 	if err := json.Unmarshal(bodyBytes, &usersResp); err != nil {
 		return ingress.KYCNone, fmt.Errorf("cannot unmarshal authorized kyber users: %v", err)
 	}
+	log.Println("error here 2 : ", resp.Status, string(bodyBytes))
 
 	// Submit verification if the selected address is still verified with the
 	// trader's Kyber account

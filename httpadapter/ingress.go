@@ -52,7 +52,7 @@ type ApproveWithdrawalAdapter interface {
 }
 
 type LoginAdapter interface {
-	GetLogin(address string) (int64, string, error)
+	qGetLogin(address string) (int64, string, error)
 	PostLogin(address, referrer string) error
 	PostVerification(address string, kyberUID int64, kycType int) error
 	WyreVerified(traderIn string) (bool, error)

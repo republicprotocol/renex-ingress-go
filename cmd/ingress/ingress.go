@@ -66,6 +66,20 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot load config: %v", err)
 	}
+	infuraKey := os.Getenv("INFURA_KEY")
+	if infuraKey == "" {
+		panic("infuraKey cannot be empty")
+	}
+	if config.RepublicEthereum.URI == "" {
+		var network string
+		switch config.RepublicEthereum.Network {
+		case contract.NetworkMainnet:
+			network = "mainnet"
+		default:
+			network = "kovan"
+		}
+		config.RepublicEthereum.URI = fmt.Sprintf("https://%v.infura.io/v3/%v", network, infuraKey)
+	}
 
 	keystore, err := loadKeystore(keystoreParam, keystorePassphraseParam)
 	if err != nil {

@@ -2,6 +2,7 @@ package contract
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
@@ -16,14 +17,18 @@ type Conn struct {
 
 // Connect to a URI.
 func Connect(config RenExConfig) (Conn, error) {
+	infuraKey := os.Getenv("INFURA_KEY")
+	if infuraKey == "" {
+		panic("fail to read infura project id")
+	}
 	if config.URI == "" {
 		switch config.Network {
 		case NetworkMainnet:
-			config.URI = "https://mainnet.infura.io"
+			config.URI = fmt.Sprintf("https://mainnet.infura.io/v3/%v", infuraKey)
 		case NetworkTestnet:
-			config.URI = "https://kovan.infura.io"
+			config.URI = fmt.Sprintf("https://kovan.infura.io/v3/%v", infuraKey)
 		case NetworkNightly:
-			config.URI = "https://kovan.infura.io"
+			config.URI = fmt.Sprintf("https://kovan.infura.io/v3/%v", infuraKey)
 		case NetworkLocal:
 			config.URI = "http://localhost:8545"
 		default:
